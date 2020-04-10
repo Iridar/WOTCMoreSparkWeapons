@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Guid>26eb64ba-f2c3-4a5d-b31c-3d99bc074600</Guid>
+    <Name>WOTCMoreSparkWeapons</Name>
+    <Description>Adds additional weapon options for SPARKs and MEC Troopers.</Description>
+    <SteamPublishID>0</SteamPublishID>
+    <AssemblyName>WOTCMoreSparkWeapons</AssemblyName>
+    <RootNamespace>WOTCMoreSparkWeapons</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Config\Base" />
+    <Folder Include="Config\Compatibility" />
+    <Folder Include="Localization\" />
+    <Folder Include="Content" />
+    <Folder Include="Src\" />
+    <Folder Include="Src\WOTCMoreSparkWeapons\" />
+    <Folder Include="Src\WOTCMoreSparkWeapons\Classes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config\Base\XComEditor.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\Base\XComEngine.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\Base\XComGame.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\Base\XComGameData.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\Compatibility\XComRocketLaunchers.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComClassData.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComGameData_WeaponData.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\IRIOrdnanceLauncher.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ReadMe.txt" />
+    <Content Include="ModPreview.jpg" />
+    <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_OrdnanceLauncher.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2DownloadableContentInfo_WOTCMoreSparkWeapons.uc" />
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2TargetingMethod_OrdnanceLauncher.uc">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
+</Project>
