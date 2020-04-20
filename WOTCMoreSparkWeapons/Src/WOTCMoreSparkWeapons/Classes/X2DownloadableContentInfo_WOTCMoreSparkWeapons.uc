@@ -16,12 +16,11 @@ static event InstallNewCampaign(XComGameState StartState)
 
 
 //	Immedaite goals:
-//	Cinecam for Launch Grenade (based on Micro Missiles which uses CIN_Quick_Wide in CIN_Soldier
-//	Same for Fire Rocket
-//	Same for Fire Sabot
-//	Arm Rocket animation
+//	Fix bugs with Give / Take rocket
 //	Animation and cine cam for Plasma Ejector
+//	Same for Nuke
 //	Check all other rockets
+//	Add a condition so that Throw Grenade doesn't appear for SPARKs
 
 //	Mag tier model
 //	Beam tier model
@@ -163,6 +162,10 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 
 				//	Give Rocket and stuff
 				Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket")));
+				if (GrenadeTemplate.DataName == 'IRI_X2Rocket_Lockon_T3')
+				{	
+					Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3")));
+				}
 			}
 		}
 	}		
