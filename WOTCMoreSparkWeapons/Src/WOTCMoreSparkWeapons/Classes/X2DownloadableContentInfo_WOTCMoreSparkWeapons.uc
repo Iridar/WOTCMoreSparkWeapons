@@ -44,6 +44,7 @@ static event OnPostTemplatesCreated()
     if (CharTemplate != none)
     {
         CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
+		CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideSpark");
 		`LOG("Patched matinee",, 'IRITEST');
     }
 }
