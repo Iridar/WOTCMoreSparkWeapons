@@ -108,6 +108,7 @@ static function X2DataTemplate Create_LaunchOrdnance()
 
 	//Template.CinescriptCameraType = "Grenadier_GrenadeLauncher";
 	Template.CinescriptCameraType = "MEC_MicroMissiles";
+	Template.CinescriptCameraType = "Iridar_Grenade_Launch_Spark";
 
 	// This action is considered 'hostile' and can be interrupted!
 	Template.Hostility = eHostility_Offensive;

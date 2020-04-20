@@ -19,6 +19,9 @@
     <Folder Include="Src\WOTCMoreSparkWeapons\Classes\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Config\Base\XComCamera.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\Base\XComEditor.ini">
       <SubType>Content</SubType>
     </Content>
@@ -38,6 +41,12 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Config\XComGameData_WeaponData.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\CIN_IRI_Lockon.umap">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\CIN_IRI_QuickWideSpark.umap">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIOrdnanceLauncher.upk">

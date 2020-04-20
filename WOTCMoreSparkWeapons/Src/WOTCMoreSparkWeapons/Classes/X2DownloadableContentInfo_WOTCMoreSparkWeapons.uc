@@ -1,13 +1,3 @@
-//---------------------------------------------------------------------------------------
-//  FILE:   XComDownloadableContentInfo_WOTCMoreSparkWeapons.uc                                    
-//           
-//	Use the X2DownloadableContentInfo class to specify unique mod behavior when the 
-//  player creates a new campaign or loads a saved game.
-//  
-//---------------------------------------------------------------------------------------
-//  Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
-//---------------------------------------------------------------------------------------
-
 class X2DownloadableContentInfo_WOTCMoreSparkWeapons extends X2DownloadableContentInfo;
 
 /// <summary>
@@ -24,10 +14,61 @@ static event OnLoadedSavedGame()
 static event InstallNewCampaign(XComGameState StartState)
 {}
 
+
+//	Immedaite goals:
+//	Cinecam for Launch Grenade (based on Micro Missiles which uses CIN_Quick_Wide in CIN_Soldier
+//	Same for Fire Rocket
+//	Same for Fire Sabot
+//	Arm Rocket animation
+//	Animation and cine cam for Plasma Ejector
+//	Check all other rockets
+
+//	Mag tier model
+//	Beam tier model
+//	Set to use Grenade Launcher schematics
+//	Localization
+//	In-game weapon icons
+
+static event OnPostTemplatesCreated()
+{
+    local X2CharacterTemplateManager    CharMgr;
+    local X2CharacterTemplate           CharTemplate;
+
+    //  Get the Character Template Modify
+    CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+
+    //  Access a specific Character Template.
+    CharTemplate = CharMgr.FindCharacterTemplate('SparkSoldier');
+
+    //  If template was found
+    if (CharTemplate != none)
+    {
+        CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
+		`LOG("Patched matinee",, 'IRITEST');
+    }
+}
+
+
+static function string DLCAppendSockets(XComUnitPawn Pawn)
+{
+	local XComGameState_Unit UnitState;
+
+	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Pawn.ObjectID));
+
+	if (UnitState != none && (UnitState.GetMyTemplateName() == 'SparkSoldier' || UnitState.GetMyTemplateName() == 'XComMecSoldier'))
+	{
+		//`LOG("Adding spark sockets to" @ UnitState.GetFullName(),, 'IRITEST');
+		return "IRIOrdnanceLauncher.Meshes.Spark_Sockets";
+	}
+	return "";
+}
+
+
 static function GetNumUtilitySlotsOverride(out int NumUtilitySlots, XComGameState_Item EquippedArmor, XComGameState_Unit UnitState, XComGameState CheckGameState)
 {
 	local XComGameState_Item ItemState;
 
+	//	TODO:  Replace this with Grenade Pocket once CHL is out
 	if (UnitState.GetMyTemplateName() == 'SparkSoldier' || UnitState.GetMyTemplateName() == 'XComMecSoldier')
 	{
 		ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
@@ -46,7 +87,6 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 	local X2AbilityTemplate			AbilityTemplate;
 	local StateObjectReference		GrenadeLauncherRef;
 	local X2GrenadeTemplate			GrenadeTemplate;
-	local int i;
 
 	//`LOG("Finalize abilities for unit:",, 'IRILOG');
 
@@ -70,7 +110,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 				GrenadeTemplate = X2GrenadeTemplate(ItemState.GetMyTemplate());
 				if (GrenadeTemplate != none)
 				{ 
-					//	If the grenade item is a rocket add Launch Ordnance to it
+					//	If the grenade item is NOT a rocket add Launch Ordnance to it
 					if (GrenadeTemplate.WeaponCat != 'rocket')
 					{
 						Data = EmptyData;
@@ -84,4 +124,45 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			}
 		}
 	}
+}
+
+static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, optional XComGameState_Item ItemState=none)
+{
+    Local XComGameState_Item	InternalWeaponState;
+	local XComGameState_Unit	UnitState;
+	local X2GrenadeTemplate		GrenadeTemplate;
+
+    if (ItemState == none) 
+	{	
+		InternalWeaponState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(WeaponArchetype.ObjectID));
+		`redscreen("SPARK Weapons: Weapon Initialized -> Had to reach into history to get Internal Weapon State.-Iridar");
+	}
+	else InternalWeaponState = ItemState;
+
+	if (InternalWeaponState != none)
+	{
+		if (InternalWeaponState.GetWeaponCategory() == 'iri_ordnance_launcher')
+		{
+			SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_Lockon")));
+			return;
+		}
+		
+		GrenadeTemplate = X2GrenadeTemplate(InternalWeaponState.GetMyTemplate());
+
+		if (GrenadeTemplate != none && GrenadeTemplate.WeaponCat == 'rocket')
+		{
+			UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(InternalWeaponState.OwnerStateObject.ObjectID));
+			if (UnitState != none && (UnitState.GetMyTemplateName() == 'SparkSoldier' || UnitState.GetMyTemplateName() == 'XComMecSoldier'))
+			{
+				//Weapon.DefaultSocket = '';
+
+				Weapon.CustomUnitPawnAnimsets.Length = 0;
+				//	Firing animations
+				Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRIOrdnanceLauncher.Anims.AS_OrdnanceLauncher")));
+
+				//	Give Rocket and stuff
+				Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket")));
+			}
+		}
+	}		
 }

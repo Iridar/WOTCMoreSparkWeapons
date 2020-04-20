@@ -1,4 +1,5 @@
 class X2TargetingMethod_OrdnanceLauncher extends X2TargetingMethod_MECMicroMissile;
+
 /*
 function Init(AvailableAction InAction, int NewTargetIndex)
 {
