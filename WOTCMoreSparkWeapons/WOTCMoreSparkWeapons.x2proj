@@ -52,6 +52,9 @@
     <Content Include="Content\CIN_IRI_QuickWideSpark.umap">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\IRIActiveCamoPerk.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\IRIOrdnanceLauncher.upk">
       <SubType>Content</SubType>
     </Content>
@@ -62,6 +65,9 @@
     <Content Include="ModPreview.jpg" />
     <Content Include="Localization\XComGame.int" />
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_OrdnanceLauncher.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_HasWeaponOfCategory.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2DownloadableContentInfo_WOTCMoreSparkWeapons.uc" />

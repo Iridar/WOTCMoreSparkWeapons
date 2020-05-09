@@ -20,29 +20,31 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Mag tier model
-//	Beam tier model
-//	Set to use Grenade Launcher schematics
-//	Localization
-//	In-game weapon icons
+//	Ordnance Lauincher - Mag tier model
+//	Ordnance Lauincher - Beam tier model
+//	Ordnance Lauincher - Set to use Grenade Launcher schematics
+//	Ordnance Lauincher - Localization
+//	Ordnance Lauincher - inventory icons for weapons
 
-//	Uncouple BIT from the SPARK
-//	Uncouple Heavy Weapon from the BIT
+//	Uncouple BIT from the SPARK - investigate log warnings.
 //	Uncouple begin mission camo from BIT
 //	Make Bombard work with Ordnance Launcher
 //	Handle Repair without BIT
-//	BIT for Specialists?
+//	BIT for Specialists? Include Active Camo animation for specialists.
 //	Template Highlander Slots for the Ordnance Launcher
 //	Add config variables: rocket launchers present, SparkLauncherspresent
 
+//	Icon for Active Camo
+
 static event OnPostTemplatesCreated()
 {
-	PatchMatinees();
+	PatchMatineesAndActiveCamo();
 	CopyLocalizationForHeavyWeaponAbilities();
 	PatchRainmaker();
+	AddActveCamoToBITs();
 }
 
-static function PatchMatinees()
+static function PatchMatineesAndActiveCamo()
 {
     local X2CharacterTemplateManager    CharMgr;
     local X2CharacterTemplate           CharTemplate;
@@ -57,6 +59,9 @@ static function PatchMatinees()
 
 		if (CharTemplate != none)
 		{
+			//	Remove Active Camo from char templates. We'll add it to BIT instead.
+			CharTemplate.Abilities.RemoveItem('ActiveCamo');
+
 			if (default.bRocketLaunchersModPresent)
 			{
 				CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
@@ -123,7 +128,25 @@ static function PatchRainmaker()
 	else `LOG("ERROR, Could not find Rainmaker ability template.",, 'WOTCMoreSparkWeapons');
 }	
 
+static function AddActveCamoToBITs()
+{
+	local X2WeaponTemplate              WeaponTemplate;
+    local array<X2WeaponTemplate>       arrWeaponTemplates;
+    local X2ItemTemplateManager         ItemMgr;
 
+	//	Add my Active Camo to all Spark BITs
+    ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+
+    arrWeaponTemplates = ItemMgr.GetAllWeaponTemplates();
+
+    foreach arrWeaponTemplates(WeaponTemplate)
+    {
+        if (WeaponTemplate.WeaponCat == 'sparkbit')
+        {
+			WeaponTemplate.Abilities.AddItem('IRI_ActiveCamo');
+        }
+    }
+}
 
 static function CopyLocalizationForHeavyWeaponAbilities()
 {

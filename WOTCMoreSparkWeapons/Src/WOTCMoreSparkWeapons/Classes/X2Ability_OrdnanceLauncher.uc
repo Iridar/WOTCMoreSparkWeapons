@@ -6,6 +6,8 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	Templates.AddItem(Create_LaunchOrdnance());
 
+	Templates.AddItem(IRI_ActiveCamo());
+
 	// Separate versions of abilities to fire from the arm cannon with a different cinecam.
 	Templates.AddItem(SparkRocketLauncher());
 	Templates.AddItem(SparkShredderGun());
@@ -127,6 +129,55 @@ static function X2DataTemplate Create_LaunchOrdnance()
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.GrenadeLostSpawnIncreasePerUse;
 	Template.bFrameEvenWhenUnitIsHidden = true;
+
+	return Template;
+}
+
+static function X2AbilityTemplate IRI_ActiveCamo()
+{
+	local X2AbilityTemplate			Template;
+	local X2Effect_StayConcealed	Effect;
+	//local X2Effect_RangerStealth    StealthEffect;
+	local X2AbilityTrigger_EventListener    Trigger;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ActiveCamo');
+
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_phantom";
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	//Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	Trigger = new class'X2AbilityTrigger_EventListener';
+	Trigger.ListenerData.Deferral = ELD_OnStateSubmitted;
+	Trigger.ListenerData.EventID = 'StartOfMatchConcealment';
+	Trigger.ListenerData.Filter = eFilter_Player;
+	Trigger.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_Self_VisualizeInGameState;
+	Template.AbilityTriggers.AddItem(Trigger);
+
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+
+	//	Adding a hard effect to enter concealment so that SPARK enters concealment on missions where squad is not concealed in time
+	//	for active ability to see the SPARK concealed and play its VFX correctly.
+
+	//	Hard effect to gain concealment.
+	//StealthEffect = new class'X2Effect_RangerStealth';
+	//StealthEffect.BuildPersistentEffect(1, true, true, false, eGameRule_PlayerTurnEnd);
+	//Effect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, false, ,Template.AbilitySourceName);
+	//StealthEffect.bRemoveWhenTargetConcealmentBroken = true;
+	//Template.AddTargetEffect(StealthEffect);
+
+	//	Phantom-like - stay concealed if squad breaks concealment.
+	Effect = new class'X2Effect_StayConcealed';
+	Effect.BuildPersistentEffect(1, true, false);
+	Effect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, false, ,Template.AbilitySourceName);
+	Template.AddTargetEffect(Effect);
+
+	Template.Hostility = eHostility_Neutral;
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	Template.CustomFireAnim = 'NO_Camouflage';
 
 	return Template;
 }
