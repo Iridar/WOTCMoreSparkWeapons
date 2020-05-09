@@ -6,6 +6,15 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	Templates.AddItem(Create_LaunchOrdnance());
 
+	// Separate versions of abilities to fire from the arm cannon with a different cinecam.
+	Templates.AddItem(SparkRocketLauncher());
+	Templates.AddItem(SparkShredderGun());
+	Templates.AddItem(SparkShredstormCannon());
+	Templates.AddItem(SparkFlamethrower());
+	Templates.AddItem(SparkFlamethrowerMk2());
+	Templates.AddItem(SparkBlasterLauncher());
+	Templates.AddItem(SparkPlasmaBlaster());
+
 	return Templates;
 }
 
@@ -120,6 +129,124 @@ static function X2DataTemplate Create_LaunchOrdnance()
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
 	return Template;
+}
+
+
+//	========================================
+//				HEAVY WEAPON ABILITIES
+//	========================================
+
+
+static function X2AbilityTemplate SparkRocketLauncher()
+{
+	local X2AbilityTemplate AbilityTemplate;
+
+	AbilityTemplate = class'X2Ability_HeavyWeapons'.static.RocketLauncherAbility('IRI_SparkRocketLauncher');
+
+	X2AbilityMultiTarget_Radius(AbilityTemplate.AbilityMultiTargetStyle).AddAbilityBonusRadius('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_RADIUS_ROCKETLAUNCHER);
+
+	AbilityTemplate.bDisplayInUITacticalText = false;
+	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
+
+	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+
+	return AbilityTemplate;
+}
+
+static function X2AbilityTemplate SparkShredderGun()
+{
+	local X2AbilityTemplate AbilityTemplate;
+
+	AbilityTemplate = class'X2Ability_HeavyWeapons'.static.ShredderGunAbility('IRI_SparkShredderGun');
+
+	X2AbilityMultiTarget_Cone(AbilityTemplate.AbilityMultiTargetStyle).AddBonusConeSize('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONEDIAMETER_SHREDDERGUN, class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONELENGTH_SHREDDERGUN);
+
+	AbilityTemplate.bDisplayInUITacticalText = false;
+	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
+
+	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+
+	return AbilityTemplate;
+}
+
+static function X2AbilityTemplate SparkShredstormCannon()
+{
+	local X2AbilityTemplate AbilityTemplate;
+
+	AbilityTemplate = class'X2Ability_HeavyWeapons'.static.ShredstormCannonAbility('IRI_SparkShredstormCannon');
+
+	X2AbilityMultiTarget_Cone(AbilityTemplate.AbilityMultiTargetStyle).AddBonusConeSize('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONEDIAMETER_SHREDSTORM, class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONELENGTH_SHREDSTORM);
+
+	AbilityTemplate.bDisplayInUITacticalText = false;
+	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
+
+	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+
+	return AbilityTemplate;
+}
+
+static function X2AbilityTemplate SparkFlamethrower()
+{
+	local X2AbilityTemplate AbilityTemplate;
+
+	AbilityTemplate = class'X2Ability_HeavyWeapons'.static.Flamethrower('IRI_SparkFlamethrower');
+
+	X2AbilityMultiTarget_Cone(AbilityTemplate.AbilityMultiTargetStyle).AddBonusConeSize('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONEDIAMETER_FLAMETHROWER, class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONELENGTH_FLAMETHROWER);
+
+	AbilityTemplate.bDisplayInUITacticalText = false;
+	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
+
+	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+
+	return AbilityTemplate;
+}
+
+static function X2AbilityTemplate SparkFlamethrowerMk2()
+{
+	local X2AbilityTemplate AbilityTemplate;
+
+	AbilityTemplate = class'X2Ability_HeavyWeapons'.static.Flamethrower('IRI_SparkFlamethrowerMk2');
+
+	X2AbilityMultiTarget_Cone(AbilityTemplate.AbilityMultiTargetStyle).AddBonusConeSize('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONEDIAMETER_FLAMETHROWER2, class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONELENGTH_FLAMETHROWER2);
+
+	AbilityTemplate.bDisplayInUITacticalText = false;
+	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
+
+	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+
+	return AbilityTemplate;
+}
+
+static function X2AbilityTemplate SparkBlasterLauncher()
+{
+	local X2AbilityTemplate AbilityTemplate;
+
+	AbilityTemplate = class'X2Ability_HeavyWeapons'.static.BlasterLauncherAbility('IRI_SparkBlasterLauncher');
+
+	X2AbilityMultiTarget_Radius(AbilityTemplate.AbilityMultiTargetStyle).AddAbilityBonusRadius('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_RADIUS_BLASTERLAUNCHER);
+
+	AbilityTemplate.bDisplayInUITacticalText = false;
+	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
+
+	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+
+	return AbilityTemplate;
+}
+
+static function X2AbilityTemplate SparkPlasmaBlaster()
+{
+	local X2AbilityTemplate AbilityTemplate;
+
+	AbilityTemplate = class'X2Ability_HeavyWeapons'.static.PlasmaBlaster('IRI_SparkPlasmaBlaster');
+
+	X2AbilityMultiTarget_Line(AbilityTemplate.AbilityMultiTargetStyle).AddAbilityBonusWidth('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_WIDTH_PLASMABLASTER);
+
+	AbilityTemplate.bDisplayInUITacticalText = false;
+	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
+
+	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+
+	return AbilityTemplate;
 }
 
 

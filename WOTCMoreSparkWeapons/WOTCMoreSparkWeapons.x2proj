@@ -43,6 +43,9 @@
     <Content Include="Config\XComGameData_WeaponData.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\XComSparkWeapons.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\CIN_IRI_Lockon.umap">
       <SubType>Content</SubType>
     </Content>
@@ -52,6 +55,9 @@
     <Content Include="Content\IRIOrdnanceLauncher.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\IRISparkHeavyWeapons.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="ReadMe.txt" />
     <Content Include="ModPreview.jpg" />
     <Content Include="Localization\XComGame.int" />
@@ -59,6 +65,9 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2DownloadableContentInfo_WOTCMoreSparkWeapons.uc" />
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_IRI_Rainmaker.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher.uc">
       <SubType>Content</SubType>
     </Content>
