@@ -137,25 +137,27 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 {
 	local X2AbilityTemplate			Template;
 	local X2Effect_StayConcealed	Effect;
+	local X2Effect_Persistent		PersistentEffect;
 	//local X2Effect_RangerStealth    StealthEffect;
-	local X2AbilityTrigger_EventListener    Trigger;
+	//local X2AbilityTrigger_EventListener    Trigger;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ActiveCamo');
 
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_phantom";
+	Template.IconImage = "img:///UILibrary_XPACK_Common.PerkIcons.UIPerk_refractionfield";
+	SetHidden(Template);
 
 	Template.AbilityToHitCalc = default.DeadEye;
 	Template.AbilityTargetStyle = default.SelfTarget;
-	//Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
-
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+	/*
 	Trigger = new class'X2AbilityTrigger_EventListener';
 	Trigger.ListenerData.Deferral = ELD_OnStateSubmitted;
 	Trigger.ListenerData.EventID = 'StartOfMatchConcealment';
 	Trigger.ListenerData.Filter = eFilter_Player;
-	Trigger.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_Self_VisualizeInGameState;
-	Template.AbilityTriggers.AddItem(Trigger);
-
+	Trigger.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_Self; //_VisualizeInGameState;
+	Template.AbilityTriggers.AddItem(Trigger);*/
+	
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
 
 	//	Adding a hard effect to enter concealment so that SPARK enters concealment on missions where squad is not concealed in time
@@ -168,6 +170,12 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	//StealthEffect.bRemoveWhenTargetConcealmentBroken = true;
 	//Template.AddTargetEffect(StealthEffect);
 
+	PersistentEffect = new class'X2Effect_Persistent';
+	PersistentEffect.EffectName = 'IRI_ActiveCamo_Effect';
+	PersistentEffect.BuildPersistentEffect(1, true, false);
+	PersistentEffect.bRemoveWhenTargetConcealmentBroken = true;
+	Template.AddTargetEffect(PersistentEffect);
+
 	//	Phantom-like - stay concealed if squad breaks concealment.
 	Effect = new class'X2Effect_StayConcealed';
 	Effect.BuildPersistentEffect(1, true, false);
@@ -178,9 +186,14 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 	Template.CustomFireAnim = 'NO_Camouflage';
+	//Template.AssociatedPlayTiming = SPT_AfterParallel;
+	//Template.AssociatedPlayTiming = SPT_BeforeParallel;
 
 	return Template;
 }
+
+// Unconcealed mission + BIT: pass.
+// Concealed mission + BIT: pass.
 
 
 //	========================================

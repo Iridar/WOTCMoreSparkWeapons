@@ -36,6 +36,8 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Icon for Active Camo
 
+//	KSM Icon: Texture2D'UILibrary_PerkIcons.UIPerk_mecclosecombat'
+
 static event OnPostTemplatesCreated()
 {
 	PatchMatineesAndActiveCamo();
