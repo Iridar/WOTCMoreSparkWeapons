@@ -27,26 +27,23 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Ordnance Lauincher - inventory icons for weapons
 
 //	Uncouple BIT from the SPARK - investigate log warnings.
-//	Uncouple begin mission camo from BIT
-//	Make Bombard work with Ordnance Launcher
 //	Handle Repair without BIT
 //	BIT for Specialists? Include Active Camo animation for specialists.
 //	Template Highlander Slots for the Ordnance Launcher
-//	Add config variables: rocket launchers present, SparkLauncherspresent
 
 //	Icon for Active Camo
-
 //	KSM Icon: Texture2D'UILibrary_PerkIcons.UIPerk_mecclosecombat'
 
 static event OnPostTemplatesCreated()
 {
-	PatchMatineesAndActiveCamo();
-	CopyLocalizationForHeavyWeaponAbilities();
+	PatchCharacterTemplates();
+	CopyLocalizationForAbilities();
 	PatchRainmaker();
+	PatchRepair();
 	AddActveCamoToBITs();
 }
 
-static function PatchMatineesAndActiveCamo()
+static function PatchCharacterTemplates()
 {
     local X2CharacterTemplateManager    CharMgr;
     local X2CharacterTemplate           CharTemplate;
@@ -64,10 +61,9 @@ static function PatchMatineesAndActiveCamo()
 			//	Remove Active Camo from char templates. We'll add it to BIT instead.
 			CharTemplate.Abilities.RemoveItem('ActiveCamo');
 
-			if (default.bRocketLaunchersModPresent)
-			{
-				CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
-			}
+			//	Always attach Lockon Matinee cuz it's also used by Bombard
+			CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
+			
 			CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideSpark");
 			`LOG("Added matinee for Character Template:" @ CharTemplate.DataName,, 'IRITEST');
 		}
@@ -130,6 +126,24 @@ static function PatchRainmaker()
 	else `LOG("ERROR, Could not find Rainmaker ability template.",, 'WOTCMoreSparkWeapons');
 }	
 
+static function PatchRepair()
+{
+	local X2AbilityTemplateManager		AbilityTemplateManager;
+	local X2AbilityTemplate				Template;
+	local X2Condition_SourceWeaponCat	WeaponCondition;
+
+	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+
+	Template = AbilityTemplateManager.FindAbilityTemplate('Repair');
+	if (Template != none)
+	{
+		WeaponCondition = new class'X2Condition_SourceWeaponCat';
+		WeaponCondition.MatchWeaponCat = 'sparkbit';
+		Template.AbilityShooterConditions.AddItem(WeaponCondition);
+	}
+	else `LOG("ERROR, Could not find Repair ability template.",, 'WOTCMoreSparkWeapons');
+}	
+
 static function AddActveCamoToBITs()
 {
 	local X2WeaponTemplate              WeaponTemplate;
@@ -150,7 +164,7 @@ static function AddActveCamoToBITs()
     }
 }
 
-static function CopyLocalizationForHeavyWeaponAbilities()
+static function CopyLocalizationForAbilities()
 {
     local X2AbilityTemplateManager  AbilityTemplateManager;
 
@@ -164,6 +178,8 @@ static function CopyLocalizationForHeavyWeaponAbilities()
 	CopyLocalization(AbilityTemplateManager, 'IRI_SparkFlamethrowerMk2', 'SparkFlamethrowerMk2');
 	CopyLocalization(AbilityTemplateManager, 'IRI_SparkBlasterLauncher', 'SparkBlasterLauncher');
 	CopyLocalization(AbilityTemplateManager, 'IRI_SparkPlasmaBlaster', 'SparkPlasmaBlaster');
+
+	CopyLocalization(AbilityTemplateManager, 'IRI_Bombard', 'Bombard');
 }
 
 static function CopyLocalization(X2AbilityTemplateManager AbilityTemplateManager, name TemplateName, name DonorTemplateName)
@@ -248,34 +264,6 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 				//	Lookup its template name and replace or remove the ability.
 				switch (SetupData[Index].TemplateName)
 				{
-					case 'IRI_FireRocket':
-						SetupData[Index].TemplateName = 'IRI_FireRocket_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireRocket_Spark');
-						break;
-					case 'IRI_FireSabot':
-						SetupData[Index].TemplateName = 'IRI_FireSabot_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireSabot_Spark');
-						break;
-					case 'IRI_FireLockon':
-						SetupData[Index].TemplateName = 'IRI_FireLockon_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireLockon_Spark');
-						break;
-					case 'IRI_LockAndFireLockon':
-						SetupData[Index].TemplateName = 'IRI_LockAndFireLockon_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_LockAndFireLockon_Spark');
-						break;
-					case 'IRI_LockAndFireLockon_Holo':
-						SetupData[Index].TemplateName = 'IRI_LockAndFireLockon_Holo_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_LockAndFireLockon_Holo_Spark');
-						break;
-					case 'IRI_FireTacticalNuke':
-						SetupData[Index].TemplateName = 'IRI_FireTacticalNuke_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireTacticalNuke_Spark');
-						break;
-					case 'IRI_Fire_PlasmaEjector':
-						SetupData[Index].TemplateName = 'IRI_Fire_PlasmaEjector_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_PlasmaEjector_Spark');
-						break;
 					case 'ThrowGrenade':	//	Replace instances of Throw Grenade with Launch Ordnance. Pet two foxes with one arm.
 						SetupData[Index].TemplateName = 'IRI_LaunchOrdnance';
 						SetupData[Index].Template = AbilityTemplate;
@@ -312,6 +300,39 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					case 'SparkPlasmaBlaster':
 						SetupData[Index].TemplateName = 'IRI_SparkPlasmaBlaster';
 						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkPlasmaBlaster');
+						break;
+					case 'Bombard':
+						SetupData[Index].TemplateName = 'IRI_Bombard';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Bombard');
+						SetupData[Index].SourceWeaponRef = GrenadeLauncherRef;
+						break;
+					case 'IRI_FireRocket':
+						SetupData[Index].TemplateName = 'IRI_FireRocket_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireRocket_Spark');
+						break;
+					case 'IRI_FireSabot':
+						SetupData[Index].TemplateName = 'IRI_FireSabot_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireSabot_Spark');
+						break;
+					case 'IRI_FireLockon':
+						SetupData[Index].TemplateName = 'IRI_FireLockon_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireLockon_Spark');
+						break;
+					case 'IRI_LockAndFireLockon':
+						SetupData[Index].TemplateName = 'IRI_LockAndFireLockon_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_LockAndFireLockon_Spark');
+						break;
+					case 'IRI_LockAndFireLockon_Holo':
+						SetupData[Index].TemplateName = 'IRI_LockAndFireLockon_Holo_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_LockAndFireLockon_Holo_Spark');
+						break;
+					case 'IRI_FireTacticalNuke':
+						SetupData[Index].TemplateName = 'IRI_FireTacticalNuke_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireTacticalNuke_Spark');
+						break;
+					case 'IRI_Fire_PlasmaEjector':
+						SetupData[Index].TemplateName = 'IRI_Fire_PlasmaEjector_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_PlasmaEjector_Spark');
 						break;
 					default:
 						break;

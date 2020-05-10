@@ -1,9 +1,14 @@
 class X2Item_OrdnanceLauncher extends X2Item config(GameData_WeaponData);
 
-
-
-
 var config WeaponDamageValue DAMAGE;
+var config array <WeaponDamageValue> EXTRA_DAMAGE;
+
+
+
+
+
+
+
 var config int IENVIRONMENTDAMAGE;
 var config int AIM;
 var config int CRITCHANCE;
@@ -54,6 +59,9 @@ static function X2GrenadeLauncherTemplate Create_OrdnanceLauncher()
 
 	Template.strImage = "img:///UILibrary_Common.ConvSecondaryWeapons.ConvGrenade";
 	Template.EquipSound = "Secondary_Weapon_Equip_Conventional";
+
+	Template.BaseDamage = default.DAMAGE;
+	Template.ExtraDamage = default.EXTRA_DAMAGE;
 	
 	Template.iSoundRange = class'X2Item_DefaultGrenades'.default.GRENADELAUNCHER_ISOUNDRANGE;
 	Template.iEnvironmentDamage = class'X2Item_DefaultGrenades'.default.GRENADELAUNCHER_IENVIRONMENTDAMAGE;
@@ -116,7 +124,7 @@ static function X2DataTemplate Create_Item()
 	Template.Tier = default.SORTING_TIER;
 
 	Template.RangeAccuracy = default.RANGE;
-	Template.BaseDamage = default.DAMAGE;
+	
 	Template.Aim = default.AIM;
 	Template.CritChance = default.CRITCHANCE;
 	Template.iClipSize = default.ICLIPSIZE;

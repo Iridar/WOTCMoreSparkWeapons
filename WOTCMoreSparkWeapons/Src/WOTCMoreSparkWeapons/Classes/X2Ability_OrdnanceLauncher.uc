@@ -8,6 +8,8 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	Templates.AddItem(IRI_ActiveCamo());
 
+	Templates.AddItem(Create_IRI_Bombard());
+
 	// Separate versions of abilities to fire from the arm cannon with a different cinecam.
 	Templates.AddItem(SparkRocketLauncher());
 	Templates.AddItem(SparkShredderGun());
@@ -192,8 +194,133 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	return Template;
 }
 
-// Unconcealed mission + BIT: pass.
-// Concealed mission + BIT: pass.
+static function X2AbilityTemplate Create_IRI_Bombard()
+{
+	local X2AbilityTemplate             Template;
+	local X2AbilityTarget_Cursor        CursorTarget;
+	local X2AbilityMultiTarget_Radius   RadiusMultiTarget;
+	local X2AbilityCost_Charges         ChargeCost;
+	local X2AbilityCharges              Charges;
+	local X2AbilityCooldown             Cooldown;
+	local X2Effect_ApplyWeaponDamage    DamageEffect;
+	local X2AbilityCost_ActionPoints    ActionPointCost;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_Bombard');
+
+	//	Icon
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_AlwaysShow;
+	Template.IconImage = "img:///UILibrary_DLC3Images.UIPerk_spark_bombard";
+
+	//	Targeting and Triggering
+	Template.TargetingMethod = class'X2TargetingMethod_VoidRift';
+	Template.AbilityToHitCalc = default.DeadEye;
+
+	CursorTarget = new class'X2AbilityTarget_Cursor';
+	CursorTarget.bRestrictToSquadsightRange = true;
+	Template.AbilityTargetStyle = CursorTarget;
+
+	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
+	RadiusMultiTarget.fTargetRadius = class'X2Ability_SparkAbilitySet'.default.BOMBARD_DAMAGE_RADIUS_METERS;
+	RadiusMultiTarget.bIgnoreBlockingCover = true;
+	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
+
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	//	Ability Costs
+	ChargeCost = new class'X2AbilityCost_Charges';
+	ChargeCost.NumCharges = 1;
+	Template.AbilityCosts.AddItem(ChargeCost);
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	Charges = new class'X2AbilityCharges';
+	Charges.InitialCharges = class'X2Ability_SparkAbilitySet'.default.BOMBARD_CHARGES;
+	Template.AbilityCharges = Charges;
+	
+	Cooldown = new class'X2AbilityCooldown';
+	Cooldown.iNumTurns = class'X2Ability_SparkAbilitySet'.default.BOMBARD_NUM_COOLDOWN_TURNS;
+	Template.AbilityCooldown = Cooldown;
+
+	// Shooter Conditions
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AddShooterEffectExclusions();
+
+	//	Multi Target Conditions
+	Template.AbilityMultiTargetConditions.AddItem(default.LivingTargetOnlyProperty);
+
+	//	Ability effects
+	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	DamageEffect.bIgnoreBaseDamage = true;
+	DamageEffect.DamageTag = 'Bombard';
+	DamageEffect.EnvironmentalDamageAmount = class'X2Ability_SparkAbilitySet'.default.BOMBARD_ENV_DMG;
+	Template.AddMultiTargetEffect(DamageEffect);
+
+	Template.CinescriptCameraType = "Iridar_Rocket_Lockon_Spark";
+	Template.CustomFireAnim = 'FF_Bombard';
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = IRI_Bombard_BuildVisualization;
+
+	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
+	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.GrenadeLostSpawnIncreasePerUse;
+	Template.bFrameEvenWhenUnitIsHidden = true;
+
+	return Template;
+}
+
+simulated function IRI_Bombard_BuildVisualization(XComGameState VisualizeGameState)
+{
+	local XComGameStateVisualizationMgr		VisMgr;
+	local X2Action							FoundAction;
+	local VisualizationActionMetadata		ActionMetadata;
+	local XComGameStateHistory				History;
+	local XComGameStateContext_Ability		Context;
+	local int								SourceUnitID;
+	local X2Action_CameraLookAt				LookAtTargetAction;
+
+	//	Call the typical ability visuailzation. With just that, the ability would look like the soldier firing the rocket upwards, and then enemy getting damage for seemingly no reason.
+	class'X2Ability'.static.TypicalAbility_BuildVisualization(VisualizeGameState);
+
+	VisMgr = `XCOMVISUALIZATIONMGR;
+	History = `XCOMHISTORY;
+	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+	SourceUnitID = Context.InputContext.SourceObject.ObjectID;
+
+	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(SourceUnitID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
+	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(SourceUnitID);
+	ActionMetadata.VisualizeActor = History.GetVisualizer(SourceUnitID);
+
+	//	Find the Fire Action in vis tree configured by Typical Ability Build Viz
+	FoundAction = VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_Fire');
+
+	if (FoundAction != none)
+	{
+		//	Add a camera action as a child to the Fire Action's parent, that lets both Fire Action and Camera Action run in parallel
+		//	pan camera towards the shooter for the firing animation
+		LookAtTargetAction = X2Action_CameraLookAt(class'X2Action_CameraLookAt'.static.AddToVisualizationTree(ActionMetadata, Context, false, FoundAction.ParentActions[0]));
+		LookAtTargetAction.LookAtActor = ActionMetadata.VisualizeActor;
+		LookAtTargetAction.LookAtDuration = 6.25f;
+		LookAtTargetAction.BlockUntilActorOnScreen = true;
+		LookAtTargetAction.BlockUntilFinished = true;
+		//LookAtAction.TargetZoomAfterArrival = -0.5f; zooms in slowly and doesn't stop
+		
+		//	This action will pause the Vis Tree until the Unit Hit (Notify Target) Anim Notify is reached in the Fire Action's AnimSequence (in the Fire Lockon firing animation)
+		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree(ActionMetadata, Context, true, FoundAction);
+
+		//	Start setting up the action that will pan the camera towards the location of the primary target
+		LookAtTargetAction = X2Action_CameraLookAt(class'X2Action_CameraLookAt'.static.AddToVisualizationTree(ActionMetadata, Context, true, ActionMetadata.LastActionAdded));
+		LookAtTargetAction.LookAtLocation = Context.InputContext.TargetLocations[0];
+		LookAtTargetAction.LookAtDuration = 3.0f;
+
+		//	make the projectile fall down.
+		class'X2Action_FireJavelin'.static.AddToVisualizationTree(ActionMetadata, Context, true, LookAtTargetAction);
+	}
+}
 
 
 //	========================================
