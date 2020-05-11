@@ -27,7 +27,7 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Ordnance Lauincher - inventory icons for weapons
 
 //	Uncouple BIT from the SPARK - investigate log warnings.
-//	Handle Repair without BIT
+
 //	BIT for Specialists? Include Active Camo animation for specialists.
 //	Template Highlander Slots for the Ordnance Launcher
 
