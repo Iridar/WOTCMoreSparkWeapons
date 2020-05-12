@@ -347,6 +347,7 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
     Local XComGameState_Item	InternalWeaponState, SecondaryWeaponState;
 	local XComGameState_Unit	UnitState;
 	local X2GrenadeTemplate		GrenadeTemplate;
+	local X2WeaponTemplate		WeaponTemplate;
 	local XComContentManager	Content;
 
     if (ItemState == none) 
@@ -359,12 +360,22 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 	if (InternalWeaponState != none)
 	{
 		Content = `CONTENT;
+		WeaponTemplate = X2WeaponTemplate(InternalWeaponState.GetMyTemplate());
 
-		if (InternalWeaponState.GetWeaponCategory() == 'iri_ordnance_launcher')
+		if (WeaponTemplate != none && WeaponTemplate.WeaponCat == 'iri_ordnance_launcher')
 		{
 			if (default.bRocketLaunchersModPresent)
 			{
-				SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_Lockon")));
+				switch (WeaponTemplate.WeaponTech)
+				{
+					case 'magnetic':
+						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_MG_Rockets")));
+					case 'beam':
+					case 'conventional':
+					default:
+						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_CV_Rockets")));
+						break;
+				}	
 			}
 			return;
 		}
