@@ -60,9 +60,8 @@ static function X2DataTemplate Create_LaunchOrdnance()
 	CursorTarget.bRestrictToWeaponRange = true;
 	Template.AbilityTargetStyle = CursorTarget;
 
-	Template.TargetingMethod = class'X2TargetingMethod_Grenade';
-	//Template.TargetingMethod = class'X2TargetingMethod_MECMicroMissile';
-	//Template.TargetingMethod = class'X2TargetingMethod_OrdnanceLauncher';
+	//Template.TargetingMethod = class'X2TargetingMethod_Grenade';
+	Template.TargetingMethod = class'X2TargetingMethod_OrdnanceLauncher';
 
 	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
 	RadiusMultiTarget.bUseWeaponRadius = true;
