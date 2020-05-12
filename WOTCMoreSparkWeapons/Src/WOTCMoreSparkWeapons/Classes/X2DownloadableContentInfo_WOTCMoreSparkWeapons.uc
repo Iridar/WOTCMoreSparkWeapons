@@ -2,6 +2,7 @@ class X2DownloadableContentInfo_WOTCMoreSparkWeapons extends X2DownloadableConte
 
 var config(SparkWeapons) array<name> SparkCharacterTemplates;
 var config(SparkWeapons) bool bRocketLaunchersModPresent;
+var config(SparkWeapons) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
 
 /// <summary>
 /// This method is run if the player loads a saved game that was created prior to this DLC / Mod being installed, and allows the 
@@ -359,70 +360,104 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 
 	if (InternalWeaponState != none)
 	{
-		Content = `CONTENT;
+		UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(InternalWeaponState.OwnerStateObject.ObjectID));
 		WeaponTemplate = X2WeaponTemplate(InternalWeaponState.GetMyTemplate());
 
-		if (WeaponTemplate != none && WeaponTemplate.WeaponCat == 'iri_ordnance_launcher')
+		if (UnitState != none && (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE) && WeaponTemplate != none)
 		{
-			if (default.bRocketLaunchersModPresent)
+			//	Initial checks complete, this is a weapon equipped on a SPARK.
+
+			Content = `CONTENT;
+			
+			//	If this is an Ordnance Launcher and the Rocket Launchers mod is present, add Weapon Animations for firing rockets.
+			if (WeaponTemplate.WeaponCat == 'iri_ordnance_launcher' && default.bRocketLaunchersModPresent)
 			{
 				switch (WeaponTemplate.WeaponTech)
 				{
 					case 'magnetic':
 						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_MG_Rockets")));
+						break;
 					case 'beam':
+						//	DEBUG ONLY
+						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_MG_Rockets")));
+						break;
 					case 'conventional':
 					default:
 						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_CV_Rockets")));
 						break;
 				}	
-			}
-			return;
-		}
-		else if(InternalWeaponState.GetWeaponCategory() == 'heavy')
-		{
-			UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(InternalWeaponState.OwnerStateObject.ObjectID));
-			if (UnitState == none) 
-			{
-				//`redscreen("SPARK Weapons: Weapon Initialized -> no Unit State!-Iridar");
 				return;
 			}
-
-			SecondaryWeaponState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon);
-			if (SecondaryWeaponState != none && SecondaryWeaponState.GetWeaponCategory() != 'sparkbit' && 
-				(default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE))
+			
+			//	If this is a Heavy Weapon, and the SPARK doesn't have a BIT equipped, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
+			if (WeaponTemplate.WeaponCat == 'heavy' && (default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState)))
 			{
-				//	This is a Heavy Weapon and this is SPARK / MEC that doesn't have a BIT equipped.
+				//	Replace the mesh for this heavy weapon with the arm cannon and replace the weapon and pawn animations.
 				Weapon.CustomUnitPawnAnimsets.Length = 0;
 				SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("IRISparkHeavyWeapons.Meshes.SM_SparkHeavyWeapon"));
 				SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Weapon")));
 				Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Spark")));
 
-				`LOG("Patched heavy weapon for a SPARK.",, 'IRITEST');
+				//`LOG("Patched heavy weapon for a SPARK.",, 'IRITEST');
 				return;
 			}
-		}
-		
-		if (default.bRocketLaunchersModPresent)
-		{
-			GrenadeTemplate = X2GrenadeTemplate(InternalWeaponState.GetMyTemplate());
 
-			if (GrenadeTemplate != none && GrenadeTemplate.WeaponCat == 'rocket')
+			//	If the rocket launchers mod is installed
+			if (default.bRocketLaunchersModPresent)
 			{
-				UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(InternalWeaponState.OwnerStateObject.ObjectID));
-				if (UnitState != none && (UnitState.GetMyTemplateName() == 'SparkSoldier' || UnitState.GetMyTemplateName() == 'XComMecSoldier'))
+				//	And this weapon is a rocket
+				GrenadeTemplate = X2GrenadeTemplate(InternalWeaponState.GetMyTemplate());
+				if (GrenadeTemplate != none && GrenadeTemplate.WeaponCat == 'rocket')
 				{
-					//Weapon.DefaultSocket = '';
+					//	Check if the Secondary Weapon is an Ordnance Launcher
+					SecondaryWeaponState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon);
+					if (SecondaryWeaponState != none)
+					{
+						WeaponTemplate = X2WeaponTemplate(SecondaryWeaponState.GetMyTemplate());
+					}
+					if (WeaponTemplate != none && WeaponTemplate.WeaponCat == 'iri_ordnance_launcher')
+					{
+						//	Replace the rocket's Pawn Animations with the ones made for the Ordnance Launcher.
+						Weapon.CustomUnitPawnAnimsets.Length = 0;
+						//	Firing animations
+						//	Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRIOrdnanceLauncher.Anims.AS_OrdnanceLauncher")));
 
-					Weapon.CustomUnitPawnAnimsets.Length = 0;
-					//	Firing animations
-					Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRIOrdnanceLauncher.Anims.AS_OrdnanceLauncher")));
+						//	Give Rocket and stuff. Take Rocket is added to character templates in Rocket Launchers mod, because eveery spark must be able to Take Rockets before their Weapon is initialized.
+						Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket")));
 
-					//	Give Rocket and stuff. Take Rocket is added to character templates in Rocket Launchers mod, because eveery spark must be able to Take Rockets before their Weapon is initialized.
-					Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket")));
-					if (GrenadeTemplate.DataName == 'IRI_X2Rocket_Lockon_T3')
-					{	
-						Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3")));
+						//	Attach additional Anim Sets based on the tier of the launcher.
+						switch (WeaponTemplate.WeaponTech)
+						{
+							case 'magnetic':
+								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_MG")));
+								break;
+							case 'beam':
+								//	DEBUG ONLY
+								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_MG")));
+								break;
+							case 'conventional':
+							//	Basic anims are enough for conventional.
+							default:
+								break;
+						}	
+						//	T3 Lockon rocket gets its own firing animation with a different Play Socket Animation notify to play a different "rocket flying in the sky" cosmetic PFX.
+						if (GrenadeTemplate.DataName == 'IRI_X2Rocket_Lockon_T3')
+						{	
+							switch (WeaponTemplate.WeaponTech)
+							{
+								case 'magnetic':
+									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_MG")));
+									break;
+								case 'beam':
+									//	DEBUG ONLY
+									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_MG")));
+									break;
+								case 'conventional':
+									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3")));
+								default:
+									break;
+							}
+						}
 					}
 				}
 			}

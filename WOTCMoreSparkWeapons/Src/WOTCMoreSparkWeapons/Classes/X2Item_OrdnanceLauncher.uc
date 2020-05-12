@@ -110,8 +110,8 @@ static function X2GrenadeLauncherTemplate Create_OrdnanceLauncher_MG()
 	Template.IncreaseGrenadeRadius = class'X2Item_DefaultGrenades'.default.GRENADELAUNCHER_RADIUSBONUS;
 	Template.IncreaseGrenadeRange = class'X2Item_DefaultGrenades'.default.GRENADELAUNCHER_RANGEBONUS;
 
-	Template.WeaponTech = 'magnetic';
-	//Template.WeaponTech = 'beam';
+	//Template.WeaponTech = 'magnetic';
+	Template.WeaponTech = 'beam';
 	Template.GameArchetype = "IRIOrdnanceLauncher.Archetypes.WP_OrdnanceLauncher_MG";
 	Template.WeaponCat = 'iri_ordnance_launcher';
 	//Template.Abilities.AddItem('IRI_LaunchOrdnance');
