@@ -96,7 +96,7 @@ static function X2DataTemplate Create_Item()
 	local ArtifactCost Resources;
 	local int i;
 	
-	`CREATE_X2TEMPLATE(class'X2GrenadeLauncherTemplate', Template, 'IRI_OrdnanceLauncher_CV');
+	`CREATE_X2TEMPLATE(class'X2GrenadeLauncherTemplate', Template, 'IRI_OrdnanceLauncher_BM');
 
 	Template.StowedLocation = eSlot_RightBack;
 	switch (default.WEAPON_TECH)
