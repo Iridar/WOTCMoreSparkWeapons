@@ -5,6 +5,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	local array<X2DataTemplate> Templates;
 
 	Templates.AddItem(Create_LaunchOrdnance());
+	Templates.AddItem(Create_LaunchOrdnance('IRI_BlastOrdnance', true));
 
 	Templates.AddItem(IRI_ActiveCamo());
 
@@ -22,7 +23,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	return Templates;
 }
 
-static function X2DataTemplate Create_LaunchOrdnance()
+static function X2DataTemplate Create_LaunchOrdnance(optional name TemplateName = 'IRI_LaunchOrdnance', optional bool bBlasterLauncherTargeting = false)
 {
 	local X2AbilityTemplate                 Template;
 	local X2AbilityCost_Ammo                AmmoCost;
@@ -34,7 +35,7 @@ static function X2DataTemplate Create_LaunchOrdnance()
 	local X2Condition_AbilitySourceWeapon   GrenadeCondition, ProximityMineCondition;
 	local X2Effect_ProximityMine            ProximityMineEffect;
 
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_LaunchOrdnance');
+	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
 
 	//Template.SoldierAbilityPurchasedFn = class'X2Ability_GrenadierAbilitySet'.static.GrenadePocketPurchased;
 
@@ -61,8 +62,14 @@ static function X2DataTemplate Create_LaunchOrdnance()
 	Template.AbilityTargetStyle = CursorTarget;
 
 	//Template.TargetingMethod = class'X2TargetingMethod_Grenade';
-	Template.TargetingMethod = class'X2TargetingMethod_OrdnanceLauncher';
-
+	if (bBlasterLauncherTargeting)
+	{
+		Template.TargetingMethod = class'X2TargetingMethod_BlasterLauncher';
+	}
+	else
+	{
+		Template.TargetingMethod = class'X2TargetingMethod_OrdnanceLauncher';
+	}
 	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
 	RadiusMultiTarget.bUseWeaponRadius = true;
 	RadiusMultiTarget.bUseWeaponBlockingCoverFlag = true;

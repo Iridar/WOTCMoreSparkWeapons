@@ -49,6 +49,9 @@
     <Content Include="Content\CIN_IRI_Lockon.umap">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\CIN_IRI_QuickWideHighSpark.umap">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\CIN_IRI_QuickWideSpark.umap">
       <SubType>Content</SubType>
     </Content>
@@ -81,6 +84,15 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher_BM.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher_CV.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher_MG.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2TargetingMethod_OrdnanceLauncher.uc">

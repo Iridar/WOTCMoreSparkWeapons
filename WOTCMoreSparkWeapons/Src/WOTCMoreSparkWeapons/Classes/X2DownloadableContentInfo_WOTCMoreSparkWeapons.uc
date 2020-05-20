@@ -3,6 +3,7 @@ class X2DownloadableContentInfo_WOTCMoreSparkWeapons extends X2DownloadableConte
 var config(SparkWeapons) array<name> SparkCharacterTemplates;
 var config(SparkWeapons) bool bRocketLaunchersModPresent;
 var config(SparkWeapons) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
+var config(GameData_WeaponData) bool bOrdnanceAmplifierUsesBlasterLauncherTargeting;
 
 /// <summary>
 /// This method is run if the player loads a saved game that was created prior to this DLC / Mod being installed, and allows the 
@@ -21,19 +22,42 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Ordnance Lauincher - Mag tier model
-//	Ordnance Lauincher - Beam tier model
-//	Ordnance Lauincher - Set to use Grenade Launcher schematics
-//	Ordnance Lauincher - Localization
-//	Ordnance Lauincher - inventory icons for weapons
-
-//	Uncouple BIT from the SPARK - investigate log warnings.
-
-//	BIT for Specialists? Include Active Camo animation for specialists.
 //	Template Highlander Slots for the Ordnance Launcher
+//	Check armory weapon tinting - make sure it persists!
+
+//	Uncouple BIT from the SPARK - investigate log warning
+//	Move hacking to BIT
+//	BIT for Specialists? Include Active Camo animation for specialists.
+//	Weak railgun heavy weapon
+//	Make rocket movement penalty not applied to SPARKs
 
 //	Icon for Active Camo
 //	KSM Icon: Texture2D'UILibrary_PerkIcons.UIPerk_mecclosecombat'
+
+//	Sparkfall within the context of this mod?
+
+//	Cannon loading sound
+//AkEvent'XPACK_SoundEnvironment.Crate_Extract_Advent_Crate_Grab'
+
+//	Music for release vid?
+// https://youtu.be/YLp62WwnGSU
+
+//	KSM as a heavy weapon. Competes with the flamethrower, keeping it similar to EW. Also mounts on the same left arm. Makes sense.
+//	Restorative Mist and Electo Pulse go into utility slot, competing with SPARK Launcher Redux. If BIT is equipped, BIT is used to deploy them. If not, they deploy around the SPARK.
+//	Pulse is more of an AoE bot stun with small damage. Nova's just straight damage, and it damages the SPARK. it's also limited to them.
+
+/*
+Simple tech on custom death animations: 
+Apply an AnimSet to the target with a custom death animation (same name as original death animation, check if you need to replace several animations with different names at once.
+Might be necessary to apply the AnimSet before the ability goes through. In that case, apply it with a separate ability with an AbilityActivated event listener trigger that works during interrupt stage. 
+Make sure to un-apply the AnimSet effect afterwards in case the target doesn't die.
+*/
+
+/*
+Ordnance Projector
+Ordnance Amplifier -> Lago 508
+Kinetic Collision Module
+ inetic Drive Module / Kinetic Driver*/
 
 static event OnPostTemplatesCreated()
 {
@@ -41,7 +65,7 @@ static event OnPostTemplatesCreated()
 	CopyLocalizationForAbilities();
 	PatchRainmaker();
 	PatchRepair();
-	AddActveCamoToBITs();
+	PatchWeaponTemplates();
 }
 
 static function PatchCharacterTemplates()
@@ -66,6 +90,8 @@ static function PatchCharacterTemplates()
 			CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
 			
 			CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideSpark");
+			CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideHighSpark");
+			
 			`LOG("Added matinee for Character Template:" @ CharTemplate.DataName,, 'IRITEST');
 		}
 	}
@@ -145,23 +171,41 @@ static function PatchRepair()
 	else `LOG("ERROR, Could not find Repair ability template.",, 'WOTCMoreSparkWeapons');
 }	
 
-static function AddActveCamoToBITs()
+static function PatchWeaponTemplates()
 {
 	local X2WeaponTemplate              WeaponTemplate;
     local array<X2WeaponTemplate>       arrWeaponTemplates;
     local X2ItemTemplateManager         ItemMgr;
+	local X2GrenadeTemplate				GrenadeTemplate;
+	local AbilityIconOverride			IconOverride;
 
-	//	Add my Active Camo to all Spark BITs
     ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-
     arrWeaponTemplates = ItemMgr.GetAllWeaponTemplates();
 
     foreach arrWeaponTemplates(WeaponTemplate)
     {
+		//	Add my Active Camo to all Spark BITs
         if (WeaponTemplate.WeaponCat == 'sparkbit')
         {
 			WeaponTemplate.Abilities.AddItem('IRI_ActiveCamo');
         }
+
+		//	Duplicate Launch Grenade icons for my Launch Ordnance abilities.
+		GrenadeTemplate = X2GrenadeTemplate(WeaponTemplate);
+		if (GrenadeTemplate != none)
+		{
+			foreach GrenadeTemplate.AbilityIconOverrides(IconOverride)
+			{
+				if (IconOverride.AbilityName == 'LaunchGrenade')
+				{
+					if (default.bOrdnanceAmplifierUsesBlasterLauncherTargeting)
+					{
+						GrenadeTemplate.AddAbilityIconOverride('IRI_BlastOrdnance', IconOverride.OverrideIcon);
+					}
+					GrenadeTemplate.AddAbilityIconOverride('IRI_LaunchOrdnance', IconOverride.OverrideIcon);
+				}
+			}
+		}
     }
 }
 
@@ -256,9 +300,18 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			//	If the unit is a SPARK / MEC with an Ordnance Launcher
 			`LOG("Found SPARK with a grenade launcher",, 'IRILOG');
 			GrenadeLauncherRef = ItemState.GetReference();
-			AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();			
-			AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate('IRI_LaunchOrdnance');
 
+			//	Prep the ability we're gonna be attaching to grenades.
+			AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();		
+			if (default.bOrdnanceAmplifierUsesBlasterLauncherTargeting && ItemState.GetMyTemplateName() == 'IRI_OrdnanceLauncher_BM')
+			{
+				AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate('IRI_BlastOrdnance');
+			}
+			else
+			{
+				AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate('IRI_LaunchOrdnance');
+			}
+			
 			//	Cycle through all abilities that are about to be Initialized
 			for (Index = SetupData.Length - 1; Index >= 0; Index--)
 			{
@@ -266,7 +319,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 				switch (SetupData[Index].TemplateName)
 				{
 					case 'ThrowGrenade':	//	Replace instances of Throw Grenade with Launch Ordnance. Pet two foxes with one arm.
-						SetupData[Index].TemplateName = 'IRI_LaunchOrdnance';
+						SetupData[Index].TemplateName = AbilityTemplate.DataName;
 						SetupData[Index].Template = AbilityTemplate;
 						SetupData[Index].SourceAmmoRef = SetupData[Index].SourceWeaponRef;
 						SetupData[Index].SourceWeaponRef = GrenadeLauncherRef;
@@ -378,8 +431,7 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_MG_Rockets")));
 						break;
 					case 'beam':
-						//	DEBUG ONLY
-						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_MG_Rockets")));
+						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_BM_Rockets")));
 						break;
 					case 'conventional':
 					default:
@@ -432,8 +484,7 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_MG")));
 								break;
 							case 'beam':
-								//	DEBUG ONLY
-								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_MG")));
+								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_BM")));
 								break;
 							case 'conventional':
 							//	Basic anims are enough for conventional.
@@ -449,8 +500,7 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_MG")));
 									break;
 								case 'beam':
-									//	DEBUG ONLY
-									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_MG")));
+									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_BM")));
 									break;
 								case 'conventional':
 									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3")));
@@ -464,26 +514,3 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 		}
 	}		
 }
-/*
-static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent MeshComp)
-{
-	local int i;
-	local MaterialInterface Mat;
-	local MaterialInstanceConstant MIC;
-
-	if (MeshComp != none && XComWeapon(WeaponArchetype.m_kEntity).DefaultSocket == 'HeavyWeapon')
-	{
-		`LOG(GetFuncName() @ XComWeapon(WeaponArchetype.m_kEntity).DefaultSocket @ MeshComp.GetNumElements(),, 'IRISPARK');
-
-		for (i = 0; i < MeshComp.GetNumElements(); ++i)
-		{
-			Mat = MeshComp.GetMaterial(i);
-			MIC = MaterialInstanceConstant(Mat);
-			if (MIC != none)
-			{
-				MIC.
-				`LOG(MIC.Name,, 'X2JediClassWotc');
-			}	
-		}
-	}	
-}*/
