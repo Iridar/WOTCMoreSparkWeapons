@@ -64,9 +64,15 @@
     <Content Include="Content\IRISparkHeavyWeapons.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Localization\WOTCMoreSparkWeapons.int">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="ReadMe.txt" />
     <Content Include="ModPreview.jpg" />
     <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_KSM.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_OrdnanceLauncher.uc">
       <SubType>Content</SubType>
     </Content>
@@ -83,7 +89,7 @@
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_IRI_Rainmaker.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher.uc">
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_KSM.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher_BM.uc">
@@ -93,6 +99,12 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher_MG.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_AuxSlot.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_InventorySlots.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2TargetingMethod_OrdnanceLauncher.uc">

@@ -3,7 +3,11 @@ class X2DownloadableContentInfo_WOTCMoreSparkWeapons extends X2DownloadableConte
 var config(SparkWeapons) array<name> SparkCharacterTemplates;
 var config(SparkWeapons) bool bRocketLaunchersModPresent;
 var config(SparkWeapons) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
+var config(SparkWeapons) array<name> WeaponCategoriesAddHeavyWeaponSlot;
 var config(GameData_WeaponData) bool bOrdnanceAmplifierUsesBlasterLauncherTargeting;
+
+var config(ClassData) array<name> ClassesToRemoveAbilitiesFrom;
+var config(ClassData) array<name> AbilitiesToRemove;
 
 /// <summary>
 /// This method is run if the player loads a saved game that was created prior to this DLC / Mod being installed, and allows the 
@@ -22,17 +26,24 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Template Highlander Slots for the Ordnance Launcher
-//	Check armory weapon tinting - make sure it persists!
+//	Add melee punch icon to the KSM targeting method
+/*
+[0155.04] Log: No animation compression exists for sequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit)
+[0155.04] Log: FAnimationUtils::CompressAnimSequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit) SkelMesh not valid, won't be able to use RemoveLinearKeys.
+[0155.04] Log: Compression Requested for Empty Animation NO_SensorSweepA
+*/
 
-//	Uncouple BIT from the SPARK - investigate log warning
-//	Move hacking to BIT
+//	Kinetic Strike Module
+//	Kinetic Assault Module
+//	Kinetic Barrage Module
+
 //	BIT for Specialists? Include Active Camo animation for specialists.
 //	Weak railgun heavy weapon
-//	Make rocket movement penalty not applied to SPARKs
 
 //	Icon for Active Camo
 //	KSM Icon: Texture2D'UILibrary_PerkIcons.UIPerk_mecclosecombat'
+
+//	KSM kill animation: https://youtu.be/m8H-FDOLxz0
 
 //	Sparkfall within the context of this mod?
 
@@ -42,9 +53,17 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Music for release vid?
 // https://youtu.be/YLp62WwnGSU
 
-//	KSM as a heavy weapon. Competes with the flamethrower, keeping it similar to EW. Also mounts on the same left arm. Makes sense.
-//	Restorative Mist and Electo Pulse go into utility slot, competing with SPARK Launcher Redux. If BIT is equipped, BIT is used to deploy them. If not, they deploy around the SPARK.
+//	BIT - Repair Servos (restore 2HP a turn to a maximum of 6 per mission)?
+//	BIT - buff hacking
+//	BIT - AOE holotarget?
+//	BIT - make Active Camo scale with BIT tier?
+
+//	KSM is a secondary weapon, provides a Heavy Weapon slot.
+//	BIT and KSM grant a heavy weapon slot, when equipped.
+//	Restorative Mist and Electo Pulse go into auxiliary slot, competing with SPARK Launcher Redux. If BIT is equipped, BIT is used to deploy them. If not, they deploy around the SPARK.
 //	Pulse is more of an AoE bot stun with small damage. Nova's just straight damage, and it damages the SPARK. it's also limited to them.
+
+//	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities.
 
 /*
 Simple tech on custom death animations: 
@@ -52,7 +71,13 @@ Apply an AnimSet to the target with a custom death animation (same name as origi
 Might be necessary to apply the AnimSet before the ability goes through. In that case, apply it with a separate ability with an AbilityActivated event listener trigger that works during interrupt stage. 
 Make sure to un-apply the AnimSet effect afterwards in case the target doesn't die.
 */
-
+/*
+Credits:
+lago508
+Chris the Thin Mint
+Wolfcub05
+Arkhangel
+*/
 /*
 Ordnance Projector
 Ordnance Amplifier -> Lago 508
@@ -61,11 +86,58 @@ Kinetic Collision Module
 
 static event OnPostTemplatesCreated()
 {
+	PatchSoldierClassTemplates();
 	PatchCharacterTemplates();
 	CopyLocalizationForAbilities();
 	PatchRainmaker();
 	PatchRepair();
 	PatchWeaponTemplates();
+}
+
+static function PatchSoldierClassTemplates()
+{		
+	local X2SoldierClassTemplateManager Manager;
+	local X2SoldierClassTemplate		SoldierClassTemplate;
+	local name							TemplateName;
+	local int i;
+
+	Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+
+	foreach default.ClassesToRemoveAbilitiesFrom(TemplateName)
+	{
+		SoldierClassTemplate = Manager.FindSoldierClassTemplate(TemplateName);
+
+		//	Requires unprotecting X2SoldierClassTemplate::SoldierRanks
+		if (SoldierClassTemplate != none && SoldierClassTemplate.SoldierRanks.Length > 0)
+		{
+			for (i = 0; i < SoldierClassTemplate.SoldierRanks[0].AbilitySlots.Length; i++)
+			{
+				if (default.AbilitiesToRemove.Find(SoldierClassTemplate.SoldierRanks[0].AbilitySlots[i].AbilityType.AbilityName) != INDEX_NONE)
+				{
+					SoldierClassTemplate.SoldierRanks[0].AbilitySlots.Remove(i, 1);
+					break;
+				}
+			}
+		}		
+	}	 
+}
+
+static function GetNumHeavyWeaponSlotsOverride(out int NumHeavySlots, XComGameState_Unit UnitState, XComGameState CheckGameState)
+{	
+	local XComGameState_Item ItemState;
+
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
+	{
+		ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
+
+		if (ItemState != none)
+		{
+			if (default.WeaponCategoriesAddHeavyWeaponSlot.Find(ItemState.GetWeaponCategory()) != INDEX_NONE)
+			{
+				NumHeavySlots++;
+			}
+		}
+	}
 }
 
 static function PatchCharacterTemplates()
@@ -184,10 +256,15 @@ static function PatchWeaponTemplates()
 
     foreach arrWeaponTemplates(WeaponTemplate)
     {
-		//	Add my Active Camo to all Spark BITs
+		//	Add some abilities to BITs.
         if (WeaponTemplate.WeaponCat == 'sparkbit')
         {
+			//	Makes BIT grant concealment
 			WeaponTemplate.Abilities.AddItem('IRI_ActiveCamo');
+
+			//	Pure passives with localization, just to let the player know.
+			WeaponTemplate.Abilities.AddItem('IRI_Fake_IntrusionProtocol');
+			WeaponTemplate.Abilities.AddItem('IRI_Fake_Arsenal');
         }
 
 		//	Duplicate Launch Grenade icons for my Launch Ordnance abilities.
@@ -223,6 +300,9 @@ static function CopyLocalizationForAbilities()
 	CopyLocalization(AbilityTemplateManager, 'IRI_SparkFlamethrowerMk2', 'SparkFlamethrowerMk2');
 	CopyLocalization(AbilityTemplateManager, 'IRI_SparkBlasterLauncher', 'SparkBlasterLauncher');
 	CopyLocalization(AbilityTemplateManager, 'IRI_SparkPlasmaBlaster', 'SparkPlasmaBlaster');
+	CopyLocalization(AbilityTemplateManager, 'IRI_Fake_IntrusionProtocol', 'IntrusionProtocol');	
+	CopyLocalization(AbilityTemplateManager, 'IRI_Fake_Arsenal', 'Arsenal');	
+	
 
 	CopyLocalization(AbilityTemplateManager, 'IRI_Bombard', 'Bombard');
 }
@@ -267,18 +347,50 @@ static function string DLCAppendSockets(XComUnitPawn Pawn)
 	return "";
 }
 
-
+/*
 static function GetNumUtilitySlotsOverride(out int NumUtilitySlots, XComGameState_Item EquippedArmor, XComGameState_Unit UnitState, XComGameState CheckGameState)
 {
-	local XComGameState_Item ItemState;
-
-	//	TODO:  Replace this with Grenade Pocket once CHL is out
-	ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
-	if (ItemState != none && ItemState.GetWeaponCategory() == 'iri_ordnance_launcher')
+	//	If this is a SPARK or a MEC and doesn't have utility slots at all, add one.
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && NumUtilitySlots == 0)
 	{
 		NumUtilitySlots++;
 	}
 }
+
+static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, int Quantity, XComGameState_Unit UnitState, optional XComGameState CheckGameState, optional out string DisabledReason, optional XComGameState_Item ItemState)
+{
+    local XGParamTag                    LocTag;
+    local X2SoldierClassTemplateManager Manager;
+
+	//	If this is a Utility Slot, and this character is a SPARK or a MEC
+	if (Slot == eInvSlot_Utility && default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
+	{
+		//	Do nothing if the item was already disabled by some other mod.
+		if(DisabledReason != "") return CheckGameState == none; 
+
+		//	Do this only if the unit *should* have zero utility slots according to the character template, meaning we're interacting with the slot we've added ourselves.
+		if (UnitState.GetMyTemplate().CharacterBaseStats[eStat_UtilityItems] == 0)
+		{
+			//	Forbid equipping grenades into utility slot.
+			if (X2GrenadeTemplate(ItemTemplate) == none)
+			{
+				//	Grenades CANNOT be equipped in the utility slot.
+				bCanAddItem = 0;
+
+				Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+				LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+				LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
+				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
+
+				//	Override normal behavior
+				return CheckGameState != none;
+			}
+		}
+	}
+
+	//	Do not override normal behavior.
+	return CheckGameState == none;
+}*/
 
 static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
 {
@@ -318,6 +430,10 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 				//	Lookup its template name and replace or remove the ability.
 				switch (SetupData[Index].TemplateName)
 				{
+					//	Remove Intrusion Protocol from units that have Ordnance Launcher equipped.
+					case 'IntrusionProtocol':
+						SetupData.Remove(Index, 1);
+						break;
 					case 'ThrowGrenade':	//	Replace instances of Throw Grenade with Launch Ordnance. Pet two foxes with one arm.
 						SetupData[Index].TemplateName = AbilityTemplate.DataName;
 						SetupData[Index].Template = AbilityTemplate;
