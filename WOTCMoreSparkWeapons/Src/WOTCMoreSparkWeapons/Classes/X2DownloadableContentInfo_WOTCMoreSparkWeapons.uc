@@ -407,24 +407,24 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
 {
 	local XComGameState_Item		ItemState;
-	//local array<XComGameState_Item>	InventoryItems;
-	//local AbilitySetupData			Data, EmptyData;
 	local X2AbilityTemplate			AbilityTemplate;
-	local StateObjectReference		GrenadeLauncherRef;
-	//local X2GrenadeTemplate			GrenadeTemplate;
+	local StateObjectReference		OrdLauncherRef;
 	local X2AbilityTemplateManager  AbilityTemplateManager;
+	local bool						bChangeHeavyWeapons;
+	local bool						bChangeGrenadesAndRockets;
 	local int Index;
 
 	//`LOG("Finalize abilities for unit:",, 'IRILOG');
 	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
 	{
-		ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon);
-		if (ItemState != none && ItemState.GetWeaponCategory() == 'iri_ordnance_launcher')
+		//	Ordnance Launcher Equipped?
+		ItemState = UnitState.GetItemInSlot(class'X2Item_OrdnanceLauncher_CV'.default.INVENTORY_SLOT);
+		if (ItemState != none && ItemState.GetWeaponCategory() == class'X2Item_OrdnanceLauncher_CV'.default.WEAPON_CATEGORY)
 		{
-			//	If the unit is a SPARK / MEC with an Ordnance Launcher
-			`LOG("Found SPARK with a grenade launcher",, 'IRILOG');
-			GrenadeLauncherRef = ItemState.GetReference();
+			bChangeGrenadesAndRockets = true;
+			OrdLauncherRef = ItemState.GetReference();
 
+			`LOG("Found SPARK with a grenade launcher",, 'IRILOG');
 			//	Prep the ability we're gonna be attaching to grenades.
 			AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();		
 			if (default.bOrdnanceAmplifierUsesBlasterLauncherTargeting && ItemState.GetMyTemplateName() == 'IRI_OrdnanceLauncher_BM')
@@ -435,90 +435,114 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			{
 				AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate('IRI_LaunchOrdnance');
 			}
-			
-			//	Cycle through all abilities that are about to be Initialized
-			for (Index = SetupData.Length - 1; Index >= 0; Index--)
+		}
+
+		//	BIT Equipped? Not checking secondary weapon directly in case somebody adds Utility Slot BITs or something
+		if (default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
+		{
+			bChangeHeavyWeapons = true;
+		}
+					
+		//	Cycle through all abilities that are about to be Initialized
+		for (Index = SetupData.Length - 1; Index >= 0; Index--)
+		{
+
+			//	Lookup its template name and replace or remove the ability.
+			switch (SetupData[Index].TemplateName)
 			{
-				//	Lookup its template name and replace or remove the ability.
-				switch (SetupData[Index].TemplateName)
-				{
-					//	Remove Intrusion Protocol from units that have Ordnance Launcher equipped.
-					case 'IntrusionProtocol':
-						SetupData.Remove(Index, 1);
-						break;
-					case 'ThrowGrenade':	//	Replace instances of Throw Grenade with Launch Ordnance. Pet two foxes with one arm.
-						SetupData[Index].TemplateName = AbilityTemplate.DataName;
-						SetupData[Index].Template = AbilityTemplate;
-						SetupData[Index].SourceAmmoRef = SetupData[Index].SourceWeaponRef;
-						SetupData[Index].SourceWeaponRef = GrenadeLauncherRef;
-						break;
-					case 'LaunchGrenade':	//	Remove instances of Launch Grenade. There shouldn't be a way for them to be here, but just in case.
-						SetupData.Remove(Index, 1);
-						break;
-					case 'SparkRocketLauncher':
-						SetupData[Index].TemplateName = 'IRI_SparkRocketLauncher';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkRocketLauncher');
-						break;
-					case 'SparkShredderGun':
-						SetupData[Index].TemplateName = 'IRI_SparkShredderGun';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredderGun');
-						break;
-					case 'SparkShredstormCannon':
-						SetupData[Index].TemplateName = 'IRI_SparkShredstormCannon';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredstormCannon');
-						break;
-					case 'SparkFlamethrower':
-						SetupData[Index].TemplateName = 'IRI_SparkFlamethrower';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrower');
-						break;
-					case 'SparkFlamethrowerMk2':
-						SetupData[Index].TemplateName = 'IRI_SparkFlamethrowerMk2';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrowerMk2');
-						break;
-					case 'SparkBlasterLauncher':
-						SetupData[Index].TemplateName = 'IRI_SparkBlasterLauncher';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkBlasterLauncher');
-						break;
-					case 'SparkPlasmaBlaster':
-						SetupData[Index].TemplateName = 'IRI_SparkPlasmaBlaster';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkPlasmaBlaster');
-						break;
-					case 'Bombard':
-						SetupData[Index].TemplateName = 'IRI_Bombard';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Bombard');
-						SetupData[Index].SourceWeaponRef = GrenadeLauncherRef;
-						break;
-					case 'IRI_FireRocket':
-						SetupData[Index].TemplateName = 'IRI_FireRocket_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireRocket_Spark');
-						break;
-					case 'IRI_FireSabot':
-						SetupData[Index].TemplateName = 'IRI_FireSabot_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireSabot_Spark');
-						break;
-					case 'IRI_FireLockon':
-						SetupData[Index].TemplateName = 'IRI_FireLockon_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireLockon_Spark');
-						break;
-					case 'IRI_LockAndFireLockon':
-						SetupData[Index].TemplateName = 'IRI_LockAndFireLockon_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_LockAndFireLockon_Spark');
-						break;
-					case 'IRI_LockAndFireLockon_Holo':
-						SetupData[Index].TemplateName = 'IRI_LockAndFireLockon_Holo_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_LockAndFireLockon_Holo_Spark');
-						break;
-					case 'IRI_FireTacticalNuke':
-						SetupData[Index].TemplateName = 'IRI_FireTacticalNuke_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireTacticalNuke_Spark');
-						break;
-					case 'IRI_Fire_PlasmaEjector':
-						SetupData[Index].TemplateName = 'IRI_Fire_PlasmaEjector_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_PlasmaEjector_Spark');
-						break;
-					default:
-						break;
-				}
+				//	=======	Grenades =======
+				case 'ThrowGrenade':	//	Replace instances of Throw Grenade with Launch Ordnance. Pet two foxes with one arm.
+					if (!bChangeGrenadesAndRockets) break;
+					SetupData[Index].TemplateName = AbilityTemplate.DataName;
+					SetupData[Index].Template = AbilityTemplate;
+					SetupData[Index].SourceAmmoRef = SetupData[Index].SourceWeaponRef;
+					SetupData[Index].SourceWeaponRef = OrdLauncherRef;
+					break;
+				case 'LaunchGrenade':	//	Remove instances of Launch Grenade. There shouldn't be a way for them to be here, but just in case.
+					if (!bChangeGrenadesAndRockets) break;
+					SetupData.Remove(Index, 1);
+					break;
+				//	=======	Heavy Weapons =======
+				case 'SparkRocketLauncher':
+					if (!bChangeHeavyWeapons) break;
+					SetupData[Index].TemplateName = 'IRI_SparkRocketLauncher';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkRocketLauncher');
+					break;
+				case 'SparkShredderGun':
+					if (!bChangeHeavyWeapons) break;
+					SetupData[Index].TemplateName = 'IRI_SparkShredderGun';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredderGun');
+					break;
+				case 'SparkShredstormCannon':
+					if (!bChangeHeavyWeapons) break;
+					SetupData[Index].TemplateName = 'IRI_SparkShredstormCannon';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredstormCannon');
+					break;
+				case 'SparkFlamethrower':
+					if (!bChangeHeavyWeapons) break;
+					SetupData[Index].TemplateName = 'IRI_SparkFlamethrower';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrower');
+					break;
+				case 'SparkFlamethrowerMk2':
+					if (!bChangeHeavyWeapons) break;
+					SetupData[Index].TemplateName = 'IRI_SparkFlamethrowerMk2';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrowerMk2');
+					break;
+				case 'SparkBlasterLauncher':
+					if (!bChangeHeavyWeapons) break;
+					SetupData[Index].TemplateName = 'IRI_SparkBlasterLauncher';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkBlasterLauncher');
+					break;
+				case 'SparkPlasmaBlaster':
+					if (!bChangeHeavyWeapons) break;
+					SetupData[Index].TemplateName = 'IRI_SparkPlasmaBlaster';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkPlasmaBlaster');
+					break;
+				//	=======	Bombard =======
+				case 'Bombard':
+					if (!bChangeGrenadesAndRockets) break;
+					SetupData[Index].TemplateName = 'IRI_Bombard';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Bombard');
+					SetupData[Index].SourceWeaponRef = OrdLauncherRef;
+					break;
+				//	=======	Rocket Launchers =======	
+				case 'IRI_FireRocket':	
+					if (!bChangeGrenadesAndRockets) break;
+					SetupData[Index].TemplateName = 'IRI_FireRocket_Spark';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireRocket_Spark');
+					break;
+				case 'IRI_FireSabot':
+					if (!bChangeGrenadesAndRockets) break;
+					SetupData[Index].TemplateName = 'IRI_FireSabot_Spark';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireSabot_Spark');
+					break;
+				case 'IRI_FireLockon':
+					if (!bChangeGrenadesAndRockets) break;
+					SetupData[Index].TemplateName = 'IRI_FireLockon_Spark';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireLockon_Spark');
+					break;
+				case 'IRI_LockAndFireLockon':
+					if (!bChangeGrenadesAndRockets) break;
+					SetupData[Index].TemplateName = 'IRI_LockAndFireLockon_Spark';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_LockAndFireLockon_Spark');
+					break;
+				case 'IRI_LockAndFireLockon_Holo':
+					if (!bChangeGrenadesAndRockets) break;
+					SetupData[Index].TemplateName = 'IRI_LockAndFireLockon_Holo_Spark';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_LockAndFireLockon_Holo_Spark');
+					break;
+				case 'IRI_FireTacticalNuke':
+					if (!bChangeGrenadesAndRockets) break;
+					SetupData[Index].TemplateName = 'IRI_FireTacticalNuke_Spark';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_FireTacticalNuke_Spark');
+					break;
+				case 'IRI_Fire_PlasmaEjector':
+					if (!bChangeGrenadesAndRockets) break;
+					SetupData[Index].TemplateName = 'IRI_Fire_PlasmaEjector_Spark';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_PlasmaEjector_Spark');
+					break;
+				default:
+					break;
 			}
 		}
 	}

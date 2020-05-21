@@ -1,5 +1,7 @@
 class X2Item_KSM extends X2Item config(GameData_WeaponData);
 
+var config int MELEE_DAMAGE_BONUS;
+
 var config WeaponDamageValue DAMAGE;
 var config array <WeaponDamageValue> EXTRA_DAMAGE;
 var config int IENVIRONMENTDAMAGE;
@@ -48,6 +50,8 @@ static function X2DataTemplate Create_Item()
 	local int i;
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_KineticStrikeModule_CV');
+
+	Template.SetUIStatMarkup(class'XLocalizedData'.default.MeleeBonus,, default.MELEE_DAMAGE_BONUS);
 	
 	Template.WeaponPanelImage = "_ConventionalRifle";
 	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_AssaultRifle';

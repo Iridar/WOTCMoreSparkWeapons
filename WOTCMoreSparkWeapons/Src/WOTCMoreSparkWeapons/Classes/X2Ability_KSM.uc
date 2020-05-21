@@ -5,7 +5,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	local array<X2DataTemplate> Templates;
 
 	Templates.AddItem(Create_KineticStrike());
-	Templates.AddItem(Create_KineticStrike_Animation());
+	Templates.AddItem(Create_KineticStrike_Passive());
 
 	return Templates;
 }
@@ -14,11 +14,11 @@ static function X2AbilityTemplate Create_KineticStrike()
 {
 	local X2AbilityTemplate                 Template;	
 	local X2AbilityCost_ActionPoints        ActionPointCost;
-	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
+	//local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
 	local X2AbilityTarget_Cursor            CursorTarget;
 	local X2AbilityMultiTarget_Cylinder		MultiTarget;
 	local X2Effect_AdditionalAnimSets		AnimSetEffect;
-	local X2Effect_KSM_DeathAnim			DeathAnimSetEffect;
+	//local X2Effect_KSM_DeathAnim			DeathAnimSetEffect;
 	//local X2Effect_Knockback				KnockbackEffect;
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_KineticStrike');
@@ -62,7 +62,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.AbilityCosts.AddItem(ActionPointCost);
 	
 	//	Multi Target effects
-
+	
 	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
 	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Kill");
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
@@ -74,8 +74,8 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.AddMultiTargetEffect(AnimSetEffect);
 
 	// new class'X2Effect_DLC_3StrikeDamage';
-	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
-	Template.AddMultiTargetEffect(WeaponDamageEffect);
+	//WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	Template.AddMultiTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
 	
 	//KnockbackEffect = new class'X2Effect_Knockback';
 	//KnockbackEffect.KnockbackDistance = 2;
@@ -101,8 +101,6 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.MeleeLostSpawnIncreasePerUse;
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
-	Template.AdditionalAbilities.AddItem('IRI_KineticStrike_Animation');
-
 	return Template;	
 }
 
@@ -110,11 +108,16 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 {	
 	local XComGameStateVisualizationMgr VisMgr;
 	local array<X2Action>				FindActions;
-	local X2Action						FindAction;
+	local X2Action						FindAction, CycleAction;
+	local X2Action						FireAction;
+	local XComGameStateContext_Ability	AbilityContext;
 
 	class'X2Ability'.static.TypicalAbility_BuildVisualization(VisualizeGameState);
 	
 	VisMgr = `XCOMVISUALIZATIONMGR;
+	AbilityContext = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+
+	FireAction = VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_Fire',, AbilityContext.InputContext.SourceObject.ObjectID);
 
 	//	Move the Update Animations actions to the start of the Viz Tree so they take effect in time for the custom death animation to get assigned to the target.
 	VisMgr.GetNodesOfType(VisMgr.BuildVisTree, class'X2Action_UpdateAnimations', FindActions);
@@ -122,95 +125,43 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 	{
 		VisMgr.DisconnectAction(FindAction);
 		VisMgr.ConnectAction(FindAction, VisMgr.BuildVisTree, false, VisMgr.BuildVisTree);
+
+		foreach FindAction.ChildActions(CycleAction)
+		{
+			VisMgr.DisconnectAction(CycleAction);
+			VisMgr.ConnectAction(CycleAction, VisMgr.BuildVisTree, false, FireAction);
+		}
 	}	
 }
 
-static function X2AbilityTemplate Create_KineticStrike_Animation()
+static function X2AbilityTemplate Create_KineticStrike_Passive()
 {
-	local X2AbilityTemplate                 Template;	
-	local X2AbilityTrigger_EventListener    Trigger;
-	local X2Effect_AdditionalAnimSets		AnimSetEffect;
-	
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_KineticStrike_Animation');
+	local X2AbilityTemplate			Template;
+	local X2Effect_MeleeDamageBonus	DamageEffect;
 
-	//	Icon setup
-	Template.AbilitySourceName = 'eAbilitySource_Item';
-	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_mecclosecombat";
+	// Icon Properties
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_KineticStrike_Passive');
 
-	//	Targeting and Triggering
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_momentum";
+
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Neutral;
+
 	Template.AbilityToHitCalc = default.DeadEye;
-	Template.AbilityTargetStyle = default.SimpleSingleTarget;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
 
-	Trigger = new class'X2AbilityTrigger_EventListener';
-    Trigger.ListenerData.Deferral = ELD_OnStateSubmitted;
-    Trigger.ListenerData.EventID = 'AbilityActivated';
-    Trigger.ListenerData.Filter = eFilter_Unit;
-    Trigger.ListenerData.EventFn = KineticStrikeActivatedListener;
-    Template.AbilityTriggers.AddItem(Trigger);
-
-	//	Effects
-	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
-	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Death");
-	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	Template.AddTargetEffect(AnimSetEffect);
-
-	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
-	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Kill");
-	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	Template.AddShooterEffect(AnimSetEffect);
+	DamageEffect = new class'X2Effect_MeleeDamageBonus';
+	DamageEffect.BonusDamage = class'X2Item_KSM'.default.MELEE_DAMAGE_BONUS;
+	DamageEffect.BuildPersistentEffect(1, true, false, false);
+	DamageEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyLongDescription(), Template.IconImage, true,,Template.AbilitySourceName);
+	Template.AddTargetEffect(DamageEffect);
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	
-	//	No visualization on purpose
-	Template.BuildVisualizationFn = none;
-	//	Cannot be interrupted
-	Template.Hostility = eHostility_Neutral;
-	Template.BuildInterruptGameStateFn = none;
+	//  NOTE: No visualization on purpose!
 
-	return Template;	
-}
-
-static function EventListenerReturn KineticStrikeActivatedListener(Object EventData, Object EventSource, XComGameState GameState, Name EventID, Object CallbackData)
-{
-    local XComGameStateContext_Ability	AbilityContext;
-    local XComGameState_Ability			AbilityState, KSMA_AbilityState;
-    local XComGameState_Unit			SourceUnit, TargetUnit;
-	local XComGameStateHistory			History;
-	local int i;
-
-    AbilityState = XComGameState_Ability(EventData);
-    SourceUnit = XComGameState_Unit(EventSource);
-	KSMA_AbilityState = XComGameState_Ability(CallbackData);
-    AbilityContext = XComGameStateContext_Ability(GameState.GetContext());
-
-	`LOG("KineticStrikeActivatedListener running",, 'WOTCMoreSparkWeapons');
-
-    if (AbilityState == none || SourceUnit == none || AbilityContext == none)
-    {
-        //    Something went terribly wrong, exit listener.
-        return ELR_NoInterrupt;
-    }
-	//    Do stuff during interrupt phase
-	if (AbilityContext.InputContext.AbilityTemplateName == 'IRI_KineticStrike' && AbilityContext.InterruptionStatus == eInterruptionStatus_Interrupt)
-    {
-		`LOG("KineticStrikeActivatedListener kinetic strike detected",, 'WOTCMoreSparkWeapons');
-		History = `XCOMHISTORY;
-		for (i = 0; i < AbilityContext.InputContext.MultiTargets.Length; i++)
-		{
-			if (AbilityContext.IsResultContextMultiHit(i))
-			{
-				TargetUnit = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID));
-				if (TargetUnit != none && TargetUnit.IsEnemyUnit(SourceUnit))
-				{
-					`LOG("KineticStrikeActivatedListener triggering for target:" @ TargetUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
-					 KSMA_AbilityState.AbilityTriggerAgainstSingleTarget(AbilityContext.InputContext.MultiTargets[i], false);
-					 return ELR_NoInterrupt;
-				}
-			}
-		}
-    }
-    return ELR_NoInterrupt;
+	return Template;
 }
 
 //	========================================

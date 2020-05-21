@@ -95,6 +95,9 @@
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_KSM_DeathAnim.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_MeleeDamageBonus.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_KSM.uc">
       <SubType>Content</SubType>
     </Content>

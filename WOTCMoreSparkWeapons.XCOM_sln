@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # XCOM ModBuddy Solution File, Format Version 11.00
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{5DAE07AF-E217-45C1-8DE7-FF99D6011E8A}") = "WOTCMoreSparkWeapons", "WOTCMoreSparkWeapons\WOTCMoreSparkWeapons.x2proj", "{B489CBC7-76BD-4EC5-8F10-F4472C613ED7}"
+Project("{5DAE07AF-E217-45C1-8DE7-FF99D6011E8A}") = "WOTCMoreSparkWeapons", "WOTCMoreSparkWeapons\WOTCMoreSparkWeapons.x2proj", "{84027E6B-B418-4BD8-8DA2-176A6159A986}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Default|XCOM 2 = Default|XCOM 2
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B489CBC7-76BD-4EC5-8F10-F4472C613ED7}.Default|XCOM 2.ActiveCfg = Default|XCOM 2
-		{B489CBC7-76BD-4EC5-8F10-F4472C613ED7}.Default|XCOM 2.Build.0 = Default|XCOM 2
+		{84027E6B-B418-4BD8-8DA2-176A6159A986}.Default|XCOM 2.ActiveCfg = Default|XCOM 2
+		{84027E6B-B418-4BD8-8DA2-176A6159A986}.Default|XCOM 2.Build.0 = Default|XCOM 2
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
