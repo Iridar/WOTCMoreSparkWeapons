@@ -26,16 +26,7 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Add melee punch icon to the KSM targeting method
-/*
-[0155.04] Log: No animation compression exists for sequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit)
-[0155.04] Log: FAnimationUtils::CompressAnimSequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit) SkelMesh not valid, won't be able to use RemoveLinearKeys.
-[0155.04] Log: Compression Requested for Empty Animation NO_SensorSweepA
-*/
-
-//	Kinetic Strike Module
-//	Kinetic Assault Module
-//	Kinetic Barrage Module
+//	KSM model.
 
 //	BIT for Specialists? Include Active Camo animation for specialists.
 //	Weak railgun heavy weapon
@@ -54,16 +45,16 @@ static event InstallNewCampaign(XComGameState StartState)
 // https://youtu.be/YLp62WwnGSU
 
 //	BIT - Repair Servos (restore 2HP a turn to a maximum of 6 per mission)?
-//	BIT - buff hacking
 //	BIT - AOE holotarget?
 //	BIT - make Active Camo scale with BIT tier?
 
 //	KSM is a secondary weapon, provides a Heavy Weapon slot.
-//	BIT and KSM grant a heavy weapon slot, when equipped.
+//	BIT and KSM grant a heavy weapon slot, when equipped. (implemented)
 //	Restorative Mist and Electo Pulse go into auxiliary slot, competing with SPARK Launcher Redux. If BIT is equipped, BIT is used to deploy them. If not, they deploy around the SPARK.
 //	Pulse is more of an AoE bot stun with small damage. Nova's just straight damage, and it damages the SPARK. it's also limited to them.
 
 //	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities.
+//	Compatibility config for grenade scatter mod and grenade rebalance mod
 
 /*
 Simple tech on custom death animations: 
@@ -71,18 +62,22 @@ Apply an AnimSet to the target with a custom death animation (same name as origi
 Might be necessary to apply the AnimSet before the ability goes through. In that case, apply it with a separate ability with an AbilityActivated event listener trigger that works during interrupt stage. 
 Make sure to un-apply the AnimSet effect afterwards in case the target doesn't die.
 */
+
 /*
-Credits:
-lago508
-Chris the Thin Mint
-Wolfcub05
-Arkhangel
-*/
-/*
+
+//	Kinetic Strike Module
+//	Kinetic Assault Module
+
+//	Kinetic Barrage Module
 Ordnance Projector
-Ordnance Amplifier -> Lago 508
 Kinetic Collision Module
- inetic Drive Module / Kinetic Driver*/
+Kinetic Drive Module / Kinetic Driver*/
+
+ /*	Investigate logs:
+[0155.04] Log: No animation compression exists for sequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit)
+[0155.04] Log: FAnimationUtils::CompressAnimSequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit) SkelMesh not valid, won't be able to use RemoveLinearKeys.
+[0155.04] Log: Compression Requested for Empty Animation NO_SensorSweepA
+*/
 
 static event OnPostTemplatesCreated()
 {
@@ -284,6 +279,23 @@ static function PatchWeaponTemplates()
 			}
 		}
     }
+
+	//	Add missing stat markup for the bonus hacking from BIT
+	WeaponTemplate = X2WeaponTemplate(ItemMgr.FindItemTemplate('SparkBit_CV'));
+	if (WeaponTemplate != none)
+	{
+		WeaponTemplate.SetUIStatMarkup(class'XLocalizedData'.default.TechBonusLabel, eStat_Hacking, class'X2Item_DLC_Day90Weapons'.default.SPARKBIT_CONVENTIONAL_HACKBONUS, true);
+	}
+	WeaponTemplate = X2WeaponTemplate(ItemMgr.FindItemTemplate('SparkBit_MG'));
+	if (WeaponTemplate != none)
+	{
+		WeaponTemplate.SetUIStatMarkup(class'XLocalizedData'.default.TechBonusLabel, eStat_Hacking, class'X2Item_DLC_Day90Weapons'.default.SPARKBIT_MAGNETIC_HACKBONUS, true);
+	}
+	WeaponTemplate = X2WeaponTemplate(ItemMgr.FindItemTemplate('SparkBit_BM'));
+	if (WeaponTemplate != none)
+	{
+		WeaponTemplate.SetUIStatMarkup(class'XLocalizedData'.default.TechBonusLabel, eStat_Hacking, class'X2Item_DLC_Day90Weapons'.default.SPARKBIT_BEAM_HACKBONUS, true);
+	}
 }
 
 static function CopyLocalizationForAbilities()
@@ -558,15 +570,22 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 			}
 			
 			//	If this is a Heavy Weapon, and the SPARK doesn't have a BIT equipped, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
-			if (WeaponTemplate.WeaponCat == 'heavy' && (default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState)))
+			if (WeaponTemplate.WeaponCat == 'heavy')
 			{
-				//	Replace the mesh for this heavy weapon with the arm cannon and replace the weapon and pawn animations.
-				Weapon.CustomUnitPawnAnimsets.Length = 0;
-				SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("IRISparkHeavyWeapons.Meshes.SM_SparkHeavyWeapon"));
-				SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Weapon")));
-				Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Spark")));
+				if (default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
+				{
+					//	Replace the mesh for this heavy weapon with the arm cannon and replace the weapon and pawn animations.
+					Weapon.CustomUnitPawnAnimsets.Length = 0;
+					SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("IRISparkHeavyWeapons.Meshes.SM_SparkHeavyWeapon"));
+					SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Weapon")));
+					Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Spark")));
 
-				//`LOG("Patched heavy weapon for a SPARK.",, 'IRITEST');
+					`LOG("Patched heavy weapon for a SPARK.",, 'IRITEST');
+				}
+				else
+				{
+					Weapon.DefaultSocket = '';
+				}
 				return;
 			}
 

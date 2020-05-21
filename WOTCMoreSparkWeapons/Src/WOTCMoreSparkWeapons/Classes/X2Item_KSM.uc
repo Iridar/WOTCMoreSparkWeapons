@@ -76,7 +76,7 @@ static function X2DataTemplate Create_Item()
 	
 	Template.Tier = default.SORTING_TIER;
 
-	Template.iRange = 1;
+	Template.iRange = 0;
 	Template.iRadius = 1;
 
 	Template.RangeAccuracy = default.RANGE;

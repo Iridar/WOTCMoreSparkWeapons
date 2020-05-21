@@ -58,6 +58,9 @@
     <Content Include="Content\IRIActiveCamoPerk.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\IRIKineticStrikeModule.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\IRIOrdnanceLauncher.upk">
       <SubType>Content</SubType>
     </Content>
@@ -89,6 +92,9 @@
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_IRI_Rainmaker.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_KSM_DeathAnim.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_KSM.uc">
       <SubType>Content</SubType>
     </Content>
@@ -105,6 +111,9 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_InventorySlots.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2TargetingMethod_KSM.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2TargetingMethod_OrdnanceLauncher.uc">
