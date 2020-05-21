@@ -68,11 +68,10 @@ static function X2AbilityTemplate Create_KineticStrike()
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
 	Template.AddShooterEffect(AnimSetEffect);
 
-	DeathAnimSetEffect = new class'X2Effect_KSM_DeathAnim';
-	DeathAnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Death");
-	DeathAnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	DeathAnimSetEffect.bRemoveWhenTargetDies = false;
-	Template.AddMultiTargetEffect(DeathAnimSetEffect);
+	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
+	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Death");
+	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
+	Template.AddMultiTargetEffect(AnimSetEffect);
 
 	// new class'X2Effect_DLC_3StrikeDamage';
 	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
@@ -91,7 +90,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
 	Template.MeleePuckMeshPath = "Materials_DLC3.MovePuck_Strike";
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	Template.BuildVisualizationFn = KineticStrike_BuildVisualization;
 
 	//	This ability is offensive and can be interrupted!
 	Template.Hostility = eHostility_Offensive;
@@ -102,35 +101,28 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.MeleeLostSpawnIncreasePerUse;
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
-	//Template.AdditionalAbilities.AddItem('IRI_KineticStrike_Animation');
+	Template.AdditionalAbilities.AddItem('IRI_KineticStrike_Animation');
 
 	return Template;	
 }
 
 static function KineticStrike_BuildVisualization(XComGameState VisualizeGameState)
 {	
-	local VisualizationActionMetadata	ActionMetadata, EmptyMetadata;
-	local XComGameStateContext_Ability	AbilityContext;
-	local XComGameStateHistory			History;
-	local int i;
-
-	History = `XCOMHISTORY;
-	AbilityContext = XComGameStateContext_Ability(VisualizeGameState.GetContext());
-	
-	for (i = 0; i < AbilityContext.InputContext.MultiTargets.Length; i++)
-	{
-		if (AbilityContext.IsResultContextMultiHit(i))
-		{
-			ActionMetadata = EmptyMetadata;
-			ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
-			ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID, eReturnType_Reference);
-			ActionMetadata.VisualizeActor = History.GetVisualizer(AbilityContext.InputContext.MultiTargets[i].ObjectID);
-
-			class'X2Action_UpdateAnimations'.static.AddToVisualizationTree(ActionMetadata, AbilityContext);
-		}
-	}
+	local XComGameStateVisualizationMgr VisMgr;
+	local array<X2Action>				FindActions;
+	local X2Action						FindAction;
 
 	class'X2Ability'.static.TypicalAbility_BuildVisualization(VisualizeGameState);
+	
+	VisMgr = `XCOMVISUALIZATIONMGR;
+
+	//	Move the Update Animations actions to the start of the Viz Tree so they take effect in time for the custom death animation to get assigned to the target.
+	VisMgr.GetNodesOfType(VisMgr.BuildVisTree, class'X2Action_UpdateAnimations', FindActions);
+	foreach FindActions(FindAction)
+	{
+		VisMgr.DisconnectAction(FindAction);
+		VisMgr.ConnectAction(FindAction, VisMgr.BuildVisTree, false, VisMgr.BuildVisTree);
+	}	
 }
 
 static function X2AbilityTemplate Create_KineticStrike_Animation()
