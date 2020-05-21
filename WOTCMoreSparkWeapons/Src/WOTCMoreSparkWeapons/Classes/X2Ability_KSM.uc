@@ -18,7 +18,8 @@ static function X2AbilityTemplate Create_KineticStrike()
 	local X2AbilityTarget_Cursor            CursorTarget;
 	local X2AbilityMultiTarget_Cylinder		MultiTarget;
 	local X2Effect_AdditionalAnimSets		AnimSetEffect;
-	local X2Effect_KSM_DeathAnim			DeathAnimSetEffect;
+	local X2Effect_OverrideDeathAction		OverrideDeathAction;
+	local X2Effect_AdditionalAnimSets		DeathAnimSetEffect;
 	//local X2Effect_Knockback				KnockbackEffect;
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_KineticStrike');
@@ -68,11 +69,17 @@ static function X2AbilityTemplate Create_KineticStrike()
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
 	Template.AddShooterEffect(AnimSetEffect);
 
-	DeathAnimSetEffect = new class'X2Effect_KSM_DeathAnim';
+	DeathAnimSetEffect = new class'X2Effect_AdditionalAnimSets';
 	DeathAnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Death");
 	DeathAnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	DeathAnimSetEffect.bRemoveWhenTargetDies = false;
+	//DeathAnimSetEffect.bRemoveWhenTargetDies = false;
 	Template.AddMultiTargetEffect(DeathAnimSetEffect);
+
+	OverrideDeathAction = new class'X2Effect_OverrideDeathAction';
+	OverrideDeathAction.DeathActionClass = class'X2Action_Death_KSM';
+	OverrideDeathAction.BuildPersistentEffect(1, true, false, false);
+	Template.AddMultiTargetEffect(OverrideDeathAction);
+	
 
 	// new class'X2Effect_DLC_3StrikeDamage';
 	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';

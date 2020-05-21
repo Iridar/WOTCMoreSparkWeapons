@@ -26,6 +26,7 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
+//	Prevennt KSM for breaking tiles you're standing on
 //	KSM model.
 
 //	BIT for Specialists? Include Active Camo animation for specialists.
