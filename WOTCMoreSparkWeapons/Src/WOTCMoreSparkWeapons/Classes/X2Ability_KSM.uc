@@ -62,7 +62,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.AbilityCosts.AddItem(ActionPointCost);
 	
 	//	Multi Target effects
-	
+	/*	temporary disable
 	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
 	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Kill");
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
@@ -71,7 +71,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
 	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Death");
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	Template.AddMultiTargetEffect(AnimSetEffect);
+	Template.AddMultiTargetEffect(AnimSetEffect);*/
 
 	// new class'X2Effect_DLC_3StrikeDamage';
 	//WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
@@ -154,6 +154,7 @@ static function X2AbilityTemplate Create_KineticStrike_Passive()
 
 	DamageEffect = new class'X2Effect_MeleeDamageBonus';
 	DamageEffect.BonusDamage = class'X2Item_KSM'.default.MELEE_DAMAGE_BONUS;
+	DamageEffect.ValidAbilities = class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.MeleeAbilitiesUseKSM;
 	DamageEffect.BuildPersistentEffect(1, true, false, false);
 	DamageEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyLongDescription(), Template.IconImage, true,,Template.AbilitySourceName);
 	Template.AddTargetEffect(DamageEffect);

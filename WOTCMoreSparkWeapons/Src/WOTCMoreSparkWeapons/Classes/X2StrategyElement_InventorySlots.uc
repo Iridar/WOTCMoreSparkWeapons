@@ -10,9 +10,9 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
-	Templates.AddItem(CreateSlotTemplate('IRI_SparkSlot_1', eInvSlot_SparkRocket1, 1));
-	Templates.AddItem(CreateSlotTemplate('IRI_SparkSlot_2', eInvSlot_SparkRocket2, 2));
-	Templates.AddItem(CreateSlotTemplate('IRI_SparkSlot_3', eInvSlot_SparkRocket3, 3));
+	Templates.AddItem(CreateSlotTemplate('IRI_SparkSlot_1', eInvSlot_SparkRocket1, 3));
+	//Templates.AddItem(CreateSlotTemplate('IRI_SparkSlot_2', eInvSlot_SparkRocket2, 2));
+	//Templates.AddItem(CreateSlotTemplate('IRI_SparkSlot_3', eInvSlot_SparkRocket3, 3));
 
 	return Templates;
 }
@@ -37,10 +37,9 @@ static function X2DataTemplate CreateSlotTemplate(name TemplateName, EInventoryS
 	Template.IsEquippedSlot = false;
 
 	Template.BypassesUniqueRule = true;
-	Template.IsMultiItemSlot = false;
 	Template.IsSmallSlot = true;
 	Template.NeedsPresEquip = false;
-	Template.ShowOnCinematicPawns = true;
+	Template.ShowOnCinematicPawns = false;
 
 	Template.CanAddItemToSlotFn = CanAddItemToSlot;
 
@@ -69,7 +68,16 @@ static function X2DataTemplate CreateSlotTemplate(name TemplateName, EInventoryS
 	Template.GetDisplayLetterFn = GetSlotDisplayLetter;
 	Template.GetDisplayNameFn = GetDisplayName;
 
+	Template.IsMultiItemSlot = true;
+	//Template.MinimumEquipped = 4;
+	Template.GetMaxItemCountFn = SlotGetMaxItemCount;
+
 	return Template;
+}
+
+static function int SlotGetMaxItemCount(CHItemSlot Slot, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	return 4;
 }
 
 static function bool HasSlot_1(CHItemSlot Slot, XComGameState_Unit UnitState, out string LockedReason, optional XComGameState CheckGameState)
@@ -130,10 +138,10 @@ static function bool ShowItemInLockerList(CHItemSlot Slot, XComGameState_Unit Un
 static function bool CanAddItemToSlot(CHItemSlot Slot, XComGameState_Unit UnitState, X2ItemTemplate ItemTemplate, optional XComGameState CheckGameState, optional int Quantity = 1, optional XComGameState_Item ItemState)
 {    
 	//	If there is no item in the slot
-	if(UnitState.GetItemInSlot(Slot.InvSlot, CheckGameState) == none)
-	{
+	//if(UnitState.GetItemInSlot(Slot.InvSlot, CheckGameState) == none)
+	//{
 		return X2GrenadeTemplate(ItemTemplate) != none;
-	}
+	//}
 
 	//	Slot is already occupied, cannot add any more items to it.
 	return false;

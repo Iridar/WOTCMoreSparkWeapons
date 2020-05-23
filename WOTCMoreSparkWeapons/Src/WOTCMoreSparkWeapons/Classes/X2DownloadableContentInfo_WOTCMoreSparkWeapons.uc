@@ -5,6 +5,7 @@ var config(SparkWeapons) bool bRocketLaunchersModPresent;
 var config(SparkWeapons) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
 var config(SparkWeapons) array<name> WeaponCategoriesAddHeavyWeaponSlot;
 var config(GameData_WeaponData) bool bOrdnanceAmplifierUsesBlasterLauncherTargeting;
+var config(GameData_WeaponData) array<name> MeleeAbilitiesUseKSM;
 
 var config(ClassData) array<name> ClassesToRemoveAbilitiesFrom;
 var config(ClassData) array<name> AbilitiesToRemove;
@@ -26,7 +27,7 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	KSM model.
+//	Make Ordnance Launcher bonus slots use Multi Slot system
 
 //	BIT for Specialists? Include Active Camo animation for specialists.
 //	Weak railgun heavy weapon
@@ -408,9 +409,10 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 {
 	local XComGameState_Item		ItemState;
 	local X2AbilityTemplate			AbilityTemplate;
-	local StateObjectReference		OrdLauncherRef;
+	local StateObjectReference		OrdLauncherRef, KSMRef;
 	local X2AbilityTemplateManager  AbilityTemplateManager;
 	local bool						bChangeHeavyWeapons;
+	local bool						bChangeMelee;
 	local bool						bChangeGrenadesAndRockets;
 	local int Index;
 
@@ -437,6 +439,14 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			}
 		}
 
+		//	KSM Equipped?
+		ItemState = UnitState.GetItemInSlot(class'X2Item_KSM'.default.INVENTORY_SLOT);
+		if (ItemState != none && ItemState.GetWeaponCategory() == class'X2Item_KSM'.default.WEAPON_CATEGORY)
+		{
+			bChangeMelee = true;
+			KSMRef = ItemState.GetReference();
+		}
+		
 		//	BIT Equipped? Not checking secondary weapon directly in case somebody adds Utility Slot BITs or something
 		if (default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
 		{
@@ -542,6 +552,12 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_PlasmaEjector_Spark');
 					break;
 				default:
+					//	=======	Melee =======
+					if (!bChangeMelee) break;	//	Move melee abilities to KSM so they can use KSM melee animations
+					if (default.MeleeAbilitiesUseKSM.Find(SetupData[Index].TemplateName) != INDEX_NONE)
+					{
+						SetupData[Index].SourceWeaponRef = KSMRef;
+					}
 					break;
 			}
 		}
