@@ -62,7 +62,6 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.AbilityCosts.AddItem(ActionPointCost);
 	
 	//	Multi Target effects
-	/*	temporary disable
 	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
 	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Kill");
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
@@ -71,7 +70,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
 	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Death");
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	Template.AddMultiTargetEffect(AnimSetEffect);*/
+	Template.AddMultiTargetEffect(AnimSetEffect);
 
 	// new class'X2Effect_DLC_3StrikeDamage';
 	//WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
@@ -111,6 +110,11 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 	local X2Action						FindAction, CycleAction;
 	local X2Action						FireAction;
 	local XComGameStateContext_Ability	AbilityContext;
+	local X2Action_MoveTurn				MoveTurnAction;
+	local VisualizationActionMetadata   ActionMetadata;
+	local XComGameStateHistory			History;
+	local XComGameState_Unit			SourceUnit;
+	local X2Action_WaitForAnotherAction	WaitAction;
 
 	class'X2Ability'.static.TypicalAbility_BuildVisualization(VisualizeGameState);
 	
@@ -132,6 +136,29 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 			VisMgr.ConnectAction(CycleAction, VisMgr.BuildVisTree, false, FireAction);
 		}
 	}	
+
+	//	Make the "primary target" of the ability rotate towards the spark
+	if (AbilityContext.InputContext.MultiTargets.Length > 0)
+	{
+		History = `XCOMHISTORY;
+		SourceUnit = XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+
+		ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[0].ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
+		ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[0].ObjectID);
+		ActionMetadata.VisualizeActor = History.GetVisualizer(AbilityContext.InputContext.MultiTargets[0].ObjectID);
+		
+		MoveTurnAction = X2Action_MoveTurn(class'X2Action_MoveTurn'.static.AddToVisualizationTree(ActionMetadata, AbilityContext, true, FireAction.ParentActions[0]));
+		MoveTurnAction.m_vFacePoint =  `XWORLD.GetPositionFromTileCoordinates(SourceUnit.TileLocation);
+		MoveTurnAction.UpdateAimTarget = true;
+
+		WaitAction = X2Action_WaitForAnotherAction(class'X2Action_WaitForAnotherAction'.static.AddToVisualizationTree(ActionMetadata, AbilityContext, false, MoveTurnAction));
+		WaitAction.ActionToWaitFor = FireAction;		
+
+		foreach FireAction.ChildActions(CycleAction)
+		{
+			VisMgr.ConnectAction(CycleAction, VisMgr.BuildVisTree, false, WaitAction);
+		}
+	}
 }
 
 static function X2AbilityTemplate Create_KineticStrike_Passive()

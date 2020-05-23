@@ -20,7 +20,7 @@ static function X2DataTemplate CreateSlotTemplate()
 
 	`CREATE_X2TEMPLATE(class'CHItemSlot', Template, 'IRI_SparkSlot_Aux');
 
-	Template.InvSlot = eInvSlot_SparkRocket4;
+	Template.InvSlot = eInvSlot_AuxiliaryWeapon;
 	Template.SlotCatMask = Template.SLOT_WEAPON | Template.SLOT_ITEM;
 
 	Template.IsUserEquipSlot = true;

@@ -10,27 +10,18 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
-	Templates.AddItem(CreateSlotTemplate('IRI_SparkSlot_1', eInvSlot_SparkRocket1, 3));
-	//Templates.AddItem(CreateSlotTemplate('IRI_SparkSlot_2', eInvSlot_SparkRocket2, 2));
-	//Templates.AddItem(CreateSlotTemplate('IRI_SparkSlot_3', eInvSlot_SparkRocket3, 3));
+	Templates.AddItem(CreateSlotTemplate());
 
 	return Templates;
 }
 
-/*
-eInvSlot_SparkRocket1
-eInvSlot_SparkRocket2
-eInvSlot_SparkRocket3
-eInvSlot_SparkRocket4
-*/
-
-static function X2DataTemplate CreateSlotTemplate(name TemplateName, EInventorySlot Slot, int iNum)
+static function X2DataTemplate CreateSlotTemplate()
 {
 	local CHItemSlot Template;
 
-	`CREATE_X2TEMPLATE(class'CHItemSlot', Template, TemplateName);
+	`CREATE_X2TEMPLATE(class'CHItemSlot', Template, 'IRI_SparkSlot_Grenade');
 
-	Template.InvSlot = Slot;
+	Template.InvSlot = eInvSlot_SparkGrenadePocket;
 	Template.SlotCatMask = Template.SLOT_ITEM;
 
 	Template.IsUserEquipSlot = true;
@@ -43,23 +34,8 @@ static function X2DataTemplate CreateSlotTemplate(name TemplateName, EInventoryS
 
 	Template.CanAddItemToSlotFn = CanAddItemToSlot;
 
-	switch (iNum)
-	{
-		case 1:	
-			Template.UnitHasSlotFn = HasSlot_1;
-			Template.GetPriorityFn = SlotGetPriority_1;
-			break;
-		case 2:	
-			Template.UnitHasSlotFn = HasSlot_2;
-			Template.GetPriorityFn = SlotGetPriority_2;
-			break;
-		case 3:	
-			Template.UnitHasSlotFn = HasSlot_3;
-			Template.GetPriorityFn = SlotGetPriority_3;
-			break;
-		default:
-			break;
-	}
+	Template.UnitHasSlotFn = HasSlot;
+	Template.GetPriorityFn = SlotGetPriority;
 	
 	
 	Template.ShowItemInLockerListFn = ShowItemInLockerList;
@@ -69,61 +45,51 @@ static function X2DataTemplate CreateSlotTemplate(name TemplateName, EInventoryS
 	Template.GetDisplayNameFn = GetDisplayName;
 
 	Template.IsMultiItemSlot = true;
-	//Template.MinimumEquipped = 4;
+	Template.MinimumEquipped = -1;
 	Template.GetMaxItemCountFn = SlotGetMaxItemCount;
+	Template.GetBestGearForSlotFn = GetBestGearForSlot;
 
 	return Template;
 }
 
 static function int SlotGetMaxItemCount(CHItemSlot Slot, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
-	return 4;
-}
-
-static function bool HasSlot_1(CHItemSlot Slot, XComGameState_Unit UnitState, out string LockedReason, optional XComGameState CheckGameState)
-{    
-	return HasSlot(UnitState, 1, CheckGameState);
-}
-
-static function bool HasSlot_2(CHItemSlot Slot, XComGameState_Unit UnitState, out string LockedReason, optional XComGameState CheckGameState)
-{    
-	return HasSlot(UnitState, 2, CheckGameState);
-}
-
-static function bool HasSlot_3(CHItemSlot Slot, XComGameState_Unit UnitState, out string LockedReason, optional XComGameState CheckGameState)
-{    
-	return HasSlot(UnitState, 3, CheckGameState);
-}
-
-static function bool HasSlot(XComGameState_Unit UnitState, int iNum, optional XComGameState CheckGameState)
-{
 	local XComGameState_Item		ItemState;
 	local X2GrenadeLauncherTemplate	WeaponTemplate;
+	
+	ItemState = UnitState.GetItemInSlot(class'X2Item_OrdnanceLauncher_CV'.default.INVENTORY_SLOT, CheckGameState);
 
-	ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
 	if (ItemState != none)
 	{
 		WeaponTemplate = X2GrenadeLauncherTemplate(ItemState.GetMyTemplate());
-
-		if (WeaponTemplate != none && WeaponTemplate.WeaponCat == 'iri_ordnance_launcher')
+		if (WeaponTemplate != none)
 		{
-			return iNum <= GetTier(WeaponTemplate);
+			return GetNumSlotsForWeaponTemplate(WeaponTemplate);
 		}
 	}
 
-    return false;
+	return 4;
 }
 
-static function int GetTier(X2GrenadeLauncherTemplate WeaponTemplate)
+static function bool HasSlot(CHItemSlot Slot, XComGameState_Unit UnitState, out string LockedReason, optional XComGameState CheckGameState)
+{
+	local XComGameState_Item ItemState;
+	
+	ItemState = UnitState.GetItemInSlot(class'X2Item_OrdnanceLauncher_CV'.default.INVENTORY_SLOT, CheckGameState);
+	
+	return ItemState != none && ItemState.GetWeaponCategory() == class'X2Item_OrdnanceLauncher_CV'.default.WEAPON_CATEGORY;
+}
+
+static function int GetNumSlotsForWeaponTemplate(X2GrenadeLauncherTemplate WeaponTemplate)
 {
 	switch (WeaponTemplate.WeaponTech)
 	{
 		case 'conventional':
-			return 1;
+			return default.CONV_LAUNCHER_GRANT_GRENADE_SLOTS;
 		case 'magnetic':
-			return 2;
+			return default.MAG_LAUNCHER_GRANT_GRENADE_SLOTS;
 		case 'beam':
-			return 3;
+			return default.BEAM_LAUNCHER_GRANT_GRENADE_SLOTS;
 		default:
 			return 0;
 	}
@@ -147,15 +113,31 @@ static function bool CanAddItemToSlot(CHItemSlot Slot, XComGameState_Unit UnitSt
 	return false;
 }
 
+static function array<X2EquipmentTemplate> GetBestGearForSlot(CHItemSlot Slot, XComGameState_Unit Unit)
+{
+	local array<X2EquipmentTemplate>	arr;
+	local X2EquipmentTemplate			ClawsTemplate;
+
+	ClawsTemplate = X2EquipmentTemplate(class'X2ItemTemplateManager'.static.GetItemTemplateManager().FindItemTemplate('FragGrenade'));
+
+	arr.AddItem(ClawsTemplate);
+
+	return arr;
+}
+
 static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XComGameState_HeadquartersXCom XComHQ, XComGameState NewGameState)
 {
 	local XComGameState_Item ItemState;
+	local array<XComGameState_Item> ItemStates;
 	local string strDummy;
 	local bool HasSlot;
+	local int i, iMaxItems;
 
-	ItemState = Unit.GetItemInSlot(Slot.InvSlot, NewGameState);
+	ItemStates = Unit.GetAllItemsInSlot(Slot.InvSlot, NewGameState);
 	HasSlot = Slot.UnitHasSlot(Unit, strDummy, NewGameState);
-	
+
+	iMaxItems = Slot.GetMaxItemCountFn(Slot, Unit, NewGameState);
+	/*
 	if(ItemState == none && HasSlot )
 	{
 		ItemState = FindBestWeapon(Unit, Slot.InvSlot, XComHQ, NewGameState);
@@ -171,19 +153,63 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 			return;
 		}
 		else `LOG("Empty slot is not allowed, but the mod was unable to find an infinite item to fill the slot.",, 'WOTCMoreSparkWeapons');
-	}	
+	}	*/
 
-	if(ItemState != none && !HasSlot)
+	//	Unit has slot
+	if (HasSlot)
+	{
+		//	... but not enough items equipped. 
+		for (i = ItemStates.Length; i < iMaxItems; i++)
+		{
+			ItemState = FindBestWeapon(Unit, Slot.InvSlot, XComHQ, NewGameState);
+			if (ItemState != none)
+			{
+				`LOG("Empty slot is not allowed, equipping:" @ ItemState.GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+				if (Unit.AddItemToInventory(ItemState, Slot.InvSlot, NewGameState))
+				{
+					`LOG("Equipped successfully!",, 'WOTCMoreSparkWeapons');
+				}
+				else `LOG("WARNING, could not equip it!",, 'WOTCMoreSparkWeapons');
+			}
+			else return;	//	Could not find a weapon to put into the slot - exit.
+		}	
+
+		//	... but too many items equipped.
+		for (i = ItemStates.Length; i > iMaxItems; i--)
+		{
+			ItemState = ItemStates[i];
+
+			ItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', ItemState.ObjectID));
+			if (ItemState != none)
+			{
+				if (Unit.RemoveItemFromInventory(ItemState, NewGameState))
+				{
+					`LOG("Successfully unequipped the item. Putting it into HQ Inventory.",, 'WOTCMoreSparkWeapons');
+					XComHQ.PutItemInInventory(NewGameState, ItemState);
+				}
+				else `LOG("WARNING, failed to unequip the item!",, 'WOTCMoreSparkWeapons');
+			}
+		}	
+		
+		return; // All done equipping or unequipping items into the slot, exit.
+	}
+
+	//	Unit doesn't have the slot, but has some items equipped into it.
+	if (ItemStates.Length > 0 && !HasSlot)
 	{
 		`LOG("WARNING Unit:" @ Unit.GetFullName() @ "soldier class:" @ Unit.GetSoldierClassTemplateName() @ "has an item equipped in the Slot:" @ ItemState.GetMyTemplateName() @ ", but they are not supposed to have the Pistol Slot. Attempting to unequip the item.",, 'WOTCMoreSparkWeapons');
 
-		ItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', ItemState.ObjectID));
-		if (Unit.RemoveItemFromInventory(ItemState, NewGameState))
+		foreach ItemStates(ItemState)
 		{
-			`LOG("Successfully unequipped the item. Putting it into HQ Inventory.",, 'WOTCMoreSparkWeapons');
-			XComHQ.PutItemInInventory(NewGameState, ItemState);
+			ItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', ItemState.ObjectID));
+
+			if (Unit.RemoveItemFromInventory(ItemState, NewGameState))
+			{
+				`LOG("Successfully unequipped the item. Putting it into HQ Inventory.",, 'WOTCMoreSparkWeapons');
+				XComHQ.PutItemInInventory(NewGameState, ItemState);
+			}
+			else `LOG("WARNING, failed to unequip the item!",, 'WOTCMoreSparkWeapons');
 		}
-		else `LOG("WARNING, failed to unequip the item!",, 'WOTCMoreSparkWeapons');
 	}
 }
 
@@ -236,19 +262,9 @@ function ECHSlotUnequipBehavior SlotGetUnequipBehavior(CHItemSlot Slot, ECHSlotU
 	return eCHSUB_AttemptReEquip;
 }
 
-static function int SlotGetPriority_1(CHItemSlot Slot, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+static function int SlotGetPriority(CHItemSlot Slot, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
-	return 131;
-}
-
-static function int SlotGetPriority_2(CHItemSlot Slot, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
-{
-	return 132;
-}
-
-static function int SlotGetPriority_3(CHItemSlot Slot, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
-{
-	return 133;
+	return 135;
 }
 
 static function string GetSlotDisplayLetter(CHItemSlot Slot)

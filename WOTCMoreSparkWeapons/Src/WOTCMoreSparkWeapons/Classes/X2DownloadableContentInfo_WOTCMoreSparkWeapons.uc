@@ -27,8 +27,6 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Make Ordnance Launcher bonus slots use Multi Slot system
-
 //	BIT for Specialists? Include Active Camo animation for specialists.
 //	Weak railgun heavy weapon
 
