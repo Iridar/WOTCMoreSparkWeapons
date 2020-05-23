@@ -70,11 +70,12 @@ static function X2AbilityTemplate Create_KineticStrike()
 	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
 	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Death");
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	Template.AddMultiTargetEffect(AnimSetEffect);
+	Template.AddTargetEffect(AnimSetEffect);
 
 	// new class'X2Effect_DLC_3StrikeDamage';
 	//WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
 	Template.AddMultiTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
+	Template.AddTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
 	
 	//KnockbackEffect = new class'X2Effect_Knockback';
 	//KnockbackEffect.KnockbackDistance = 2;
@@ -87,13 +88,14 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.CinescriptCameraType = "Spark_Strike";
 
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
-	Template.MeleePuckMeshPath = "Materials_DLC3.MovePuck_Strike";
+	//Template.MeleePuckMeshPath = "Materials_DLC3.MovePuck_Strike";
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = KineticStrike_BuildVisualization;
 
 	//	This ability is offensive and can be interrupted!
 	Template.Hostility = eHostility_Offensive;
 	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
+	Template.ModifyNewContextFn = KineticStrike_ModifyActivatedAbilityContext;
 
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
@@ -101,6 +103,22 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
 	return Template;	
+}
+
+static simulated function KineticStrike_ModifyActivatedAbilityContext(XComGameStateContext Context)
+{	
+	local XComGameStateContext_Ability AbilityContext;
+
+	//	Make the 0th multi target of this ability a primary target.
+	//	This is the target that will play the synced death animation, if the ability hits.
+
+	AbilityContext = XComGameStateContext_Ability(Context);
+	if (AbilityContext.InputContext.MultiTargets.Length > 0)
+	{
+		AbilityContext.InputContext.PrimaryTarget = AbilityContext.InputContext.MultiTargets[0];
+		AbilityContext.ResultContext.HitResult = AbilityContext.ResultContext.MultiTargetHitResults[0];
+		AbilityContext.InputContext.MultiTargets.Remove(0, 1);
+	}
 }
 
 static function KineticStrike_BuildVisualization(XComGameState VisualizeGameState)
