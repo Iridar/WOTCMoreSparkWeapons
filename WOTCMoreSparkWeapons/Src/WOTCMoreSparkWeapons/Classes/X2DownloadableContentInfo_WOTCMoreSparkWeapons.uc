@@ -30,6 +30,17 @@ static event InstallNewCampaign(XComGameState StartState)
 //	BIT for Specialists? Include Active Camo animation for specialists.
 //	Weak railgun heavy weapon
 
+//	ADVENT grunts -> stratosphere
+//	Shieldbearers -> double down
+//	Berserker - Rip the heart out
+//	Andromedon - break the glass, kill the pilot
+//	Sectoid - knock over, stomp on the head
+//	Faceless - flaming elbow drop
+//	High stance Sectopod -> jump on the jump jet and strike right into the Wrath cannon as it opens up
+//	Archon - bitchslap?
+//	Muton - break their weapon with a punch, then kill them with a second one.
+//	Riftkeeper -> punch away their plating? or stick it right into their eye? Smash them into the ground?
+
 //	Icon for Active Camo
 //	KSM Icon: Texture2D'UILibrary_PerkIcons.UIPerk_mecclosecombat'
 

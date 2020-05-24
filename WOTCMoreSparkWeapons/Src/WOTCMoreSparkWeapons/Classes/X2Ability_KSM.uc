@@ -70,12 +70,11 @@ static function X2AbilityTemplate Create_KineticStrike()
 	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
 	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Death");
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	Template.AddTargetEffect(AnimSetEffect);
+	Template.AddMultiTargetEffect(AnimSetEffect);
 
 	// new class'X2Effect_DLC_3StrikeDamage';
 	//WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
 	Template.AddMultiTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
-	Template.AddTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
 	
 	//KnockbackEffect = new class'X2Effect_Knockback';
 	//KnockbackEffect.KnockbackDistance = 2;
@@ -95,7 +94,6 @@ static function X2AbilityTemplate Create_KineticStrike()
 	//	This ability is offensive and can be interrupted!
 	Template.Hostility = eHostility_Offensive;
 	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
-	Template.ModifyNewContextFn = KineticStrike_ModifyActivatedAbilityContext;
 
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
@@ -103,22 +101,6 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
 	return Template;	
-}
-
-static simulated function KineticStrike_ModifyActivatedAbilityContext(XComGameStateContext Context)
-{	
-	local XComGameStateContext_Ability AbilityContext;
-
-	//	Make the 0th multi target of this ability a primary target.
-	//	This is the target that will play the synced death animation, if the ability hits.
-
-	AbilityContext = XComGameStateContext_Ability(Context);
-	if (AbilityContext.InputContext.MultiTargets.Length > 0)
-	{
-		AbilityContext.InputContext.PrimaryTarget = AbilityContext.InputContext.MultiTargets[0];
-		AbilityContext.ResultContext.HitResult = AbilityContext.ResultContext.MultiTargetHitResults[0];
-		AbilityContext.InputContext.MultiTargets.Remove(0, 1);
-	}
 }
 
 static function KineticStrike_BuildVisualization(XComGameState VisualizeGameState)
@@ -129,38 +111,47 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 	local X2Action						FireAction;
 	local XComGameStateContext_Ability	AbilityContext;
 	local X2Action_MoveTurn				MoveTurnAction;
-	local VisualizationActionMetadata   ActionMetadata;
+	local VisualizationActionMetadata   ActionMetadata, EmptyTrack;
 	local XComGameStateHistory			History;
-	local XComGameState_Unit			SourceUnit;
-	local X2Action_WaitForAnotherAction	WaitAction;
+	local XComGameState_Unit			SourceUnit, TargetUnit;
+	local X2Action_PlayAnimation		PlayAnimation;
+	//local X2Action						DamageUnitAction;
 
 	class'X2Ability'.static.TypicalAbility_BuildVisualization(VisualizeGameState);
 	
+	History = `XCOMHISTORY;
 	VisMgr = `XCOMVISUALIZATIONMGR;
 	AbilityContext = XComGameStateContext_Ability(VisualizeGameState.GetContext());
-
-	FireAction = VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_Fire',, AbilityContext.InputContext.SourceObject.ObjectID);
-
-	//	Move the Update Animations actions to the start of the Viz Tree so they take effect in time for the custom death animation to get assigned to the target.
-	VisMgr.GetNodesOfType(VisMgr.BuildVisTree, class'X2Action_UpdateAnimations', FindActions);
-	foreach FindActions(FindAction)
-	{
-		VisMgr.DisconnectAction(FindAction);
-		VisMgr.ConnectAction(FindAction, VisMgr.BuildVisTree, false, VisMgr.BuildVisTree);
-
-		foreach FindAction.ChildActions(CycleAction)
-		{
-			VisMgr.DisconnectAction(CycleAction);
-			VisMgr.ConnectAction(CycleAction, VisMgr.BuildVisTree, false, FireAction);
-		}
-	}	
 
 	//	Make the "primary target" of the ability rotate towards the spark
 	if (AbilityContext.InputContext.MultiTargets.Length > 0)
 	{
-		History = `XCOMHISTORY;
+		FireAction = VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_Fire',, AbilityContext.InputContext.SourceObject.ObjectID);
+
+		//	Make the SPARK rotate towards the target. This doesn't always happen automatically in time.
+		TargetUnit = XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[0].ObjectID));
+		ActionMetadata = FireAction.Metadata;
+		MoveTurnAction = X2Action_MoveTurn(class'X2Action_MoveTurn'.static.AddToVisualizationTree(ActionMetadata, AbilityContext, true, FireAction.ParentActions[0]));
+		MoveTurnAction.m_vFacePoint =  `XWORLD.GetPositionFromTileCoordinates(TargetUnit.TileLocation);
+		MoveTurnAction.UpdateAimTarget = true;
+
+		//	Move the Update Animations actions to the start of the Viz Tree so they take effect in time for the custom death animation to get assigned to the target.
+		VisMgr.GetNodesOfType(VisMgr.BuildVisTree, class'X2Action_UpdateAnimations', FindActions);
+		foreach FindActions(FindAction)
+		{
+			VisMgr.DisconnectAction(FindAction);
+			VisMgr.ConnectAction(FindAction, VisMgr.BuildVisTree, false, VisMgr.BuildVisTree);
+
+			foreach FindAction.ChildActions(CycleAction)
+			{
+				VisMgr.DisconnectAction(CycleAction);
+				VisMgr.ConnectAction(CycleAction, VisMgr.BuildVisTree, false, FireAction);
+			}
+		}	
+		
 		SourceUnit = XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
 
+		ActionMetadata = EmptyTrack;
 		ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[0].ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
 		ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[0].ObjectID);
 		ActionMetadata.VisualizeActor = History.GetVisualizer(AbilityContext.InputContext.MultiTargets[0].ObjectID);
@@ -169,13 +160,12 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 		MoveTurnAction.m_vFacePoint =  `XWORLD.GetPositionFromTileCoordinates(SourceUnit.TileLocation);
 		MoveTurnAction.UpdateAimTarget = true;
 
-		WaitAction = X2Action_WaitForAnotherAction(class'X2Action_WaitForAnotherAction'.static.AddToVisualizationTree(ActionMetadata, AbilityContext, false, MoveTurnAction));
-		WaitAction.ActionToWaitFor = FireAction;		
+		//	Make the target play its idle animation to prevent it from turning back to their original facing direction right away.
+		PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree(ActionMetadata, AbilityContext, false, MoveTurnAction));
+		PlayAnimation.Params.AnimName = 'HL_Idle';
+		PlayAnimation.Params.BlendTime = 0.3f;			
 
-		foreach FireAction.ChildActions(CycleAction)
-		{
-			VisMgr.ConnectAction(CycleAction, VisMgr.BuildVisTree, false, WaitAction);
-		}
+		//DamageUnitAction = VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_ApplyWeaponDamageToUnit',, AbilityContext.InputContext.SourceObject.ObjectID);
 	}
 }
 
