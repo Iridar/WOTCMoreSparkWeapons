@@ -27,9 +27,12 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
+// [0053.66] Warning: Warning, Failed to load 'EditorMeshes.MatineeCam_SM'! Referenced by 
+
 //	BIT for Specialists? Include Active Camo animation for specialists.
 //	Weak railgun heavy weapon
 
+//	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	ADVENT grunts -> stratosphere
 //	Shieldbearers -> double down
 //	Berserker - Rip the heart out

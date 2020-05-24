@@ -82,6 +82,9 @@
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Action_FireJavelin.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Action_KSM_ApplyWeaponDamageToTerrain.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_HasWeaponOfCategory.uc">
       <SubType>Content</SubType>
     </Content>

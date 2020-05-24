@@ -14,7 +14,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 {
 	local X2AbilityTemplate                 Template;	
 	local X2AbilityCost_ActionPoints        ActionPointCost;
-	//local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
+	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
 	local X2AbilityTarget_Cursor            CursorTarget;
 	local X2AbilityMultiTarget_Cylinder		MultiTarget;
 	local X2Effect_AdditionalAnimSets		AnimSetEffect;
@@ -53,8 +53,8 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.AddShooterEffectExclusions();
 	
 	//	Multi Target Conditions
-	//Template.AbilityMultiTargetConditions.AddItem(default.LivingHostileTargetProperty);
-
+	//Template.AbilityMultiTargetConditions.AddItem(default.LivingTargetOnlyProperty);
+	
 	//	Ability Costs
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
 	ActionPointCost.iNumPoints = 1;
@@ -74,8 +74,10 @@ static function X2AbilityTemplate Create_KineticStrike()
 
 	// new class'X2Effect_DLC_3StrikeDamage';
 	//WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
-	Template.AddMultiTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
-	
+	//Template.AddMultiTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
+	WeaponDamageEffect = new class'X2Effect_DLC_3StrikeDamage';
+	WeaponDamageEffect.EnvironmentalDamageAmount = 0;
+	Template.AddMultiTargetEffect(WeaponDamageEffect);
 	//KnockbackEffect = new class'X2Effect_Knockback';
 	//KnockbackEffect.KnockbackDistance = 2;
 	//Template.AddMultiTargetEffect(KnockbackEffect);
@@ -115,13 +117,20 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 	local XComGameStateHistory			History;
 	local XComGameState_Unit			SourceUnit, TargetUnit;
 	local X2Action_PlayAnimation		PlayAnimation;
-	//local X2Action						DamageUnitAction;
+	local X2Action						DamageUnitAction;
+	local X2Action_MarkerNamed	DamageTerrainAction;
+	local int i;
 
 	class'X2Ability'.static.TypicalAbility_BuildVisualization(VisualizeGameState);
 	
 	History = `XCOMHISTORY;
 	VisMgr = `XCOMVISUALIZATIONMGR;
 	AbilityContext = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+
+	for (i = 0; i < AbilityContext.InputContext.MultiTargets.Length; i++)
+	{
+		`LOG("Target unit:" @ XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID)).GetFullName(),, 'WOTCMoreSparkWeapons');
+	}
 
 	//	Make the "primary target" of the ability rotate towards the spark
 	if (AbilityContext.InputContext.MultiTargets.Length > 0)
@@ -165,7 +174,23 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 		PlayAnimation.Params.AnimName = 'HL_Idle';
 		PlayAnimation.Params.BlendTime = 0.3f;			
 
-		//DamageUnitAction = VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_ApplyWeaponDamageToUnit',, AbilityContext.InputContext.SourceObject.ObjectID);
+		//	Make all Damage Terrain actions a child of the Unit Take Damage action, so that they don't begin until after the damage unit action is done.
+		//	Prevents the viz bug associated with Damage Terrain actions making nearby units flinch, breaking the custom death animation.
+		//DamageUnitAction = VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_ApplyWeaponDamageToUnit',, AbilityContext.InputContext.MultiTargets[0].ObjectID);
+		//VisMgr.GetNodesOfType(VisMgr.BuildVisTree, class'X2Action_ApplyWeaponDamageToTerrain', FindActions);
+		//foreach FindActions(FindAction)
+		//{
+			//DamageTerrainAction = X2Action_MarkerNamed(class'X2Action'.static.CreateVisualizationActionClass(class'X2Action_MarkerNamed', FindAction.StateChangeContext));
+			//DamageTerrainAction.SetName("ReplaceStub");
+			//VisMgr.ReplaceNode(DamageTerrainAction, FindAction);
+
+			//DamageTerrainAction = X2Action_ApplyWeaponDamageToTerrain(FindAction);
+			//`LOG("Damage radius:" @ DamageTerrainAction.DamageEvent.DamageRadius,, 'WOTCMoreSparkWeapons');
+			//DamageTerrainAction.DamageEvent.DamageRadius = 17.0f;
+			//DamageTerrainAction.DamageInfluenceRadiusMultiplier = -1;
+			//VisMgr.DisconnectAction(FindAction);
+			//VisMgr.ConnectAction(FindAction, VisMgr.BuildVisTree, false, DamageUnitAction);
+		//}	
 	}
 }
 
