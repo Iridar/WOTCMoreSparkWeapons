@@ -27,10 +27,7 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-// [0053.66] Warning: Warning, Failed to load 'EditorMeshes.MatineeCam_SM'! Referenced by 
-
-//	BIT for Specialists? Include Active Camo animation for specialists.
-//	Weak railgun heavy weapon
+// [0053.66] Warning: Warning, Failed to load 'EditorMeshes.MatineeCam_SM'! Referenced by (matinees in umap)
 
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	ADVENT grunts -> stratosphere
@@ -44,10 +41,12 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Muton - break their weapon with a punch, then kill them with a second one.
 //	Riftkeeper -> punch away their plating? or stick it right into their eye? Smash them into the ground?
 
-//	Icon for Active Camo
-//	KSM Icon: Texture2D'UILibrary_PerkIcons.UIPerk_mecclosecombat'
 
 //	KSM kill animation: https://youtu.be/m8H-FDOLxz0
+
+//	Icon for Active Camo
+//	BIT for Specialists? Include Active Camo animation for specialists.
+//	Weak railgun heavy weapon
 
 //	Sparkfall within the context of this mod?
 
@@ -91,6 +90,8 @@ Kinetic Drive Module / Kinetic Driver*/
 [0155.04] Log: FAnimationUtils::CompressAnimSequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit) SkelMesh not valid, won't be able to use RemoveLinearKeys.
 [0155.04] Log: Compression Requested for Empty Animation NO_SensorSweepA
 */
+
+//	Clean up debug logging
 
 static event OnPostTemplatesCreated()
 {
@@ -153,29 +154,56 @@ static function PatchCharacterTemplates()
     local X2CharacterTemplateManager    CharMgr;
     local X2CharacterTemplate           CharTemplate;
 	local name							CharTemplateName;
-
+	local array<X2DataTemplate>			DifficultyVariants;
+	local X2DataTemplate				DifficultyVariant;
+	
     //  Get the Character Template Modify
     CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
 
 	foreach default.SparkCharacterTemplates(CharTemplateName)
 	{
-		CharTemplate = CharMgr.FindCharacterTemplate(CharTemplateName);
+		CharMgr.FindDataTemplateAllDifficulties(CharTemplateName, DifficultyVariants);
+		foreach DifficultyVariants(DifficultyVariant)
+		{
+			CharTemplate = X2CharacterTemplate(DifficultyVariant);
 
+			if (CharTemplate != none)
+			{
+				//	Remove Active Camo from char templates. We'll add it to BIT instead.
+				CharTemplate.Abilities.RemoveItem('ActiveCamo');
+
+				//	Always attach Lockon Matinee cuz it's also used by Bombard
+				CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
+			
+				CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideSpark");
+				CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideHighSpark");
+			
+				`LOG("Added matinee for Character Template:" @ CharTemplate.DataName,, 'IRITEST');
+			}
+		}
+	}
+	
+	CharMgr.FindDataTemplateAllDifficulties('AdvShieldBearerM2', DifficultyVariants);
+	foreach DifficultyVariants(DifficultyVariant)
+	{
+		CharTemplate = X2CharacterTemplate(DifficultyVariant);
 		if (CharTemplate != none)
 		{
-			//	Remove Active Camo from char templates. We'll add it to BIT instead.
-			CharTemplate.Abilities.RemoveItem('ActiveCamo');
+			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRIKineticStrikeModule.Anims.AS_Trooper_Death")));
+		}
+	}
 
-			//	Always attach Lockon Matinee cuz it's also used by Bombard
-			CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
-			
-			CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideSpark");
-			CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideHighSpark");
-			
-			`LOG("Added matinee for Character Template:" @ CharTemplate.DataName,, 'IRITEST');
+	CharMgr.FindDataTemplateAllDifficulties('AdvShieldBearerM3', DifficultyVariants);
+	foreach DifficultyVariants(DifficultyVariant)
+	{
+		CharTemplate = X2CharacterTemplate(DifficultyVariant);
+		if (CharTemplate != none)
+		{
+			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRIKineticStrikeModule.Anims.AS_Trooper_Death")));
 		}
 	}
 }
+
 
 static function PatchRainmaker()
 {

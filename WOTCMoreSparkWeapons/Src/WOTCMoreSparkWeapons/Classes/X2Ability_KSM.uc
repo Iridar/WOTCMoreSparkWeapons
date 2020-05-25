@@ -17,7 +17,8 @@ static function X2AbilityTemplate Create_KineticStrike()
 	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
 	local X2AbilityTarget_Cursor            CursorTarget;
 	local X2AbilityMultiTarget_Cylinder		MultiTarget;
-	local X2Effect_AdditionalAnimSets		AnimSetEffect;
+	//local X2Effect_AdditionalAnimSets		AnimSetEffect;
+	local X2Effect_OverrideDeathAction		OverrideDeathAction;
 	//local X2Effect_KSM_DeathAnim			DeathAnimSetEffect;
 	//local X2Effect_Knockback				KnockbackEffect;
 	
@@ -53,7 +54,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.AddShooterEffectExclusions();
 	
 	//	Multi Target Conditions
-	//Template.AbilityMultiTargetConditions.AddItem(default.LivingTargetOnlyProperty);
+	Template.AbilityMultiTargetConditions.AddItem(default.LivingTargetOnlyProperty);
 	
 	//	Ability Costs
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
@@ -62,26 +63,39 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.AbilityCosts.AddItem(ActionPointCost);
 	
 	//	Multi Target effects
+	/*
 	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
 	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Kill");
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	Template.AddShooterEffect(AnimSetEffect);
-
+	Template.AddShooterEffect(AnimSetEffect);*/
+	/*
 	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
 	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Death");
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	Template.AddMultiTargetEffect(AnimSetEffect);
+	AnimSetEffect.TargetConditions.AddItem(new class'X2Condition_UnblockedTile');
+	Template.AddMultiTargetEffect(AnimSetEffect);*/
+
+	Template.ActionFireClass = class'X2Action_KSM_Kill';
+	OverrideDeathAction = new class'X2Effect_OverrideDeathAction';
+	OverrideDeathAction.DeathActionClass = class'X2Action_KSM_Death';
+	OverrideDeathAction.EffectName = 'IRI_KineticStrike_DeathActionEffect';
+	//OverrideDeathAction.BuildPersistentEffect(1, false, true, true, eGameRule_PlayerTurnBegin);
+	//OverrideDeathAction.TargetConditions.AddItem(new class'X2Condition_UnblockedTile');
+	Template.AddMultiTargetEffect(OverrideDeathAction);
 
 	// new class'X2Effect_DLC_3StrikeDamage';
 	//WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
 	//Template.AddMultiTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
 	WeaponDamageEffect = new class'X2Effect_DLC_3StrikeDamage';
-	WeaponDamageEffect.EnvironmentalDamageAmount = 0;
+	//WeaponDamageEffect.EnvironmentalDamageAmount = 0;
 	Template.AddMultiTargetEffect(WeaponDamageEffect);
+
 	//KnockbackEffect = new class'X2Effect_Knockback';
 	//KnockbackEffect.KnockbackDistance = 2;
 	//Template.AddMultiTargetEffect(KnockbackEffect);
 	//Template.bOverrideMeleeDeath = true;
+
+	
 
 	Template.CustomFireAnim = 'FF_Melee';
 	Template.SourceMissSpeech = 'SwordMiss';
@@ -92,6 +106,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	//Template.MeleePuckMeshPath = "Materials_DLC3.MovePuck_Strike";
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = KineticStrike_BuildVisualization;
+	Template.ModifyNewContextFn = KineticStrike_ModifyActivatedAbilityContext;
 
 	//	This ability is offensive and can be interrupted!
 	Template.Hostility = eHostility_Offensive;
@@ -103,6 +118,20 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
 	return Template;	
+}
+
+static simulated function KineticStrike_ModifyActivatedAbilityContext(XComGameStateContext Context)
+{
+	local XComGameStateContext_Ability	AbilityContext;
+
+	//	Make primary target of the ability to be the same as the 0th multi target. 
+	//	Used only for the camera work. KS doesn't apply target effects.
+	AbilityContext = XComGameStateContext_Ability(Context);
+	if (AbilityContext.InputContext.MultiTargets.Length > 0)
+	{
+		AbilityContext.InputContext.PrimaryTarget = AbilityContext.InputContext.MultiTargets[0];	
+		AbilityContext.ResultContext.HitResult = AbilityContext.ResultContext.MultiTargetHitResults[0];
+	}
 }
 
 static function KineticStrike_BuildVisualization(XComGameState VisualizeGameState)
@@ -117,8 +146,8 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 	local XComGameStateHistory			History;
 	local XComGameState_Unit			SourceUnit, TargetUnit;
 	local X2Action_PlayAnimation		PlayAnimation;
-	local X2Action						DamageUnitAction;
-	local X2Action_MarkerNamed	DamageTerrainAction;
+	//local X2Action						DamageUnitAction;
+	//local X2Action_MarkerNamed	DamageTerrainAction;
 	local int i;
 
 	class'X2Ability'.static.TypicalAbility_BuildVisualization(VisualizeGameState);
