@@ -336,7 +336,7 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 	//	State and Viz
 	Template.ActivationSpeech = 'HealingAlly';
 	Template.Hostility = eHostility_Defensive;
-	Template.CustomSelfFireAnim = 'NO_RestorativeMist';
+	//Template.CustomSelfFireAnim = 'NO_RestorativeMist';
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 

@@ -73,6 +73,9 @@
     <Content Include="Content\IRIOrdnanceLauncher.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\IRIRestorativeMist.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\IRISparkHeavyWeapons.upk">
       <SubType>Content</SubType>
     </Content>
