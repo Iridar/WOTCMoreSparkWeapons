@@ -29,6 +29,20 @@ static event InstallNewCampaign(XComGameState StartState)
 
 // [0053.66] Warning: Warning, Failed to load 'EditorMeshes.MatineeCam_SM'! Referenced by (matinees in umap)
 
+/*
+[0124.55] Warning: Warning, Failed to load 'EngineMeshes.ParticleCube'! Referenced by 'IRI_MECRockets.PFX.PS_Rocket_Lockon_Volley_Spark:ParticleModuleTypeDataMesh_0' ('Engine.ParticleModuleTypeDataMesh:Mesh').
+[0124.55] Warning: Warning, Failed to load 'EngineMeshes': Can't find file for package 'EngineMeshes' while loading NULL
+[0124.55] Warning: Warning, Failed to load 'EngineMeshes.ParticleCube'! Referenced by 'IRI_MECRockets.PFX.PS_Rocket_Lockon_Volley_T3_Spark:ParticleModuleTypeDataMesh_0' ('Engine.ParticleModuleTypeDataMesh:Mesh').
+[0124.55] Warning: Warning, Failed to load 'EngineMeshes': Can't find file for package 'EngineMeshes' while loading NULL
+[0124.56] Warning: Warning, Failed to load 'CIN_BasicColors': Can't find file for package 'CIN_BasicColors' while loading NULL
+[0124.56] Warning: Warning, Failed to load 'CIN_BasicColors.Materials.DarkGrey'! Referenced by 'CIN_IRI_QuickWideSpark.TheWorld:PersistentLevel.SkeletalMeshActor_1.SkeletalMeshComponent_20' ('Engine.MeshComponent:Materials').
+[0124.56] Warning: Warning, Failed to load 'CIN_BasicColors': Can't find file for package 'CIN_BasicColors' while loading NULL
+[0124.57] Warning: Warning, Failed to load 'CIN_BasicColors': Can't find file for package 'CIN_BasicColors' while loading NULL
+[0124.57] Warning: Warning, Failed to load 'CIN_BasicColors.Materials.DarkGrey'! Referenced by 'CIN_IRI_QuickWideHighSpark.TheWorld:PersistentLevel.SkeletalMeshActor_1.SkeletalMeshComponent_20' ('Engine.MeshComponent:Materials').
+[0124.57] Warning: Warning, Failed to load 'CIN_BasicColors': Can't find file for package 'CIN_BasicColors' while loading NULL
+*/
+
+//	Make Ordnance Launchers upgrade with Spark Armor
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	ADVENT grunts -> stratosphere
 //	Shieldbearers -> double down
@@ -49,6 +63,10 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Weak railgun heavy weapon
 
 //	Sparkfall within the context of this mod?
+
+//	Patch Spark Launchers to use eInvSlot_AuxiliaryWeapon
+
+//	Ammo Canister -> +1 Heavy Weapon shot, +1 Ordnance Launcher slot, 
 
 //	Cannon loading sound
 //AkEvent'XPACK_SoundEnvironment.Crate_Extract_Advent_Crate_Grab'
@@ -449,7 +467,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 {
 	local XComGameState_Item		ItemState;
 	local X2AbilityTemplate			AbilityTemplate;
-	local StateObjectReference		OrdLauncherRef, KSMRef;
+	local StateObjectReference		OrdLauncherRef, KSMRef, BITRef;
 	local X2AbilityTemplateManager  AbilityTemplateManager;
 	local bool						bChangeHeavyWeapons;
 	local bool						bChangeMelee;
@@ -488,7 +506,8 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 		}
 		
 		//	BIT Equipped? Not checking secondary weapon directly in case somebody adds Utility Slot BITs or something
-		if (default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
+		BITRef.ObjectID = class'X2Condition_HasWeaponOfCategory'.static.GetBITObjectID(UnitState);
+		if (default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || BITRef.ObjectID <= 0)
 		{
 			bChangeHeavyWeapons = true;
 		}
@@ -496,7 +515,6 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 		//	Cycle through all abilities that are about to be Initialized
 		for (Index = SetupData.Length - 1; Index >= 0; Index--)
 		{
-
 			//	Lookup its template name and replace or remove the ability.
 			switch (SetupData[Index].TemplateName)
 			{
@@ -591,6 +609,25 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					SetupData[Index].TemplateName = 'IRI_Fire_PlasmaEjector_Spark';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_PlasmaEjector_Spark');
 					break;
+				//	=======	Restorative Mist =======
+				case 'IRI_RestorativeMist_Heal':
+					if (BITRef.ObjectID > 0)
+					{
+						//SetupData.Remove(Index, 1);
+						`LOG("Removed restorative mist:" @ SetupData[Index].SourceAmmoRef.ObjectID @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName() @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(BITRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+					}
+					break;		
+				case 'IRI_RestorativeMist_HealBit':
+					if (BITRef.ObjectID > 0)
+					{
+						`LOG("Patched restorative mist bit:" @ SetupData[Index].SourceAmmoRef.ObjectID @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName() @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(BITRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+						SetupData[Index].SourceWeaponRef = BITRef;
+					}
+					else
+					{
+						SetupData.Remove(Index, 1);
+					}
+					break;	
 				default:
 					//	=======	Melee =======
 					if (!bChangeMelee) break;	//	Move melee abilities to KSM so they can use KSM melee animations

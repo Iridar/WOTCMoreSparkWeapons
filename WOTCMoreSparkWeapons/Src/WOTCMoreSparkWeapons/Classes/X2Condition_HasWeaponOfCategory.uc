@@ -59,3 +59,20 @@ static function bool DoesUnitHaveBITEquipped(XComGameState_Unit SourceUnit)
 	}
 	return false;
 }
+
+static function int GetBITObjectID(XComGameState_Unit SourceUnit)
+{
+	local array<XComGameState_Item> InventoryItems;
+	local XComGameState_Item		InventoryItem;
+
+	InventoryItems = SourceUnit.GetAllInventoryItems();
+
+	foreach InventoryItems(InventoryItem)
+	{
+		if (InventoryItem.GetWeaponCategory() == 'sparkbit')
+		{
+			return InventoryItem.ObjectID;
+		}
+	}
+	return -1;
+}

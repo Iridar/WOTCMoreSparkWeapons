@@ -46,6 +46,9 @@
     <Content Include="Config\XComSparkWeapons.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\CIN_BasicColors.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\CIN_IRI_Lockon.umap">
       <SubType>Content</SubType>
     </Content>
@@ -53,6 +56,12 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\CIN_IRI_QuickWideSpark.umap">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\EditorMeshes.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\EngineMeshes.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIActiveCamoPerk.upk">
@@ -117,6 +126,9 @@
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher_MG.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_RestorativeMist.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_AuxSlot.uc">

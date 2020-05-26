@@ -7,8 +7,15 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_KineticStrike());
 	Templates.AddItem(Create_KineticStrike_Passive());
 
+	Templates.AddItem(Create_RestorativeMist_Heal());
+	Templates.AddItem(Create_RestorativeMist_HealBit());
+
 	return Templates;
 }
+
+//	==============================================================
+//			KINETIC STRIKE MODULE
+//	==============================================================
 
 static function X2AbilityTemplate Create_KineticStrike()
 {
@@ -19,8 +26,8 @@ static function X2AbilityTemplate Create_KineticStrike()
 	local X2AbilityMultiTarget_Cylinder		MultiTarget;
 	//local X2Effect_AdditionalAnimSets		AnimSetEffect;
 	local X2Effect_OverrideDeathAction		OverrideDeathAction;
-	//local X2Effect_KSM_DeathAnim			DeathAnimSetEffect;
 	//local X2Effect_Knockback				KnockbackEffect;
+	//local X2Condition_UnblockedTile			UnblockedTileCondition;
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_KineticStrike');
 
@@ -83,19 +90,21 @@ static function X2AbilityTemplate Create_KineticStrike()
 	//OverrideDeathAction.TargetConditions.AddItem(new class'X2Condition_UnblockedTile');
 	Template.AddMultiTargetEffect(OverrideDeathAction);
 
-	// new class'X2Effect_DLC_3StrikeDamage';
-	//WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
 	//Template.AddMultiTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
 	WeaponDamageEffect = new class'X2Effect_DLC_3StrikeDamage';
-	//WeaponDamageEffect.EnvironmentalDamageAmount = 0;
 	Template.AddMultiTargetEffect(WeaponDamageEffect);
 
-	//KnockbackEffect = new class'X2Effect_Knockback';
-	//KnockbackEffect.KnockbackDistance = 2;
-	//Template.AddMultiTargetEffect(KnockbackEffect);
-	//Template.bOverrideMeleeDeath = true;
+	//	Add knockback only to enemies that *are* on blocked tiles.
+	/*
+	UnblockedTileCondition = new class'X2Condition_UnblockedTile';
+	UnblockedTileCondition.bReverseCondition = true;
 
-	
+	KnockbackEffect = new class'X2Effect_Knockback';
+	KnockbackEffect.KnockbackDistance = 8;
+	KnockbackEffect.bKnockbackDestroysNonFragile = true;
+	KnockbackEffect.TargetConditions.AddItem(UnblockedTileCondition);
+	Template.AddMultiTargetEffect(KnockbackEffect);
+	Template.bOverrideMeleeDeath = true;*/
 
 	Template.CustomFireAnim = 'FF_Melee';
 	Template.SourceMissSpeech = 'SwordMiss';
@@ -252,6 +261,397 @@ static function X2AbilityTemplate Create_KineticStrike_Passive()
 	//  NOTE: No visualization on purpose!
 
 	return Template;
+}
+
+//	==============================================================
+//			RESTORATIVE MIST
+//	==============================================================
+
+static function X2AbilityTemplate Create_RestorativeMist_Heal()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityCost_Ammo					AmmoCost;
+	local X2AbilityCost_ActionPoints			ActionPointCost;
+	local X2Effect_ApplyMedikitHeal				MedikitHeal;
+	local X2Effect_RemoveEffectsByDamageType	RemoveEffects;
+	local X2Condition_UnitProperty				UnitPropertyCondition;
+	//local array<name>							SkipExclusions;
+	local X2AbilityMultiTarget_Radius			MultiTargetStyle;
+	local name									HealType;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_RestorativeMist_Heal');
+
+	//	Icon Setup
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_medkit";
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
+	Template.bDisplayInUITooltip = true;
+	Template.bLimitTargetIcons = true;
+
+	//	Targeting and Triggering
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	MultiTargetStyle = new class'X2AbilityMultiTarget_Radius';
+	MultiTargetStyle.bUseWeaponRadius = true;
+	MultiTargetStyle.bIgnoreBlockingCover = false;
+	Template.AbilityMultiTargetStyle = MultiTargetStyle;
+
+	//	Ability Costs
+	Template.bUseAmmoAsChargesForHUD = true;
+	AmmoCost = new class'X2AbilityCost_Ammo';
+	AmmoCost.iAmmo = 1;
+	AmmoCost.bReturnChargesError = true;
+	Template.AbilityCosts.AddItem(AmmoCost);
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	//	Shooter Conditions
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AddShooterEffectExclusions();
+
+	//	Multi Target Conditions
+	UnitPropertyCondition = new class'X2Condition_UnitProperty';
+	UnitPropertyCondition.ExcludeDead = true;
+	UnitPropertyCondition.ExcludeHostileToSource = true;
+	UnitPropertyCondition.ExcludeFriendlyToSource = false;
+	UnitPropertyCondition.ExcludeFullHealth = true;
+	UnitPropertyCondition.ExcludeRobotic = true;
+	Template.AbilityMultiTargetConditions.AddItem(UnitPropertyCondition);
+
+	MedikitHeal = new class'X2Effect_ApplyMedikitHeal';
+	MedikitHeal.PerUseHP = 4;
+	Template.AddMultiTargetEffect(MedikitHeal);
+
+	RemoveEffects = new class'X2Effect_RemoveEffectsByDamageType';
+	foreach class'X2Ability_DefaultAbilitySet'.default.MedikitHealEffectTypes(HealType)
+	{
+		RemoveEffects.DamageTypesToRemove.AddItem(HealType);
+	}
+	Template.AddMultiTargetEffect(RemoveEffects);
+	
+	//	State and Viz
+	Template.ActivationSpeech = 'HealingAlly';
+	Template.Hostility = eHostility_Defensive;
+	Template.CustomSelfFireAnim = 'NO_RestorativeMist';
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
+
+	return Template;
+}
+
+static function X2DataTemplate Create_RestorativeMist_HealBit()
+{
+	local X2AbilityTemplate             Template;
+	local X2AbilityCost_ActionPoints    ActionPointCost;
+	local X2Condition_UnitProperty      UnitPropertyCondition;
+	local X2AbilityTarget_Cursor        CursorTarget;
+	local X2Effect_ApplyMedikitHeal		MedikitHeal;
+	local X2Effect_RemoveEffectsByDamageType	RemoveEffects;
+	local X2AbilityMultiTarget_Radius   RadiusMultiTarget;
+	local name							HealType;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_RestorativeMist_HealBit');
+
+	//	Icon Setup
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_capacitordischarge";
+	Template.bDisplayInUITooltip = false;
+
+	//	Triggering and Targeting
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	CursorTarget = new class'X2AbilityTarget_Cursor';
+	CursorTarget.FixedAbilityRange = class'X2Item_RestorativeMist'.default.HEAL_RANGE;
+	CursorTarget.bRestrictToWeaponRange = false;
+	Template.AbilityTargetStyle = CursorTarget;
+
+	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
+	RadiusMultiTarget.bUseWeaponRadius = false;
+	RadiusMultiTarget.fTargetRadius = class'X2Item_RestorativeMist'.default.HEAL_RADIUS;
+	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
+
+	Template.TargetingMethod = class'X2TargetingMethod_GremlinAOE';
+
+	//	Costs
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	AddCharges(Template, class'X2Item_RestorativeMist'.default.ICLIPSIZE);
+
+	//	Shooter Conditions
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AddShooterEffectExclusions();
+
+	//	Multi Target Conditions
+	UnitPropertyCondition = new class'X2Condition_UnitProperty';
+	UnitPropertyCondition.ExcludeDead = true;
+	UnitPropertyCondition.ExcludeHostileToSource = true;
+	UnitPropertyCondition.ExcludeFriendlyToSource = false;
+	UnitPropertyCondition.ExcludeFullHealth = true;
+	UnitPropertyCondition.ExcludeRobotic = true;
+	Template.AbilityMultiTargetConditions.AddItem(UnitPropertyCondition);
+
+	//	Ability Effects
+	MedikitHeal = new class'X2Effect_ApplyMedikitHeal';
+	MedikitHeal.PerUseHP = 4;
+	Template.AddMultiTargetEffect(MedikitHeal);
+
+	RemoveEffects = new class'X2Effect_RemoveEffectsByDamageType';
+	foreach class'X2Ability_DefaultAbilitySet'.default.MedikitHealEffectTypes(HealType)
+	{
+		RemoveEffects.DamageTypesToRemove.AddItem(HealType);
+	}
+	Template.AddMultiTargetEffect(RemoveEffects);
+
+	//	 Game State and Viz
+	//Template.DefaultSourceItemSlot = eInvSlot_SecondaryWeapon;
+	Template.CustomFireAnim = 'HL_SendGremlin';
+	Template.CustomSelfFireAnim = 'FF_FireShredStormCannon';
+	Template.Hostility = eHostility_Defensive;
+	Template.AbilityConfirmSound = "TacticalUI_ActivateAbility";
+	Template.ActivationSpeech = 'HealingAlly';
+	Template.PostActivationEvents.AddItem('ItemRecalled');
+	Template.bStationaryWeapon = true;
+	//Template.BuildNewGameStateFn = class'X2Ability_SpecialistAbilitySet'.static.SendGremlinToLocation_BuildGameState;
+	Template.BuildNewGameStateFn = SendBITToLocation_BuildGameState;
+	//Template.BuildVisualizationFn = class'X2Ability_SpecialistAbilitySet'.static.CapacitorDischarge_BuildVisualization;
+	Template.BuildVisualizationFn = RestorativeMist_BIT_BuildVisualization;
+
+	//Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	//Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	//Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;	
+
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
+
+	return Template;
+}
+
+//	Unmodofied. Can't reference the original class'X2Ability_SpecialistAbilitySet'.static.SendGremlinToLocation_BuildGameState cuz it's not static?
+simulated function XComGameState SendBITToLocation_BuildGameState( XComGameStateContext Context )
+{
+	local XComGameStateContext_Ability AbilityContext;
+	local XComGameState NewGameState;
+	local XComGameState_Item GremlinItemState;
+	local XComGameState_Unit GremlinUnitState;
+	local vector TargetPos;
+
+	
+
+	AbilityContext = XComGameStateContext_Ability(Context);
+	NewGameState = TypicalAbility_BuildGameState(Context);
+
+	`LOG("SendBITToLocation_BuildGameState: begin. Source Item:" @ AbilityContext.InputContext.ItemObject.ObjectID,, 'WOTCMoreSparkWeapons');
+
+	GremlinItemState = XComGameState_Item(NewGameState.GetGameStateForObjectID(AbilityContext.InputContext.ItemObject.ObjectID));
+	if (GremlinItemState == none)
+	{
+		GremlinItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', AbilityContext.InputContext.ItemObject.ObjectID));
+	}
+	`LOG("SendBITToLocation_BuildGameState: begin. GremlinItemState:" @ GremlinItemState.GetMyTemplateName() @ GremlinItemState.CosmeticUnitRef.ObjectID,, 'WOTCMoreSparkWeapons');
+
+	GremlinUnitState = XComGameState_Unit(NewGameState.GetGameStateForObjectID(GremlinItemState.CosmeticUnitRef.ObjectID));
+	if (GremlinUnitState == none)
+	{
+		GremlinUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', GremlinItemState.CosmeticUnitRef.ObjectID));
+	}
+
+	GremlinItemState.AttachedUnitRef.ObjectID = 0;
+	TargetPos = AbilityContext.InputContext.TargetLocations[0];
+	GremlinUnitState.SetVisibilityLocationFromVector(TargetPos);
+
+	`LOG("SendBITToLocation_BuildGameState: end",, 'WOTCMoreSparkWeapons');
+
+	return NewGameState;
+}
+
+simulated function RestorativeMist_BIT_BuildVisualization( XComGameState VisualizeGameState )
+{
+	local XComGameStateHistory			History;
+	local XComWorldData					WorldData;
+	local XComGameStateContext_Ability  Context;
+	local X2AbilityTemplate             AbilityTemplate;
+
+	local XComGameState_Item			GremlinItem;
+	local XComGameState_Unit			AttachedUnitState;
+	local XComGameState_Unit			GremlinUnitState;
+
+	local StateObjectReference          InteractingUnitRef;
+
+	local VisualizationActionMetadata			EmptyTrack;
+	local VisualizationActionMetadata			ActionMetadata;
+	local X2Action_WaitForAbilityEffect DelayAction;
+	local X2Action_AbilityPerkStart		PerkStartAction;
+
+	local Vector						TargetPosition;
+	local TTile							TargetTile;
+	local PathingInputData              PathData;
+	local array<PathPoint> Path;
+	local PathingResultData	ResultData;
+
+	local X2Action_PlaySoundAndFlyOver SoundAndFlyOver;
+	local X2Action_PlayAnimation		PlayAnimation;
+
+	local int i, j, EffectIndex;
+	local X2VisualizerInterface TargetVisualizerInterface;
+
+	local XComGameState_Unit SparkUnitState;
+	local int BITObjectID;
+
+	`LOG("RestorativeMist_BIT_BuildVisualization: begin",, 'WOTCMoreSparkWeapons');
+
+	History = `XCOMHISTORY;
+	WorldData = `XWORLD;
+
+	Context = XComGameStateContext_Ability( VisualizeGameState.GetContext( ) );
+	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager( ).FindAbilityTemplate( Context.InputContext.AbilityTemplateName );
+
+	//****************************************************************************************
+	//Configure the visualization track for the owner of the Gremlin
+	`LOG("RestorativeMist_BIT_BuildVisualization: begin shooter",, 'WOTCMoreSparkWeapons');
+	SparkUnitState = XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(Context.InputContext.SourceObject.ObjectID));
+
+	ActionMetadata = EmptyTrack;
+	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(SparkUnitState.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
+	ActionMetadata.StateObject_NewState = SparkUnitState;
+	ActionMetadata.VisualizeActor = History.GetVisualizer(SparkUnitState.ObjectID);
+
+	`LOG("RestorativeMist_BIT_BuildVisualization: play animation",, 'WOTCMoreSparkWeapons');
+
+	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context ));
+	PlayAnimation.Params.AnimName = 'HL_SendGremlinA';
+
+	if (AbilityTemplate.ActivationSpeech != '')
+	{
+		`LOG("RestorativeMist_BIT_BuildVisualization: speech and flyover",, 'WOTCMoreSparkWeapons');
+
+		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyOver'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
+		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", AbilityTemplate.ActivationSpeech, eColor_Good);
+	}
+
+	//****************************************************************************************
+	//Configure the visualization track for the Gremlin
+	BITObjectID = Context.InputContext.ItemObject.ObjectID;
+
+	`LOG("RestorativeMist_BIT_BuildVisualization: Gremling:" @ BITObjectID,, 'WOTCMoreSparkWeapons');
+
+	GremlinItem = XComGameState_Item( History.GetGameStateForObjectID( BITObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1 ) );
+	GremlinUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.CosmeticUnitRef.ObjectID ) );
+	AttachedUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.AttachedUnitRef.ObjectID ) );
+
+	InteractingUnitRef = GremlinItem.CosmeticUnitRef;
+
+	ActionMetadata = EmptyTrack;
+	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID( InteractingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1 );
+	ActionMetadata.StateObject_NewState = ActionMetadata.StateObject_OldState;
+	ActionMetadata.VisualizeActor = History.GetVisualizer( InteractingUnitRef.ObjectID );
+
+	`LOG("RestorativeMist_BIT_BuildVisualization: shooter effects",, 'WOTCMoreSparkWeapons');
+
+	//If there are effects added to the shooter, add the visualizer actions for them
+	for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityShooterEffects.Length; ++EffectIndex)
+	{
+		AbilityTemplate.AbilityShooterEffects[ EffectIndex ].AddX2ActionsForVisualization( VisualizeGameState, ActionMetadata, Context.FindShooterEffectApplyResult( AbilityTemplate.AbilityShooterEffects[ EffectIndex ] ) );
+	}
+
+	if (Context.InputContext.TargetLocations.Length > 0)
+	{
+		`LOG("RestorativeMist_BIT_BuildVisualization: target position",, 'WOTCMoreSparkWeapons');
+
+		TargetPosition = Context.InputContext.TargetLocations[0];
+		TargetTile = `XWORLD.GetTileCoordinatesFromPosition( TargetPosition );
+
+		if (WorldData.IsTileFullyOccupied( TargetTile ))
+		{
+			TargetTile.Z++;
+		}
+
+		if (!WorldData.IsTileFullyOccupied( TargetTile ))
+		{
+			`LOG("RestorativeMist_BIT_BuildVisualization: pathing",, 'WOTCMoreSparkWeapons');
+
+			class'X2PathSolver'.static.BuildPath( GremlinUnitState, AttachedUnitState.TileLocation, TargetTile, PathData.MovementTiles );
+			class'X2PathSolver'.static.GetPathPointsFromPath( GremlinUnitState, PathData.MovementTiles, Path );
+			class'XComPath'.static.PerformStringPulling(XGUnitNativeBase(ActionMetadata.VisualizeActor), Path);
+			PathData.MovementData = Path;
+			PathData.MovingUnitRef = GremlinUnitState.GetReference();
+			Context.InputContext.MovementPaths.AddItem(PathData);
+
+			class'X2TacticalVisibilityHelpers'.static.FillPathTileData(PathData.MovingUnitRef.ObjectID,	PathData.MovementTiles,	ResultData.PathTileData);
+			Context.ResultContext.PathResults.AddItem(ResultData);
+
+			class'X2VisualizerHelpers'.static.ParsePath( Context, ActionMetadata);
+		}
+		else
+		{
+			`LOG("Gremlin was unable to find a location to move to for ability "@Context.InputContext.AbilityTemplateName,, 'WOTCMoreSparkWeapons');
+			`redscreen("Gremlin was unable to find a location to move to for ability "@Context.InputContext.AbilityTemplateName);
+		}
+	}
+	else
+	{
+		`LOG("Gremlin was not provided a location to move to for ability " @Context.InputContext.AbilityTemplateName,, 'WOTCMoreSparkWeapons');
+		`redscreen("Gremlin was not provided a location to move to for ability "@Context.InputContext.AbilityTemplateName);
+	}
+
+	`LOG("Perk start action",, 'WOTCMoreSparkWeapons');
+	PerkStartAction = X2Action_AbilityPerkStart(class'X2Action_AbilityPerkStart'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
+	PerkStartAction.NotifyTargetTracks = true;
+
+	`LOG("play animation",, 'WOTCMoreSparkWeapons');
+	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context ));
+	PlayAnimation.Params.AnimName = AbilityTemplate.CustomSelfFireAnim;
+
+	// build in a delay before we hit the end (which stops activation effects)
+	`LOG("Delay action",, 'WOTCMoreSparkWeapons');
+	DelayAction = X2Action_WaitForAbilityEffect( class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context ) );
+	DelayAction.ChangeTimeoutLength( class'X2Ability_SpecialistAbilitySet'.default.GREMLIN_PERK_EFFECT_WINDOW );
+
+	`LOG("Perk end",, 'WOTCMoreSparkWeapons');
+
+	class'X2Action_AbilityPerkEnd'.static.AddToVisualizationTree( ActionMetadata, Context );
+
+	//****************************************************************************************
+	//Configure the visualization track for the targets
+	//****************************************************************************************
+	`LOG("Targets",, 'WOTCMoreSparkWeapons');
+	for (i = 0; i < Context.InputContext.MultiTargets.Length; ++i)
+	{
+		`LOG("Target:" @ i,, 'WOTCMoreSparkWeapons');
+
+		InteractingUnitRef = Context.InputContext.MultiTargets[i];
+		ActionMetadata = EmptyTrack;
+		ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(InteractingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
+		ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(InteractingUnitRef.ObjectID);
+		ActionMetadata.VisualizeActor = History.GetVisualizer(InteractingUnitRef.ObjectID);
+
+		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context, false, PlayAnimation);
+
+		for( j = 0; j < Context.ResultContext.MultiTargetEffectResults[i].Effects.Length; ++j )
+		{
+			Context.ResultContext.MultiTargetEffectResults[i].Effects[j].AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, Context.ResultContext.MultiTargetEffectResults[i].ApplyResults[j]);
+		}
+
+		TargetVisualizerInterface = X2VisualizerInterface(ActionMetadata.VisualizeActor);
+		if( TargetVisualizerInterface != none )
+		{
+			//Allow the visualizer to do any custom processing based on the new game state. For example, units will create a death action when they reach 0 HP.
+			TargetVisualizerInterface.BuildAbilityEffectsVisualization(VisualizeGameState, ActionMetadata);
+		}
+	}
+	//****************************************************************************************
+
+	`LOG("RestorativeMist_BIT_BuildVisualization: end",, 'WOTCMoreSparkWeapons');
 }
 
 //	========================================
