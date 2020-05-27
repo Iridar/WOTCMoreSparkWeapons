@@ -293,8 +293,9 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
 	MultiTargetStyle = new class'X2AbilityMultiTarget_Radius';
-	MultiTargetStyle.bUseWeaponRadius = true;
+	MultiTargetStyle.bUseWeaponRadius = false;
 	MultiTargetStyle.bIgnoreBlockingCover = false;
+	MultiTargetStyle.fTargetRadius = class'X2Item_RestorativeMist_CV'.default.HEAL_RADIUS;
 	Template.AbilityMultiTargetStyle = MultiTargetStyle;
 
 	//	Ability Costs
@@ -323,7 +324,9 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 	Template.AbilityMultiTargetConditions.AddItem(UnitPropertyCondition);
 
 	MedikitHeal = new class'X2Effect_ApplyMedikitHeal';
-	MedikitHeal.PerUseHP = 4;
+	MedikitHeal.PerUseHP = class'X2Item_RestorativeMist_CV'.default.HEAL_HP;
+	MedikitHeal.IncreasedHealProject = 'BattlefieldMedicine';
+	MedikitHeal.IncreasedPerUseHP = class'X2Item_RestorativeMist_CV'.default.BATTLEFIELD_MEDICINE_HEAL_HP;
 	Template.AddMultiTargetEffect(MedikitHeal);
 
 	RemoveEffects = new class'X2Effect_RemoveEffectsByDamageType';
@@ -364,19 +367,21 @@ static function X2DataTemplate Create_RestorativeMist_HealBit()
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_capacitordischarge";
 	Template.bDisplayInUITooltip = false;
+	Template.bDisplayInUITacticalText = false;
 
 	//	Triggering and Targeting
 	Template.AbilityToHitCalc = default.DeadEye;
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
 	CursorTarget = new class'X2AbilityTarget_Cursor';
-	CursorTarget.FixedAbilityRange = class'X2Item_RestorativeMist'.default.HEAL_RANGE;
+	CursorTarget.FixedAbilityRange = class'X2Item_RestorativeMist_CV'.default.HEAL_RANGE;
 	CursorTarget.bRestrictToWeaponRange = false;
 	Template.AbilityTargetStyle = CursorTarget;
 
 	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
+	RadiusMultiTarget.bIgnoreBlockingCover = false;
 	RadiusMultiTarget.bUseWeaponRadius = false;
-	RadiusMultiTarget.fTargetRadius = class'X2Item_RestorativeMist'.default.HEAL_RADIUS;
+	RadiusMultiTarget.fTargetRadius = class'X2Item_RestorativeMist_CV'.default.HEAL_RADIUS;
 	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
 
 	Template.TargetingMethod = class'X2TargetingMethod_GremlinAOE';
@@ -387,7 +392,7 @@ static function X2DataTemplate Create_RestorativeMist_HealBit()
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);
 
-	AddCharges(Template, class'X2Item_RestorativeMist'.default.ICLIPSIZE);
+	AddCharges(Template, class'X2Item_RestorativeMist_CV'.default.ICLIPSIZE);
 
 	//	Shooter Conditions
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
@@ -404,7 +409,9 @@ static function X2DataTemplate Create_RestorativeMist_HealBit()
 
 	//	Ability Effects
 	MedikitHeal = new class'X2Effect_ApplyMedikitHeal';
-	MedikitHeal.PerUseHP = 4;
+	MedikitHeal.PerUseHP = class'X2Item_RestorativeMist_CV'.default.HEAL_HP;
+	MedikitHeal.IncreasedHealProject = 'BattlefieldMedicine';
+	MedikitHeal.IncreasedPerUseHP = class'X2Item_RestorativeMist_CV'.default.BATTLEFIELD_MEDICINE_HEAL_HP;
 	Template.AddMultiTargetEffect(MedikitHeal);
 
 	RemoveEffects = new class'X2Effect_RemoveEffectsByDamageType';
@@ -417,7 +424,7 @@ static function X2DataTemplate Create_RestorativeMist_HealBit()
 	//	 Game State and Viz
 	//Template.DefaultSourceItemSlot = eInvSlot_SecondaryWeapon;
 	Template.CustomFireAnim = 'HL_SendGremlin';
-	Template.CustomSelfFireAnim = 'FF_FireShredStormCannon';
+	Template.CustomSelfFireAnim = 'FF_RestorativeMistA';
 	Template.Hostility = eHostility_Defensive;
 	Template.AbilityConfirmSound = "TacticalUI_ActivateAbility";
 	Template.ActivationSpeech = 'HealingAlly';
@@ -445,8 +452,6 @@ simulated function XComGameState SendBITToLocation_BuildGameState( XComGameState
 	local XComGameState_Item GremlinItemState;
 	local XComGameState_Unit GremlinUnitState;
 	local vector TargetPos;
-
-	
 
 	AbilityContext = XComGameStateContext_Ability(Context);
 	NewGameState = TypicalAbility_BuildGameState(Context);

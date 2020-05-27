@@ -1,7 +1,9 @@
-class X2Item_RestorativeMist extends X2Item config(GameData_WeaponData);
+class X2Item_RestorativeMist_CV extends X2Item config(GameData_WeaponData);
 
-var config int HEAL_RANGE;
-var config int HEAL_RADIUS;
+var config float HEAL_RANGE;
+var config float HEAL_RADIUS;
+var config int	HEAL_HP;
+var config int	BATTLEFIELD_MEDICINE_HEAL_HP;
 
 var config WeaponDamageValue DAMAGE;
 var config array <WeaponDamageValue> EXTRA_DAMAGE;
@@ -56,8 +58,8 @@ static function X2DataTemplate Create_Item()
 	Template.EquipSound = "StrategyUI_Medkit_Equip";
 
 	Template.SetUIStatMarkup(class'XLocalizedData'.default.ChargesLabel, , default.ICLIPSIZE);
-	Template.SetUIStatMarkup(class'XLocalizedData'.default.RangeLabel, , default.HEAL_RANGE);
-	Template.SetUIStatMarkup(class'XLocalizedData'.default.RadiusLabel, , default.HEAL_RADIUS);
+	//Template.SetUIStatMarkup(class'XLocalizedData'.default.RangeLabel, , default.HEAL_RANGE);
+	Template.SetUIStatMarkup(class'XLocalizedData'.default.RadiusLabel, , default.HEAL_RADIUS - 1);
 	
 	Template.iRange = default.HEAL_RANGE;
 	Template.iRadius = default.HEAL_RADIUS;

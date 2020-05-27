@@ -131,7 +131,7 @@
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_OrdnanceLauncher_MG.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_RestorativeMist.uc">
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_RestorativeMist_CV.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_AuxSlot.uc">

@@ -27,20 +27,13 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-// [0053.66] Warning: Warning, Failed to load 'EditorMeshes.MatineeCam_SM'! Referenced by (matinees in umap)
+//	Electro Pulse
+//	Electro Pulse buffs Nova
 
-/*
-[0124.55] Warning: Warning, Failed to load 'EngineMeshes.ParticleCube'! Referenced by 'IRI_MECRockets.PFX.PS_Rocket_Lockon_Volley_Spark:ParticleModuleTypeDataMesh_0' ('Engine.ParticleModuleTypeDataMesh:Mesh').
-[0124.55] Warning: Warning, Failed to load 'EngineMeshes': Can't find file for package 'EngineMeshes' while loading NULL
-[0124.55] Warning: Warning, Failed to load 'EngineMeshes.ParticleCube'! Referenced by 'IRI_MECRockets.PFX.PS_Rocket_Lockon_Volley_T3_Spark:ParticleModuleTypeDataMesh_0' ('Engine.ParticleModuleTypeDataMesh:Mesh').
-[0124.55] Warning: Warning, Failed to load 'EngineMeshes': Can't find file for package 'EngineMeshes' while loading NULL
-[0124.56] Warning: Warning, Failed to load 'CIN_BasicColors': Can't find file for package 'CIN_BasicColors' while loading NULL
-[0124.56] Warning: Warning, Failed to load 'CIN_BasicColors.Materials.DarkGrey'! Referenced by 'CIN_IRI_QuickWideSpark.TheWorld:PersistentLevel.SkeletalMeshActor_1.SkeletalMeshComponent_20' ('Engine.MeshComponent:Materials').
-[0124.56] Warning: Warning, Failed to load 'CIN_BasicColors': Can't find file for package 'CIN_BasicColors' while loading NULL
-[0124.57] Warning: Warning, Failed to load 'CIN_BasicColors': Can't find file for package 'CIN_BasicColors' while loading NULL
-[0124.57] Warning: Warning, Failed to load 'CIN_BasicColors.Materials.DarkGrey'! Referenced by 'CIN_IRI_QuickWideHighSpark.TheWorld:PersistentLevel.SkeletalMeshActor_1.SkeletalMeshComponent_20' ('Engine.MeshComponent:Materials').
-[0124.57] Warning: Warning, Failed to load 'CIN_BasicColors': Can't find file for package 'CIN_BasicColors' while loading NULL
-*/
+//	KSM Tintable
+//	Resto Mist - improve textures and tintable
+
+//	Arm Cannon Aux Weapon - grants a heavy weapon slot and its own autocannon
 
 //	Make Ordnance Launchers upgrade with Spark Armor
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
@@ -416,6 +409,36 @@ static function string DLCAppendSockets(XComUnitPawn Pawn)
 		return "IRIOrdnanceLauncher.Meshes.Spark_Sockets";
 	}
 	return "";
+}
+
+static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameState_Unit UnitState, XComUnitPawn Pawn)
+{
+	local XComContentManager Content;
+
+    if (UnitState != none && UnitState.GetMyTemplate().bIsCosmetic)
+    {
+		Content = `CONTENT;
+		CustomAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIRestorativeMist.Anims.AS_RestoMist_BIT")));
+
+		`LOG("Adding BIT Anim Set to" @ UnitState.GetMyTemplateName(),, 'IRITEST');
+	}
+}
+
+static function OverrideItemImage(out array<string> imagePath, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, XComGameState_Unit UnitState)
+{
+	local XComGameState_HeadquartersXCom XComHQ;
+
+	if (ItemTemplate.DataName == 'IRI_RestorativeMist_CV')
+	{
+		XComHQ = XComGameState_HeadquartersXCom(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom', true));
+
+		if (XComHQ != None && XComHQ.IsTechResearched('BattlefieldMedicine'))
+		{
+			imagePath.Length = 0;
+			imagePath.AddItem("img:///IRIRestorativeMist.UI.Inv_RestorativeMist_Nano");
+			`LOG("Adding resto mist icon.",, 'IRITEST');
+		}
+	}
 }
 
 /*
