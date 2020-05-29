@@ -54,7 +54,7 @@ static function bool HasSlot(CHItemSlot Slot, XComGameState_Unit UnitState, out 
 
 static function bool ShowItemInLockerList(CHItemSlot Slot, XComGameState_Unit Unit, XComGameState_Item ItemState, X2ItemTemplate ItemTemplate, XComGameState CheckGameState)
 {
-	return IsTemplateValidForSlot(ItemTemplate);
+	return IsTemplateValidForSlot(ItemTemplate, Unit, CheckGameState);
 }
 
 static function bool CanAddItemToSlot(CHItemSlot Slot, XComGameState_Unit UnitState, X2ItemTemplate ItemTemplate, optional XComGameState CheckGameState, optional int Quantity = 1, optional XComGameState_Item ItemState)
@@ -62,16 +62,24 @@ static function bool CanAddItemToSlot(CHItemSlot Slot, XComGameState_Unit UnitSt
 	//	If there is no item in the slot
 	if(UnitState.GetItemInSlot(Slot.InvSlot, CheckGameState) == none)
 	{
-		return IsTemplateValidForSlot(ItemTemplate);
+		return IsTemplateValidForSlot(ItemTemplate, UnitState, CheckGameState);
 	}
 
 	//	Slot is already occupied, cannot add any more items to it.
 	return false;
 }
 
-private static function bool IsTemplateValidForSlot(X2ItemTemplate ItemTemplate)
+private static function bool IsTemplateValidForSlot(X2ItemTemplate ItemTemplate, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
-	local X2WeaponTemplate	WeaponTemplate;
+	local XComGameState_Item	OrdLauncherState;
+	local X2WeaponTemplate		WeaponTemplate;
+
+	//	If the ordnance launcher is equipped, allow equipping grenades in the slot.
+	OrdLauncherState = UnitState.GetItemInSlot(class'X2Item_OrdnanceLauncher_CV'.default.INVENTORY_SLOT, CheckGameState);
+	if (OrdLauncherState != none && OrdLauncherState.GetWeaponCategory() == class'X2Item_OrdnanceLauncher_CV'.default.WEAPON_CATEGORY)
+	{
+		if (X2GrenadeTemplate(ItemTemplate) != none) return true;
+	}
 
 	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
 	if (WeaponTemplate != none)

@@ -47,6 +47,7 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Archon - bitchslap?
 //	Muton - break their weapon with a punch, then kill them with a second one.
 //	Riftkeeper -> punch away their plating? or stick it right into their eye? Smash them into the ground?
+//	Purifier -> use them as an explosive grenade?
 
 
 //	KSM kill animation: https://youtu.be/m8H-FDOLxz0
@@ -419,7 +420,7 @@ static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameStat
     {
 		Content = `CONTENT;
 		CustomAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIRestorativeMist.Anims.AS_RestoMist_BIT")));
-
+		//CustomAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIElectroPulse.Anims.AS_ElectroPulse_BIT")));
 		`LOG("Adding BIT Anim Set to" @ UnitState.GetMyTemplateName(),, 'IRITEST');
 	}
 }
@@ -554,40 +555,48 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					SetupData.Remove(Index, 1);
 					break;
 				//	=======	Heavy Weapons =======
-				case 'SparkRocketLauncher':
-					if (!bChangeHeavyWeapons) break;
+				case 'SparkRocketLauncher':	//	Change abilities related to Heavy Weapons - either through a global switch (BIT not equipped or the mod configured to always use the arm cannon for heavy weapons)
+											//	or if this particular heavy weapon is in the Aux Slot.
+					if (bChangeHeavyWeapons || DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) {
+					`LOG("Replacing heavy weapon ability:" @ SetupData[Index].TemplateName,, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkRocketLauncher';
-					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkRocketLauncher');
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkRocketLauncher'); }
 					break;
 				case 'SparkShredderGun':
-					if (!bChangeHeavyWeapons) break;
+					if (bChangeHeavyWeapons || DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) {
+					`LOG("Replacing heavy weapon ability:" @ SetupData[Index].TemplateName,, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkShredderGun';
-					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredderGun');
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredderGun'); }
 					break;
 				case 'SparkShredstormCannon':
-					if (!bChangeHeavyWeapons) break;
+					if (bChangeHeavyWeapons || DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) {
+					`LOG("Replacing heavy weapon ability:" @ SetupData[Index].TemplateName,, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkShredstormCannon';
-					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredstormCannon');
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredstormCannon'); }
 					break;
 				case 'SparkFlamethrower':
-					if (!bChangeHeavyWeapons) break;
+					if (bChangeHeavyWeapons || DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) {
+					`LOG("Replacing heavy weapon ability:" @ SetupData[Index].TemplateName,, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkFlamethrower';
-					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrower');
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrower'); }
 					break;
 				case 'SparkFlamethrowerMk2':
-					if (!bChangeHeavyWeapons) break;
+					if (bChangeHeavyWeapons || DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) {
+					`LOG("Replacing heavy weapon ability:" @ SetupData[Index].TemplateName,, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkFlamethrowerMk2';
-					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrowerMk2');
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrowerMk2'); }
 					break;
 				case 'SparkBlasterLauncher':
-					if (!bChangeHeavyWeapons) break;
+					if (bChangeHeavyWeapons || DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) {
+					`LOG("Replacing heavy weapon ability:" @ SetupData[Index].TemplateName,, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkBlasterLauncher';
-					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkBlasterLauncher');
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkBlasterLauncher'); }
 					break;
 				case 'SparkPlasmaBlaster':
-					if (!bChangeHeavyWeapons) break;
+					if (bChangeHeavyWeapons || DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) {
+					`LOG("Replacing heavy weapon ability:" @ SetupData[Index].TemplateName,, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkPlasmaBlaster';
-					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkPlasmaBlaster');
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkPlasmaBlaster'); }
 					break;
 				//	=======	Bombard =======
 				case 'Bombard':
@@ -664,6 +673,18 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 	}
 }
 
+static function bool DoesThisRefAuxSlotItem(const StateObjectReference Ref)
+{
+	local XComGameState_Item ItemState;
+
+	ItemState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(Ref.ObjectID));
+
+	`LOG("Checking item:" @ ItemState.GetMyTemplateName() @ "in slot:" @ ItemState.InventorySlot,, 'WOTCMoreSparkWeapons');
+	if (ItemState != none && ItemState.InventorySlot == eInvSlot_AuxiliaryWeapon) return true;
+
+	return false;
+}
+
 static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, optional XComGameState_Item ItemState=none)
 {
     Local XComGameState_Item	InternalWeaponState, SecondaryWeaponState;
@@ -709,20 +730,22 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 				return;
 			}
 			
-			//	If this is a Heavy Weapon, and the SPARK doesn't have a BIT equipped, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
+			//	If this is a Heavy Weapon
 			if (WeaponTemplate.WeaponCat == 'heavy')
 			{
-				if (default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
+				//	If it is in the Aux Slot, or if the the SPARK doesn't have a BIT equipped, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
+				if (InternalWeaponState.InventorySlot == eInvSlot_AuxiliaryWeapon || default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
 				{
 					//	Replace the mesh for this heavy weapon with the arm cannon and replace the weapon and pawn animations.
 					Weapon.CustomUnitPawnAnimsets.Length = 0;
-					SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("IRISparkHeavyWeapons.Meshes.SM_SparkHeavyWeapon"));
-					SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Weapon")));
 					Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Spark")));
 
+					SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("IRISparkHeavyWeapons.Meshes.SM_SparkHeavyWeapon"));
+					SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Weapon")));
+					
 					`LOG("Patched heavy weapon for a SPARK.",, 'IRITEST');
 				}
-				else
+				else	//	Blank out the default socket on this heavy weapon so it's not visible on the spark.
 				{
 					Weapon.DefaultSocket = '';
 				}

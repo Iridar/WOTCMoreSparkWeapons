@@ -10,6 +10,8 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_RestorativeMist_Heal());
 	Templates.AddItem(Create_RestorativeMist_HealBit());
 
+	Templates.AddItem(Create_ElectroPulse());
+
 	return Templates;
 }
 
@@ -658,6 +660,102 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 
 	`LOG("RestorativeMist_BIT_BuildVisualization: end",, 'WOTCMoreSparkWeapons');
 }
+
+
+//	==============================================================
+//			ELECTRO PULSE
+//	==============================================================
+
+static function X2AbilityTemplate Create_ElectroPulse()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityCost_Ammo					AmmoCost;
+	local X2AbilityCost_ActionPoints			ActionPointCost;
+	local X2Effect_RemoveEffects				RemoveEffects;
+	local X2Condition_UnitProperty				UnitCondition;
+	//local array<name>							SkipExclusions;
+	local X2AbilityMultiTarget_Radius			MultiTargetStyle;
+	local X2Effect_ApplyWeaponDamage			WeaponDamageEffect;
+	local X2Effect_Stunned						StunnedEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ElectroPulse');
+
+	//	Icon Setup
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_medkit";
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
+	Template.bDisplayInUITooltip = true;
+	Template.bLimitTargetIcons = true;
+
+	//	Targeting and Triggering
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	MultiTargetStyle = new class'X2AbilityMultiTarget_Radius';
+	MultiTargetStyle.bUseWeaponRadius = false;
+	MultiTargetStyle.bIgnoreBlockingCover = false;
+	MultiTargetStyle.bExcludeSelfAsTargetIfWithinRadius = true;
+	MultiTargetStyle.fTargetRadius = class'X2Item_ElectroPulse'.default.PULSE_RADIUS;
+	Template.AbilityMultiTargetStyle = MultiTargetStyle;
+
+	//	Ability Costs
+	Template.bUseAmmoAsChargesForHUD = true;
+	AmmoCost = new class'X2AbilityCost_Ammo';
+	AmmoCost.iAmmo = 1;
+	AmmoCost.bReturnChargesError = true;
+	Template.AbilityCosts.AddItem(AmmoCost);
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	//	Shooter Conditions
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AddShooterEffectExclusions();
+
+	//	Multi Target Conditions
+	UnitCondition = new class'X2Condition_UnitProperty';
+	UnitCondition.ExcludeOrganic = true;
+	UnitCondition.IncludeWeakAgainstTechLikeRobot = true;
+	UnitCondition.ExcludeFriendlyToSource = false;
+
+	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	WeaponDamageEffect.bExplosiveDamage = true;
+	WeaponDamageEffect.TargetConditions.AddItem(UnitCondition);
+	WeaponDamageEffect.bShowImmunityAnyFailure = true;
+	Template.AddMultiTargetEffect(WeaponDamageEffect);
+	
+	RemoveEffects = new class'X2Effect_RemoveEffects';
+	RemoveEffects.EffectNamesToRemove.AddItem(class'X2Effect_EnergyShield'.default.EffectName);
+	Template.AddMultiTargetEffect(RemoveEffects);
+
+	StunnedEffect = class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, 33, false);
+	StunnedEffect.SetDisplayInfo(ePerkBuff_Penalty, class'X2StatusEffects'.default.RoboticStunnedFriendlyName, class'X2StatusEffects'.default.RoboticStunnedFriendlyDesc, "img:///UILibrary_PerkIcons.UIPerk_stun");
+	StunnedEffect.TargetConditions.AddItem(UnitCondition);
+	Template.AddMultiTargetEffect(StunnedEffect);
+
+	UnitCondition = new class'X2Condition_UnitProperty';
+	UnitCondition.ExcludeOrganic = true;
+	Template.AddMultiTargetEffect(class'X2StatusEffects'.static.CreateHackDefenseChangeStatusEffect(10, UnitCondition));
+	
+	Template.CinescriptCameraType = "Iridar_EMPulse_Spark";
+	//	State and Viz
+	//Template.ActivationSpeech = 'HealingAlly';
+	
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
+	Template.Hostility = eHostility_Offensive;
+	
+	//	Same as for Throw Grenade
+	Template.SuperConcealmentLoss = 100;
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
+	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.GrenadeLostSpawnIncreasePerUse;
+
+	return Template;
+}
+
 
 //	========================================
 //				COMMON CODE
