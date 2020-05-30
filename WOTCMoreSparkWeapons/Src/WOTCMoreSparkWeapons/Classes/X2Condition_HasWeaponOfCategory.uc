@@ -60,12 +60,12 @@ static function bool DoesUnitHaveBITEquipped(XComGameState_Unit SourceUnit)
 	return false;
 }
 
-static function int GetBITObjectID(XComGameState_Unit SourceUnit)
+static function int GetBITObjectID(XComGameState_Unit SourceUnit, optional XComGameState CheckGameState)
 {
 	local array<XComGameState_Item> InventoryItems;
 	local XComGameState_Item		InventoryItem;
 
-	InventoryItems = SourceUnit.GetAllInventoryItems();
+	InventoryItems = SourceUnit.GetAllInventoryItems(CheckGameState, true);
 
 	foreach InventoryItems(InventoryItem)
 	{

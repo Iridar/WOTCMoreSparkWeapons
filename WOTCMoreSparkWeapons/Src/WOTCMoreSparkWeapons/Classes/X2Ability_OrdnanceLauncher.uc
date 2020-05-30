@@ -336,6 +336,18 @@ simulated function IRI_Bombard_BuildVisualization(XComGameState VisualizeGameSta
 //				HEAVY WEAPON ABILITIES
 //	========================================
 
+static function PatchHeavyWeaponAbilityTemplate(X2AbilityTemplate AbilityTemplate)
+{
+	AbilityTemplate.bDisplayInUITacticalText = false;
+	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
+
+	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+
+	AbilityTemplate.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+
+	//AbilityTemplate.AbilityShooterConditions.Length = 0;
+}
+
 
 static function X2AbilityTemplate SparkRocketLauncher()
 {
@@ -345,10 +357,7 @@ static function X2AbilityTemplate SparkRocketLauncher()
 
 	X2AbilityMultiTarget_Radius(AbilityTemplate.AbilityMultiTargetStyle).AddAbilityBonusRadius('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_RADIUS_ROCKETLAUNCHER);
 
-	AbilityTemplate.bDisplayInUITacticalText = false;
-	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
-
-	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+	PatchHeavyWeaponAbilityTemplate(AbilityTemplate);
 
 	return AbilityTemplate;
 }
@@ -361,10 +370,7 @@ static function X2AbilityTemplate SparkShredderGun()
 
 	X2AbilityMultiTarget_Cone(AbilityTemplate.AbilityMultiTargetStyle).AddBonusConeSize('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONEDIAMETER_SHREDDERGUN, class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONELENGTH_SHREDDERGUN);
 
-	AbilityTemplate.bDisplayInUITacticalText = false;
-	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
-
-	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+	PatchHeavyWeaponAbilityTemplate(AbilityTemplate);
 
 	return AbilityTemplate;
 }
@@ -377,10 +383,7 @@ static function X2AbilityTemplate SparkShredstormCannon()
 
 	X2AbilityMultiTarget_Cone(AbilityTemplate.AbilityMultiTargetStyle).AddBonusConeSize('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONEDIAMETER_SHREDSTORM, class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONELENGTH_SHREDSTORM);
 
-	AbilityTemplate.bDisplayInUITacticalText = false;
-	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
-
-	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+	PatchHeavyWeaponAbilityTemplate(AbilityTemplate);
 
 	return AbilityTemplate;
 }
@@ -393,10 +396,7 @@ static function X2AbilityTemplate SparkFlamethrower()
 
 	X2AbilityMultiTarget_Cone(AbilityTemplate.AbilityMultiTargetStyle).AddBonusConeSize('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONEDIAMETER_FLAMETHROWER, class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONELENGTH_FLAMETHROWER);
 
-	AbilityTemplate.bDisplayInUITacticalText = false;
-	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
-
-	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+	PatchHeavyWeaponAbilityTemplate(AbilityTemplate);
 
 	return AbilityTemplate;
 }
@@ -409,10 +409,7 @@ static function X2AbilityTemplate SparkFlamethrowerMk2()
 
 	X2AbilityMultiTarget_Cone(AbilityTemplate.AbilityMultiTargetStyle).AddBonusConeSize('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONEDIAMETER_FLAMETHROWER2, class'X2Ability_SparkAbilitySet'.default.RAINMAKER_CONELENGTH_FLAMETHROWER2);
 
-	AbilityTemplate.bDisplayInUITacticalText = false;
-	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
-
-	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+	PatchHeavyWeaponAbilityTemplate(AbilityTemplate);
 
 	return AbilityTemplate;
 }
@@ -425,10 +422,7 @@ static function X2AbilityTemplate SparkBlasterLauncher()
 
 	X2AbilityMultiTarget_Radius(AbilityTemplate.AbilityMultiTargetStyle).AddAbilityBonusRadius('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_RADIUS_BLASTERLAUNCHER);
 
-	AbilityTemplate.bDisplayInUITacticalText = false;
-	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
-
-	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+	PatchHeavyWeaponAbilityTemplate(AbilityTemplate);
 
 	return AbilityTemplate;
 }
@@ -441,10 +435,7 @@ static function X2AbilityTemplate SparkPlasmaBlaster()
 
 	X2AbilityMultiTarget_Line(AbilityTemplate.AbilityMultiTargetStyle).AddAbilityBonusWidth('Rainmaker', class'X2Ability_SparkAbilitySet'.default.RAINMAKER_WIDTH_PLASMABLASTER);
 
-	AbilityTemplate.bDisplayInUITacticalText = false;
-	AbilityTemplate.bFrameEvenWhenUnitIsHidden = true;
-
-	AbilityTemplate.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
+	PatchHeavyWeaponAbilityTemplate(AbilityTemplate);
 
 	return AbilityTemplate;
 }
