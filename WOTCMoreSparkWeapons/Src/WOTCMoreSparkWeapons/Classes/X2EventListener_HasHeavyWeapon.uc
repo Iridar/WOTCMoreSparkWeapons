@@ -41,7 +41,7 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 	Tuple.Data[2].kind = XComLWTVObject;
 	Tuple.Data[2].o = CheckGameState;
 	*/
-	/*
+	
 	Tuple = XComLWTuple(EventData);
 	UnitState = XComGameState_Unit(EventSource);
 
@@ -56,7 +56,7 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 
 			//	We will determine right now if this unit has a Heavy Weapon slot or not.
 			Tuple.Data[0].b = true;
-
+			
 			//	TODO: Maybe cycle through all inventory items here.
 			ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
 			if (ItemState != none)
@@ -73,7 +73,7 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 
 			`LOG("Override: unit has heavy weapon Stage2:" @ Tuple.Data[0].b,, 'WOTCMoreSparkWeapons');
 		}
-	}*/
+	}
 	return ELR_NoInterrupt;
 }
 

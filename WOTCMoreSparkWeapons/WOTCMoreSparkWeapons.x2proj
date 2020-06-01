@@ -37,7 +37,13 @@
     <Content Include="Config\Base\XComGameData.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\Base\XComGameData_SoldierSkills.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\Compatibility\XComRocketLaunchers.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComAutogunHeavyWeapon.ini">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Config\XComClassData.ini">
@@ -91,6 +97,9 @@
     <Content Include="ReadMe.txt" />
     <Content Include="ModPreview.jpg" />
     <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_HeavyAutogun.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_KSM.uc">
       <SubType>Content</SubType>
     </Content>
@@ -128,10 +137,13 @@
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2EventListener_HasHeavyWeapon.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_ArmCannon.uc">
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_ElectroPulse.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_ElectroPulse.uc">
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_HeavyAutogun.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_HeavyAutogun_MK2.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_KSM.uc">

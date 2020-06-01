@@ -27,16 +27,20 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Electro Pulse - gameplay effects
-//	Electro Pulse - inventory icon
-//	Electro Pulse buffs Nova
+//	Light Autocannon - add MK2 and 1-tile AOE
 
-//	KSM Tintable
+//	Electro Pulse - gameplay effects
+//	Electro Pulse buffs Nova?
+//	Pulse is more of an AoE bot stun with small damage. Nova's just straight damage, and it damages the SPARK. it's also limited to them.
+//	Fix BIT EM Pulse visualization
+
+//	Balance Heavy Weapons in Aux Slot
+
 //	Resto Mist - improve textures and tintable
 
-//	Arm Cannon Aux Weapon - grants a heavy weapon slot and its own autocannon
-
 //	Make Ordnance Launchers upgrade with Spark Armor
+
+//	KSM Tintable
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	ADVENT grunts -> stratosphere
 //	Shieldbearers -> double down
@@ -49,19 +53,17 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Muton - break their weapon with a punch, then kill them with a second one.
 //	Riftkeeper -> punch away their plating? or stick it right into their eye? Smash them into the ground?
 //	Purifier -> use them as an explosive grenade?
-
-
 //	KSM kill animation: https://youtu.be/m8H-FDOLxz0
 
-//	Icon for Active Camo
+//	Icon for Active Camo and all other abilities.
+
 //	BIT for Specialists? Include Active Camo animation for specialists.
-//	Weak railgun heavy weapon
 
 //	Sparkfall within the context of this mod?
 
 //	Patch Spark Launchers to use eInvSlot_AuxiliaryWeapon
 
-//	Ammo Canister -> +1 Heavy Weapon shot, +1 Ordnance Launcher slot, 
+//	Ammo Canister -> +1 Heavy Weapon shot, +1 Ordnance Launcher slot?
 
 //	Cannon loading sound
 //AkEvent'XPACK_SoundEnvironment.Crate_Extract_Advent_Crate_Grab'
@@ -73,30 +75,18 @@ static event InstallNewCampaign(XComGameState StartState)
 //	BIT - AOE holotarget?
 //	BIT - make Active Camo scale with BIT tier?
 
-//	KSM is a secondary weapon, provides a Heavy Weapon slot.
-//	BIT and KSM grant a heavy weapon slot, when equipped. (implemented)
-//	Restorative Mist and Electo Pulse go into auxiliary slot, competing with SPARK Launcher Redux. If BIT is equipped, BIT is used to deploy them. If not, they deploy around the SPARK.
-//	Pulse is more of an AoE bot stun with small damage. Nova's just straight damage, and it damages the SPARK. it's also limited to them.
-
 //	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities.
 //	Compatibility config for grenade scatter mod and grenade rebalance mod
 
 /*
-Simple tech on custom death animations: 
-Apply an AnimSet to the target with a custom death animation (same name as original death animation, check if you need to replace several animations with different names at once.
-Might be necessary to apply the AnimSet before the ability goes through. In that case, apply it with a separate ability with an AbilityActivated event listener trigger that works during interrupt stage. 
-Make sure to un-apply the AnimSet effect afterwards in case the target doesn't die.
-*/
-//	Fix BIT EM Pulse visualization
-/*
-
 //	Kinetic Strike Module
 //	Kinetic Assault Module
-
 //	Kinetic Barrage Module
-Ordnance Projector
-Kinetic Collision Module
-Kinetic Drive Module / Kinetic Driver*/
+//	Kinetic Collision Module
+
+Kinetic Drive Module / Kinetic Driver
+
+Ordnance Projector*/
 
  /*	Investigate logs:
 [0155.04] Log: No animation compression exists for sequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit)
@@ -206,7 +196,9 @@ static function PatchCharacterTemplates()
 			
 				CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideSpark");
 				CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideHighSpark");
-			
+
+
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_LAC_Spark")));
 				`LOG("Added matinee for Character Template:" @ CharTemplate.DataName,, 'IRITEST');
 			}
 		}
@@ -386,7 +378,6 @@ static function CopyLocalizationForAbilities()
 	CopyLocalization(AbilityTemplateManager, 'IRI_Fake_IntrusionProtocol', 'IntrusionProtocol');	
 	CopyLocalization(AbilityTemplateManager, 'IRI_Fake_Arsenal', 'Arsenal');	
 	
-
 	CopyLocalization(AbilityTemplateManager, 'IRI_Bombard', 'Bombard');
 }
 
@@ -434,11 +425,13 @@ static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameStat
 {
 	local XComContentManager Content;
 
+	//	TODO: Move this to Character Templates
     if (UnitState != none && UnitState.GetMyTemplate().bIsCosmetic)
     {
 		Content = `CONTENT;
 		CustomAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIRestorativeMist.Anims.AS_RestoMist_BIT")));
 		CustomAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIElectroPulse.Anims.AS_ElectroPulse_BIT")));
+		CustomAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("AnimSet'IRISparkHeavyWeapons.Anims.AS_LAC_Bit")));
 		`LOG("Adding BIT Anim Set to" @ UnitState.GetMyTemplateName(),, 'IRITEST');
 	}
 }
@@ -521,6 +514,8 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 	{
 		`LOG("Finalize abilities for unit:" @ UnitState.GetFullName(),, 'IRILOG');
 
+		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();		
+
 		ItemStates = UnitState.GetAllInventoryItems(StartState, true);
 		foreach ItemStates(ItemState)
 		{
@@ -536,7 +531,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 
 			`LOG("Found SPARK with a grenade launcher",, 'IRILOG');
 			//	Prep the ability we're gonna be attaching to grenades.
-			AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();		
+		
 			if (default.bOrdnanceAmplifierUsesBlasterLauncherTargeting && ItemState.GetMyTemplateName() == 'IRI_OrdnanceLauncher_BM')
 			{
 				AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate('IRI_BlastOrdnance');
@@ -582,43 +577,43 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					break;
 				//	=======	Heavy Weapons =======
 				case 'SparkRocketLauncher':
-					if (!bChangeHeavyWeapons) break;
+					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkRocketLauncher';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkRocketLauncher');
 					break;
 				case 'SparkShredderGun':
-					if (!bChangeHeavyWeapons) break;
+					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkShredderGun';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredderGun');
 					break;
 				case 'SparkShredstormCannon':
-					if (!bChangeHeavyWeapons) break;
+					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkShredstormCannon';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredstormCannon');
 					break;
 				case 'SparkFlamethrower':
-					if (!bChangeHeavyWeapons) break;
+					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkFlamethrower';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrower');
 					break;
 				case 'SparkFlamethrowerMk2':
-					if (!bChangeHeavyWeapons) break;
+					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkFlamethrowerMk2';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrowerMk2');
 					break;
 				case 'SparkBlasterLauncher':
-					if (!bChangeHeavyWeapons) break;
+					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkBlasterLauncher';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkBlasterLauncher');
 					break;
 				case 'SparkPlasmaBlaster':
-					if (!bChangeHeavyWeapons) break;
+					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkPlasmaBlaster';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkPlasmaBlaster');
@@ -702,6 +697,21 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 						SetupData.Remove(Index, 1);
 					}
 					break;	
+				//	=======	Light Auto Cannon =======
+				case 'IRI_Fire_HeavyAutogun':	//	If this is a Heavy Autogun ability, and the BIT is present, and this heavy weapon is not in the Aux Slot
+					if (BITRef.ObjectID > 0 && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef))
+					{
+						//	Attach it to BIT
+						SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_BIT';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_BIT');
+					}
+					else
+					{
+						//	Otherwise, replace it with the "arm cannon" version.
+						SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_Spark');
+					}					
+					break;		
 				default:
 					//	=======	Melee =======
 					if (!bChangeMelee) break;	//	Move melee abilities to KSM so they can use KSM melee animations
@@ -713,6 +723,18 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			}
 		}
 	}
+}
+
+static function bool DoesThisRefAuxSlotItem(const StateObjectReference Ref)
+{
+    local XComGameState_Item ItemState;
+
+    ItemState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(Ref.ObjectID));
+
+    `LOG("Checking item:" @ ItemState.GetMyTemplateName() @ "in slot:" @ ItemState.InventorySlot,, 'WOTCMoreSparkWeapons');
+    if (ItemState != none && ItemState.InventorySlot == eInvSlot_AuxiliaryWeapon) return true;
+
+    return false;
 }
 
 static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, optional XComGameState_Item ItemState=none)
