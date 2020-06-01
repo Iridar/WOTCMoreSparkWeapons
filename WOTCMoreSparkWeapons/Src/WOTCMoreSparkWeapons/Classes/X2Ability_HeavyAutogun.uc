@@ -7,6 +7,11 @@ var config array<name> DO_NOT_END_TURN_ABILITY;
 var config bool ALLOW_BURNING;
 var config bool ALLOW_DISORIENTED;
 var config bool ALLOW_SPECIAL_AMMO_EFFECTS;
+var config bool INFINITE_AMMO;
+
+var config float BASE_RADIUS;
+var config float RAINMAKER_BONUS_RADIUS;
+var config int RAINMAKER_BONUS_DAMAGE;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -30,6 +35,7 @@ static function SetupFire_LAC_Ability(X2AbilityTemplate Template)
 	local X2AbilityToHitCalc_StandardAim		ToHitCalc;
 	local array<name>							SkipExclusions;
 	local X2Effect_Knockback					KnockbackEffect;
+	local X2AbilityMultiTarget_Radius			RadiusMultiTarget;
 
 	//	Icon Setup
 	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_combatprotocol";
@@ -49,6 +55,13 @@ static function SetupFire_LAC_Ability(X2AbilityTemplate Template)
 	Template.AbilityTargetStyle = default.SimpleSingleTarget;
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
+	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
+	RadiusMultiTarget.bUseWeaponRadius = false;
+	RadiusMultiTarget.fTargetRadius = default.BASE_RADIUS;
+	RadiusMultiTarget.bExcludeSelfAsTargetIfWithinRadius = true;
+	RadiusMultiTarget.AddAbilityBonusRadius('Rainmaker', default.RAINMAKER_BONUS_RADIUS);
+	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
+
 	//	Costs
 	ActionCost = new class'X2AbilityCost_ActionPoints';
 	ActionCost.bAddWeaponTypicalCost = true;
@@ -56,10 +69,13 @@ static function SetupFire_LAC_Ability(X2AbilityTemplate Template)
 	ActionCost.DoNotConsumeAllSoldierAbilities = default.DO_NOT_END_TURN_ABILITY;
 	Template.AbilityCosts.AddItem(ActionCost);
 
-	Template.bUseAmmoAsChargesForHUD = true;
-	AmmoCost = new class'X2AbilityCost_Ammo';
-	AmmoCost.iAmmo = 1;
-	Template.AbilityCosts.AddItem(AmmoCost);
+	if (!default.INFINITE_AMMO)
+	{
+		Template.bUseAmmoAsChargesForHUD = true;
+		AmmoCost = new class'X2AbilityCost_Ammo';
+		AmmoCost.iAmmo = 1;
+		Template.AbilityCosts.AddItem(AmmoCost);
+	}
 
 	//	Shooter Conditions
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
@@ -84,6 +100,9 @@ static function SetupFire_LAC_Ability(X2AbilityTemplate Template)
 	KnockbackEffect.KnockbackDistance = 2;
 	Template.AddTargetEffect(KnockbackEffect);
 
+	Template.AddMultiTargetEffect(class'X2Ability_GrenadierAbilitySet'.static.ShredderDamageEffect());
+	Template.AddMultiTargetEffect(KnockbackEffect);
+
 	//	Game State and Viz
 	Template.AbilityConfirmSound = "TacticalUI_ActivateAbility";
 	Template.Hostility = eHostility_Offensive;
@@ -96,7 +115,10 @@ static function SetupFire_LAC_Ability(X2AbilityTemplate Template)
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
-	Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
+	//Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
+	Template.TargetingMethod = class'X2TargetingMethod_HeavyAutogun';
+	
+	//Template.TargetingMethod = class'X2TargetingMethod_VoidRift';
 	Template.bUsesFiringCamera = true;
 	Template.CinescriptCameraType = "StandardGunFiring";	
 
@@ -140,7 +162,7 @@ static function X2DataTemplate Create_FireLAC_Spark()
 
 	SetupFire_LAC_Ability(Template);
 
-	Template.TargetingMethod = none;
+	//Template.TargetingMethod = none;
 	Template.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
 
 	return Template;

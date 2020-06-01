@@ -167,6 +167,9 @@
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_InventorySlots.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2TargetingMethod_HeavyAutogun.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2TargetingMethod_KSM.uc">
       <SubType>Content</SubType>
     </Content>

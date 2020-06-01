@@ -18,6 +18,12 @@ function int GetAttackingDamageModifier(XComGameState_Effect EffectState, XComGa
 		return class'X2Ability_SparkAbilitySet'.default.RAINMAKER_DMG_BLASTERLAUNCHER;
 	case 'IRI_SparkPlasmaBlaster':
 		return class'X2Ability_SparkAbilitySet'.default.RAINMAKER_DMG_PLASMABLASTER;
+	case 'IRI_Fire_HeavyAutogun':
+	case 'IRI_Fire_HeavyAutogun_Spark':
+	case 'IRI_Fire_HeavyAutogun_BIT':
+		return class'X2Ability_HeavyAutogun'.default.RAINMAKER_BONUS_DAMAGE;
+	default:
+		break;
 	}
 	return 0;
 }

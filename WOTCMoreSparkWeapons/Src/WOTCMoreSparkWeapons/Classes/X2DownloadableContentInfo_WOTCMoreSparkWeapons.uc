@@ -27,7 +27,7 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Light Autocannon - add MK2 and 1-tile AOE
+//	Autogun -> perfect targeting method, tune environment damage
 
 //	Electro Pulse - gameplay effects
 //	Electro Pulse buffs Nova?
@@ -122,7 +122,7 @@ static function PatchSoldierClassTemplates()
 		//	Requires unprotecting X2SoldierClassTemplate::SoldierRanks
 		if (SoldierClassTemplate != none && SoldierClassTemplate.SoldierRanks.Length > 0)
 		{
-			for (i = 0; i < SoldierClassTemplate.SoldierRanks[0].AbilitySlots.Length; i++)
+			for (i = SoldierClassTemplate.SoldierRanks[0].AbilitySlots.Length - 1; i >= 0; i--)
 			{
 				if (default.AbilitiesToRemove.Find(SoldierClassTemplate.SoldierRanks[0].AbilitySlots[i].AbilityType.AbilityName) != INDEX_NONE)
 				{
@@ -793,6 +793,12 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 					Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Spark")));
 					SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("IRISparkHeavyWeapons.Meshes.SM_SparkHeavyWeapon"));
 					SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Weapon")));
+
+					//	Bandaid patch to play a different animation with a different weapon charging sound.
+					if (WeaponTemplate.DataName == 'IRI_Heavy_Autogun_MK2')
+					{
+						Weapon.WeaponFireAnimSequenceName = 'FF_FireLAC_MK2';
+					}
 
 					`LOG("Weapon Initialized -> Patched heavy weapon for a SPARK.",, 'IRITEST');
 				}
