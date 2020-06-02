@@ -21,14 +21,16 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_FireLAC());
 	Templates.AddItem(Create_FireLAC_Spark());
 	Templates.AddItem(Create_FireLAC_Spark_with_BIT());
+	Templates.AddItem(Create_FireLAC_HunterProtocol());
 
 	return Templates;
 }
 
 
 //	Helper function for adding stuff that's the same for all Fire LAC abilities.
-static function SetupFire_LAC_Ability(X2AbilityTemplate Template)
+static function X2AbilityTemplate SetupFire_LAC_Ability(name TemplateName)
 {
+	local X2AbilityTemplate						Template;
 	local X2Condition_Visibility                VisCondition;
 	local X2AbilityCost_ActionPoints			ActionCost;
 	local X2AbilityCost_Ammo					AmmoCost;
@@ -36,6 +38,8 @@ static function SetupFire_LAC_Ability(X2AbilityTemplate Template)
 	local array<name>							SkipExclusions;
 	local X2Effect_Knockback					KnockbackEffect;
 	local X2AbilityMultiTarget_Radius			RadiusMultiTarget;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
 
 	//	Icon Setup
 	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_combatprotocol";
@@ -115,14 +119,14 @@ static function SetupFire_LAC_Ability(X2AbilityTemplate Template)
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
-	//Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
 	Template.TargetingMethod = class'X2TargetingMethod_HeavyAutogun';
-	
-	//Template.TargetingMethod = class'X2TargetingMethod_VoidRift';
+
 	Template.bUsesFiringCamera = true;
 	Template.CinescriptCameraType = "StandardGunFiring";	
 
 	Template.AlternateFriendlyNameFn = AutogunShot_AlternateFriendlyName;
+
+	return Template;
 }
 
 static function bool AutogunShot_AlternateFriendlyName(out string AlternateDescription, XComGameState_Ability AbilityState, StateObjectReference TargetRef)
@@ -143,38 +147,37 @@ static function bool AutogunShot_AlternateFriendlyName(out string AlternateDescr
 	return false;
 }
 
+//	=================================
+//		Standard Shot type abilities
+//	=================================
+
 static function X2DataTemplate Create_FireLAC()
 {
 	local X2AbilityTemplate Template;
 
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_Fire_HeavyAutogun');
-
-	SetupFire_LAC_Ability(Template);
+	Template = SetupFire_LAC_Ability('IRI_Fire_HeavyAutogun');
 
 	return Template;
 }
 
+//	For firing from the Aux Slot (Arm Cannon)
 static function X2DataTemplate Create_FireLAC_Spark()
 {
 	local X2AbilityTemplate Template;
 
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_Fire_HeavyAutogun_Spark');
+	Template = SetupFire_LAC_Ability('IRI_Fire_HeavyAutogun_Spark');
 
-	SetupFire_LAC_Ability(Template);
-
-	//Template.TargetingMethod = none;
 	Template.CinescriptCameraType = "Iridar_Heavy_Weapon_Spark";
 
 	return Template;
 }
 
+//	For firing from the BIT
 static function X2AbilityTemplate Create_FireLAC_Spark_with_BIT()
 {
 	local X2AbilityTemplate Template;
-	
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_Fire_HeavyAutogun_BIT');
 
-	SetupFire_LAC_Ability(Template);
+	Template = SetupFire_LAC_Ability('IRI_Fire_HeavyAutogun_BIT');
 	
 	Template.bStationaryWeapon = true;	
 	Template.BuildVisualizationFn = SparkHeavyWeaponVisualization;
@@ -235,330 +238,6 @@ static function XComGameState AttachGremlinToTarget_BuildGameState( XComGameStat
 	return NewGameState;
 }
 
-static simulated function LAC_BIT_BuildVisualization(XComGameState VisualizeGameState)
-{
-	local XComGameStateHistory				History;
-	local XComGameStateContext_Ability		Context;
-	local XComGameState_Unit				SourceUnitState, TargetUnitState;
-	local array<XComGameState_Unit>			AttachedUnitStates;
-	local XComGameState_Unit				CosmeticUnit;
-	local VisualizationActionMetadata		EmptyMetadata;
-	local VisualizationActionMetadata		ActionMetadata;
-	local X2AbilityTemplate					AbilityTemplate;
-	local XComGameState_Item				CosmeticHeavyWeapon;
-	local X2Action_ExitCover				ExitCoverAction;
-	local X2Action_ExitCover				SourceExitCoverAction;
-	local X2Action_EnterCover				EnterCoverAction;
-	local X2Action_Fire						FireAction;
-	local X2Action_Fire						NewFireAction;
-	local XComGameStateVisualizationMgr		VisMgr;
-	local Actor								SourceVisualizer;
-	local Array<X2Action>					ParentArray;
-	local Array<X2Action>					TempDamageNodes;
-	local Array<X2Action>					DamageNodes;
-	local int								ScanNodes;
-	local TTile								TargetTile;
-	local TTile								StartTile;
-	local PathingInputData					PathData;
-	local PathingResultData					ResultData;
-	local Actor								TargetVisualizer;
-	local array<PathPoint>					Path;
-	local X2Action_CameraLookAt				TargetCameraAction;
-
-	VisMgr = `XCOMVISUALIZATIONMGR;
-	// Jwats: Build the standard visualization
-	TypicalAbility_BuildVisualization(VisualizeGameState);
-
-	// Jwats: Now handle the cosmetic unit
-	History = `XCOMHISTORY;
-	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
-	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager().FindAbilityTemplate(Context.InputContext.AbilityTemplateName);
-
-	SourceUnitState = XComGameState_Unit(History.GetGameStateForObjectID(Context.InputContext.SourceObject.ObjectID));
-	TargetUnitState = XComGameState_Unit(History.GetGameStateForObjectID(Context.InputContext.PrimaryTarget.ObjectID));
-	TargetVisualizer = History.GetVisualizer(Context.InputContext.PrimaryTarget.ObjectID);
-	SourceVisualizer = History.GetVisualizer(SourceUnitState.ObjectID);
-	SourceUnitState.GetAttachedUnits(AttachedUnitStates, VisualizeGameState);
-	`assert(AttachedUnitStates.Length > 0);
-	CosmeticUnit = AttachedUnitStates[0];
-
-	CosmeticHeavyWeapon = CosmeticUnit.GetItemInSlot(eInvSlot_HeavyWeapon);
-
-	// Jwats: Because the shooter might be using a unique fire action we'll replace it with the standard fire action to just
-	//			command the cosmetic unit
-	SourceExitCoverAction = X2Action_ExitCover(VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_ExitCover', SourceVisualizer));
-	FireAction = X2Action_Fire(VisMgr.GetNodeOfType(VisMgr.BuildVisTree, AbilityTemplate.ActionFireClass, SourceVisualizer));
-
-	// Jwats: Replace the current fire action with this fire action
-	NewFireAction = X2Action_Fire(class'X2Action_Fire'.static.CreateVisualizationAction(Context, SourceVisualizer));
-	NewFireAction.SetFireParameters(Context.IsResultContextHit());
-	VisMgr.ReplaceNode(NewFireAction, FireAction);
-
-	//	BIT
-	ActionMetadata = EmptyMetadata;
-	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(CosmeticUnit.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
-	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(CosmeticUnit.ObjectID);
-	if( ActionMetadata.StateObject_NewState == none )
-		ActionMetadata.StateObject_NewState = ActionMetadata.StateObject_OldState;
-	ActionMetadata.VisualizeActor = History.GetVisualizer(CosmeticUnit.ObjectID);
-
-
-	TargetTile = TargetUnitState.GetDesiredTileForAttachedCosmeticUnit();
-	StartTile = SourceUnitState.GetDesiredTileForAttachedCosmeticUnit();
-
-	class'X2PathSolver'.static.BuildPath(CosmeticUnit, StartTile, TargetTile, PathData.MovementTiles);
-	class'X2PathSolver'.static.GetPathPointsFromPath( CosmeticUnit, PathData.MovementTiles, Path );
-	class'XComPath'.static.PerformStringPulling(XGUnitNativeBase(ActionMetadata.VisualizeActor), Path);
-
-	PathData.MovingUnitRef = CosmeticUnit.GetReference();
-	PathData.MovementData = Path;
-	Context.InputContext.MovementPaths.AddItem(PathData);
-
-	class'X2TacticalVisibilityHelpers'.static.FillPathTileData(PathData.MovingUnitRef.ObjectID,	PathData.MovementTiles,	ResultData.PathTileData);
-	Context.ResultContext.PathResults.AddItem(ResultData);
-
-	class'X2VisualizerHelpers'.static.ParsePath( Context, ActionMetadata);
-
-	if( TargetVisualizer != none )
-	{
-		TargetCameraAction = X2Action_CameraLookAt(class'X2Action_CameraLookAt'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-		TargetCameraAction.LookAtActor = TargetVisualizer;
-		TargetCameraAction.BlockUntilActorOnScreen = true;
-		TargetCameraAction.LookAtDuration = 10.0f;		// longer than we need - camera will be removed by tag below
-		TargetCameraAction.CameraTag = 'TargetFocusCamera';
-		TargetCameraAction.bRemoveTaggedCamera = false;
-	}
-
-	// Jwats: Have the bit do an exit cover/fire/enter cover
-	// Jwats: Wait to exit cover until the main guy is ready
-	ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, Context, false, , SourceExitCoverAction.ParentActions));
-	FireAction = X2Action_Fire(AbilityTemplate.ActionFireClass.static.AddToVisualizationTree(ActionMetadata, Context, false));
-	EnterCoverAction = X2Action_EnterCover(class'X2Action_EnterCover'.static.AddToVisualizationTree(ActionMetadata, Context, false, FireAction));
-	ExitCoverAction.UseWeapon = XGWeapon(History.GetVisualizer(CosmeticHeavyWeapon.ObjectID));
-	FireAction.SetFireParameters(Context.IsResultContextHit());
-	
-	// Jwats: Make sure that the fire actions are in sync! Wait until both have completed their exit cover
-	ParentArray.Length = 0;
-	ParentArray.AddItem(ExitCoverAction);
-	ParentArray.AddItem(SourceExitCoverAction);
-	VisMgr.ConnectAction(FireAction, VisMgr.BuildVisTree, false, , ParentArray);
-	VisMgr.ConnectAction(NewFireAction, VisMgr.BuildVisTree, false, , ParentArray);
-
-	// Jwats: Update the apply weapon damage nodes to have the bit's fire flamethrower as their parent instead of the spark's fire node
-	VisMgr.GetNodesOfType(VisMgr.BuildVisTree, class'X2Action_ApplyWeaponDamageToUnit', TempDamageNodes);
-	DamageNodes = TempDamageNodes;
-	VisMgr.GetNodesOfType(VisMgr.BuildVisTree, class'X2Action_ApplyWeaponDamageToTerrain', TempDamageNodes);
-
-	for( ScanNodes = 0; ScanNodes < TempDamageNodes.Length; ++ScanNodes )
-	{
-		DamageNodes.AddItem(TempDamageNodes[ScanNodes]);
-	}
-	
-	for( ScanNodes = 0; ScanNodes < DamageNodes.Length; ++ScanNodes )
-	{
-		if( DamageNodes[ScanNodes].ParentActions[0] == NewFireAction )
-		{
-			VisMgr.DisconnectAction(DamageNodes[ScanNodes]);
-			VisMgr.ConnectAction(DamageNodes[ScanNodes], VisMgr.BuildVisTree, false, FireAction);
-		}
-	}
-
-	// Jwats: Now make sure the enter cover of the bit is a child of all the apply weapon damage nodes
-	VisMgr.ConnectAction(EnterCoverAction, VisMgr.BuildVisTree, false, , DamageNodes);
-}
-
-static simulated function GremlinSingleTarget_BuildVisualization(XComGameState VisualizeGameState)
-{
-	local XComGameStateHistory History;
-	local XComGameStateContext_Ability  Context;
-	local X2AbilityTemplate             AbilityTemplate, ThreatTemplate;
-	local StateObjectReference          InteractingUnitRef;
-	local XComGameState_Item			GremlinItem;
-	local XComGameState_Unit			TargetUnitState;
-	local XComGameState_Unit			AttachedUnitState;
-	local XComGameState_Unit			GremlinUnitState, ActivatingUnitState;
-	local array<PathPoint> Path;
-	local TTile                         TargetTile;
-	local TTile							StartTile;
-
-	local VisualizationActionMetadata        EmptyTrack;
-	local VisualizationActionMetadata        ActionMetadata;
-	local X2Action_WaitForAbilityEffect DelayAction;
-	local X2Action_AbilityPerkStart		PerkStartAction;
-	local X2Action_CameraLookAt			CameraAction;
-
-	local X2Action_PlaySoundAndFlyOver SoundAndFlyOver;
-	local int EffectIndex;
-	local PathingInputData              PathData;
-	local PathingResultData				ResultData;
-	local X2Action_PlayAnimation		PlayAnimation;
-
-	local X2VisualizerInterface TargetVisualizerInterface;
-	local string FlyOverText, FlyOverIcon;
-	local X2AbilityTag AbilityTag;
-
-	local X2Action_CameraLookAt			TargetCameraAction;
-	local Actor TargetVisualizer;
-
-	History = `XCOMHISTORY;
-
-	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
-	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager().FindAbilityTemplate(Context.InputContext.AbilityTemplateName);
-
-	TargetUnitState = XComGameState_Unit( VisualizeGameState.GetGameStateForObjectID( Context.InputContext.PrimaryTarget.ObjectID ) );
-
-	GremlinItem = XComGameState_Item( History.GetGameStateForObjectID( Context.InputContext.ItemObject.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1 ) );
-	GremlinUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.CosmeticUnitRef.ObjectID ) );
-	AttachedUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.AttachedUnitRef.ObjectID ) );
-	ActivatingUnitState = XComGameState_Unit( History.GetGameStateForObjectID( Context.InputContext.SourceObject.ObjectID) );
-
-	if( GremlinUnitState == none )
-	{
-		`RedScreen("Attempting GremlinSingleTarget_BuildVisualization with a GremlinUnitState of none");
-		return;
-	}
-	
-	//Configure the visualization track for the shooter
-	//****************************************************************************************
-
-	//****************************************************************************************
-	InteractingUnitRef = Context.InputContext.SourceObject;
-	ActionMetadata = EmptyTrack;
-	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID( InteractingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1 );
-	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID( InteractingUnitRef.ObjectID );
-	ActionMetadata.VisualizeActor = History.GetVisualizer( InteractingUnitRef.ObjectID );
-
-	CameraAction = X2Action_CameraLookAt(class'X2Action_CameraLookAt'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-	CameraAction.LookAtActor = ActionMetadata.VisualizeActor;
-	CameraAction.BlockUntilActorOnScreen = true;
-
-	class'X2Action_IntrusionProtocolSoldier'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
-
-	if (AbilityTemplate.ActivationSpeech != '')
-	{
-		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyOver'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", AbilityTemplate.ActivationSpeech, eColor_Good);
-	}
-
-	// make sure he waits for the gremlin to come back, so that the cinescript camera doesn't pop until then
-	X2Action_WaitForAbilityEffect(class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded)).SetCustomTimeOutSeconds(30);
-
-	//Configure the visualization track for the gremlin
-	//****************************************************************************************
-
-	InteractingUnitRef = GremlinUnitState.GetReference( );
-
-	ActionMetadata = EmptyTrack;
-	History.GetCurrentAndPreviousGameStatesForObjectID(GremlinUnitState.ObjectID, ActionMetadata.StateObject_OldState, ActionMetadata.StateObject_NewState, , VisualizeGameState.HistoryIndex);
-	ActionMetadata.VisualizeActor = GremlinUnitState.GetVisualizer();
-	TargetVisualizer = History.GetVisualizer(Context.InputContext.PrimaryTarget.ObjectID);
-
-	class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
-
-	if (AttachedUnitState.TileLocation != TargetUnitState.TileLocation)
-	{
-		// Given the target location, we want to generate the movement data.  
-
-		//Handle tall units.
-		TargetTile = TargetUnitState.GetDesiredTileForAttachedCosmeticUnit();
-		StartTile = AttachedUnitState.GetDesiredTileForAttachedCosmeticUnit();
-
-		class'X2PathSolver'.static.BuildPath(GremlinUnitState, StartTile, TargetTile, PathData.MovementTiles);
-		class'X2PathSolver'.static.GetPathPointsFromPath( GremlinUnitState, PathData.MovementTiles, Path );
-		class'XComPath'.static.PerformStringPulling(XGUnitNativeBase(ActionMetadata.VisualizeActor), Path);
-
-		PathData.MovingUnitRef = GremlinUnitState.GetReference();
-		PathData.MovementData = Path;
-		Context.InputContext.MovementPaths.AddItem(PathData);
-
-		class'X2TacticalVisibilityHelpers'.static.FillPathTileData(PathData.MovingUnitRef.ObjectID,	PathData.MovementTiles,	ResultData.PathTileData);
-		Context.ResultContext.PathResults.AddItem(ResultData);
-
-		class'X2VisualizerHelpers'.static.ParsePath( Context, ActionMetadata);
-
-		if( TargetVisualizer != none )
-		{
-			TargetCameraAction = X2Action_CameraLookAt(class'X2Action_CameraLookAt'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-			TargetCameraAction.LookAtActor = TargetVisualizer;
-			TargetCameraAction.BlockUntilActorOnScreen = true;
-			TargetCameraAction.LookAtDuration = 10.0f;		// longer than we need - camera will be removed by tag below
-			TargetCameraAction.CameraTag = 'TargetFocusCamera';
-			TargetCameraAction.bRemoveTaggedCamera = false;
-		}
-	}
-
-	PerkStartAction = X2Action_AbilityPerkStart(class'X2Action_AbilityPerkStart'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-	PerkStartAction.NotifyTargetTracks = true;
-
-	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context ));
-	if( AbilityTemplate.CustomSelfFireAnim != '' )
-	{
-		PlayAnimation.Params.AnimName = AbilityTemplate.CustomSelfFireAnim;
-	}
-	else
-	{
-		PlayAnimation.Params.AnimName = 'NO_CombatProtocol';
-	}
-
-	class'X2Action_AbilityPerkEnd'.static.AddToVisualizationTree( ActionMetadata, Context );
-
-	//****************************************************************************************
-
-	//Configure the visualization track for the target
-	//****************************************************************************************
-	InteractingUnitRef = Context.InputContext.PrimaryTarget;
-	ActionMetadata = EmptyTrack;
-	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(InteractingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
-	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(InteractingUnitRef.ObjectID);
-	ActionMetadata.VisualizeActor = TargetVisualizer;
-
-	DelayAction = X2Action_WaitForAbilityEffect( class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context ) );
-	DelayAction.ChangeTimeoutLength( 20 );       //  give the gremlin plenty of time to show up
-	
-	for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityTargetEffects.Length; ++EffectIndex)
-	{
-		AbilityTemplate.AbilityTargetEffects[ EffectIndex ].AddX2ActionsForVisualization( VisualizeGameState, ActionMetadata, Context.FindTargetEffectApplyResult( AbilityTemplate.AbilityTargetEffects[ EffectIndex ] ) );
-	}
-					
-	if (AbilityTemplate.bShowActivation)
-	{
-		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyOver'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-		if (AbilityTemplate.DataName == 'AidProtocol' && ActivatingUnitState.HasSoldierAbility('ThreatAssessment'))
-		{
-			ThreatTemplate = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager().FindAbilityTemplate('ThreatAssessment');
-			FlyOverText = ThreatTemplate.LocFlyOverText;			
-			FlyOverIcon = ThreatTemplate.IconImage;
-		}
-		else
-		{		
-			FlyOverText = AbilityTemplate.LocFlyOverText;
-			FlyOverIcon = AbilityTemplate.IconImage;
-		}
-		AbilityTag = X2AbilityTag(`XEXPANDCONTEXT.FindTag("Ability"));
-		AbilityTag.ParseObj = History.GetGameStateForObjectID(Context.InputContext.AbilityRef.ObjectID);
-		FlyOverText = `XEXPAND.ExpandString(FlyOverText);
-		AbilityTag.ParseObj = none;
-
-		SoundAndFlyOver.SetSoundAndFlyOverParameters(none, FlyOverText, '', eColor_Good, FlyOverIcon, 1.5f, true);
-	}
-
-	TargetVisualizerInterface = X2VisualizerInterface(ActionMetadata.VisualizeActor);
-	if (TargetVisualizerInterface != none)
-	{
-		//Allow the visualizer to do any custom processing based on the new game state. For example, units will create a death action when they reach 0 HP.
-		TargetVisualizerInterface.BuildAbilityEffectsVisualization(VisualizeGameState, ActionMetadata);
-	}
-
-	if( TargetCameraAction != none )
-	{
-		TargetCameraAction = X2Action_CameraLookAt(class'X2Action_CameraLookAt'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-		TargetCameraAction.CameraTag = 'TargetFocusCamera';
-		TargetCameraAction.bRemoveTaggedCamera = true;
-	}
-
-	//****************************************************************************************
-}
-
 function SparkHeavyWeaponVisualization(XComGameState VisualizeGameState)
 {
 	local XComGameStateHistory				History;
@@ -594,7 +273,7 @@ function SparkHeavyWeaponVisualization(XComGameState VisualizeGameState)
 	SourceUnitState = XComGameState_Unit(History.GetGameStateForObjectID(Context.InputContext.SourceObject.ObjectID));
 	SourceVisualizer = History.GetVisualizer(SourceUnitState.ObjectID);
 	SourceUnitState.GetAttachedUnits(AttachedUnitStates, VisualizeGameState);
-	`assert(AttachedUnitStates.Length > 0);
+
 	CosmeticUnit = AttachedUnitStates[0];
 
 	CosmeticHeavyWeapon = CosmeticUnit.GetItemInSlot(eInvSlot_HeavyWeapon);
@@ -655,6 +334,377 @@ function SparkHeavyWeaponVisualization(XComGameState VisualizeGameState)
 	VisMgr.ConnectAction(EnterCoverAction, VisMgr.BuildVisTree, false, , DamageNodes);
 }
 
+//	====================================
+//		Hunter Protocol Functionality
+//	====================================
+
+static function X2AbilityTemplate Create_FireLAC_HunterProtocol()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityTrigger_EventListener		Trigger;
+	local X2Condition_Visibility                VisCondition;
+	local X2AbilityCost_Ammo					AmmoCost;
+	local X2AbilityToHitCalc_StandardAim		ToHitCalc;
+	local array<name>							SkipExclusions;
+	local X2Effect_Knockback					KnockbackEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_Fire_HeavyAutogun_BIT_HunterProtocol');
+
+	//	Icon Setup
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_combatprotocol";
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+	Template.bDisplayInUITacticalText = false;
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_CORPORAL_PRIORITY;
+
+	//	Targeting and triggering
+	ToHitCalc = new class'X2AbilityToHitCalc_StandardAim';
+	ToHitCalc.bReactionFire = true;
+	ToHitCalc.bAllowCrit = default.ALLOW_CRIT;
+	Template.AbilityToHitCalc = ToHitCalc;
+	Template.AbilityToHitOwnerOnMissCalc = ToHitCalc;
+	Template.DisplayTargetHitChance = !default.GUARANTEED_HIT;
+
+	Template.AbilityTargetStyle = default.SimpleSingleTarget;
+
+	Trigger = new class'X2AbilityTrigger_EventListener';
+	Trigger.ListenerData.EventID = 'AbilityActivated';
+	Trigger.ListenerData.Deferral = ELD_OnStateSubmitted;
+	Trigger.ListenerData.Filter = eFilter_Unit;
+	Trigger.ListenerData.EventFn = AbilityTriggerEventListener_FollowUp;
+	Template.AbilityTriggers.AddItem(Trigger);
+
+	if (!default.INFINITE_AMMO)
+	{
+		Template.bUseAmmoAsChargesForHUD = true;
+		AmmoCost = new class'X2AbilityCost_Ammo';
+		AmmoCost.iAmmo = 1;
+		Template.AbilityCosts.AddItem(AmmoCost);
+	}
+
+	//	Shooter Conditions
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	if (default.ALLOW_DISORIENTED) SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);
+	if (default.ALLOW_BURNING) SkipExclusions.AddItem(class'X2StatusEffects'.default.BurningName);
+	Template.AddShooterEffectExclusions(SkipExclusions);
+
+	//	Target Conditions
+	Template.AbilityTargetConditions.AddItem(default.LivingHostileUnitOnlyProperty);
+
+	VisCondition = new class'X2Condition_Visibility';
+	VisCondition.bRequireGameplayVisible = true;
+	Template.AbilityTargetConditions.AddItem(VisCondition);
+
+	//	Ability Effects
+	Template.AddTargetEffect(class'X2Ability_GrenadierAbilitySet'.static.HoloTargetEffect());
+	Template.AddTargetEffect(class'X2Ability_GrenadierAbilitySet'.static.ShredderDamageEffect());
+	Template.bAllowAmmoEffects = default.ALLOW_SPECIAL_AMMO_EFFECTS;
+	Template.bAllowBonusWeaponEffects = false;
+
+	KnockbackEffect = new class'X2Effect_Knockback';
+	KnockbackEffect.KnockbackDistance = 2;
+	Template.AddTargetEffect(KnockbackEffect);
+
+	//	Game State and Viz
+	Template.bStationaryWeapon = true;	
+	Template.Hostility = eHostility_Offensive;
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;	
+	Template.BuildVisualizationFn = LAC_HunterProtocol_BuildVisualization;
+	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
+	Template.MergeVisualizationFn = LAC_HunterProtocol_MergeVisualization;
+
+	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
+	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
+	Template.bFrameEvenWhenUnitIsHidden = true;
+
+	return Template;
+}
+
+static function EventListenerReturn AbilityTriggerEventListener_FollowUp(Object EventData, Object EventSource, XComGameState GameState, Name EventID, Object CallbackData)
+{
+    local XComGameStateContext_Ability  AbilityContext;
+    local XComGameState_Unit            SourceUnit;
+    local XComGameState_Ability         AbilityState;
+    local XComGameState_Ability         ActivatedAbilityState;
+	local X2AbilityTemplate				AbilityTemplate;
+
+    ActivatedAbilityState = XComGameState_Ability(EventData);
+    SourceUnit = XComGameState_Unit(EventSource);
+    AbilityContext = XComGameStateContext_Ability(GameState.GetContext());
+    AbilityState = XComGameState_Ability(CallbackData);
+
+	`LOG("AbilityTriggerEventListener_FollowUp: running for ability:" @ ActivatedAbilityState.GetMyTemplate(),, 'WOTCMoreSparkWeapons');
+
+    if (AbilityState == none || SourceUnit == none || AbilityContext == none || ActivatedAbilityState == none && AbilityContext.InterruptionStatus != eInterruptionStatus_Interrupt)
+    {
+        //    Something went terribly wrong, exit listener.
+		`LOG("AbilityTriggerEventListener_FollowUp: Something went terribly wrong, exit listener.",, 'WOTCMoreSparkWeapons');
+        return ELR_NoInterrupt;
+    }
+
+	AbilityTemplate = ActivatedAbilityState.GetMyTemplate();
+	
+    if( AbilityTemplate != none && IsAbilityValidForFollowUpShot(AbilityTemplate, ActivatedAbilityState))
+    {
+		AbilityState.AbilityTriggerAgainstSingleTarget(AbilityContext.InputContext.PrimaryTarget, false, GameState.HistoryIndex);
+	}
+
+    return ELR_NoInterrupt;
+}
+
+static function bool IsAbilityValidForFollowUpShot(const X2AbilityTemplate PrimaryAbilityTemplate, const XComGameState_Ability PrimaryAbilityState)
+{
+	local XComGameState_Item	PrimaryWeaponItemState;
+	local X2WeaponTemplate		PrimaryWeaponTemplate;
+
+	PrimaryWeaponItemState = PrimaryAbilityState.GetSourceWeapon();
+	if (PrimaryWeaponItemState != none && PrimaryWeaponItemState.InventorySlot == eInvSlot_PrimaryWeapon)
+	{
+		PrimaryWeaponTemplate = X2WeaponTemplate(PrimaryWeaponItemState.GetMyTemplate());
+		if (PrimaryWeaponTemplate != none)
+		{
+			return PrimaryAbilityTemplate.Hostility == eHostility_Offensive &&	//	triggering ability is offensive
+					!PrimaryAbilityTemplate.IsMelee() &&	//	triggering ability is not a melee attack
+					PrimaryAbilityTemplate.AbilitySourceName != 'eAbilitySource_Psionic' && // and not a psionic ability
+					!PrimaryAbilityTemplate.bStationaryWeapon && //filter out Gremlin abilities
+					AbilityDealsDamage(PrimaryAbilityTemplate);
+		}
+	}
+	return false;								
+}
+
+static function bool AbilityDealsDamage(const X2AbilityTemplate Template)
+{
+	local X2Effect Effect;
+
+	foreach Template.AbilityTargetEffects(Effect)
+	{
+		//the ApplyOnHit condition allows to ignore the default.WeaponUpgradeMissDamage effect
+		if (X2Effect_ApplyWeaponDamage(Effect) != none && Effect.bApplyOnHit)	
+		{
+			return true;
+		}
+	}
+	foreach Template.AbilityMultiTargetEffects(Effect)
+	{
+		if (X2Effect_ApplyWeaponDamage(Effect) != none && Effect.bApplyOnHit)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+static function LAC_HunterProtocol_MergeVisualization(X2Action BuildTree, out X2Action VisualizationTree)
+{
+	local XComGameStateVisualizationMgr			VisMgr;
+	local X2Action								MarkerStart;
+	local X2Action								MarkerEnd;
+	local XComGameStateContext_Ability			HunterShotContext;
+	local X2Action_MarkerTreeInsertBegin		HunterShotMarkerStart;
+	local X2Action_MarkerTreeInsertEnd			HunterShotMarkerEnd;
+	local array<X2Action>						FindActions;
+
+	VisMgr = `XCOMVISUALIZATIONMGR;
+
+	HunterShotContext = XComGameStateContext_Ability(BuildTree.StateChangeContext);
+	
+	HunterShotMarkerStart = X2Action_MarkerTreeInsertBegin(VisMgr.GetNodeOfType(BuildTree, class'X2Action_MarkerTreeInsertBegin'));
+	HunterShotMarkerEnd = X2Action_MarkerTreeInsertEnd(VisMgr.GetNodeOfType(BuildTree, class'X2Action_MarkerTreeInsertEnd'));
+
+	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_MarkerTreeInsertBegin', FindActions,, HunterShotContext.InputContext.SourceObject.ObjectID);
+	MarkerStart = FindActionWithClosestHistoryIndex(FindActions, HunterShotContext.DesiredVisualizationBlockIndex);
+
+	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_MarkerTreeInsertEnd', FindActions,, HunterShotContext.InputContext.SourceObject.ObjectID);
+	MarkerEnd = FindActionWithClosestHistoryIndex(FindActions, HunterShotContext.DesiredVisualizationBlockIndex);
+
+	if (HunterShotContext == none || HunterShotMarkerStart == none || HunterShotMarkerEnd == none || MarkerStart == none || MarkerEnd == none)
+	{
+		`LOG("LAC_HunterProtocol_MergeVisualization: ERROR! Merge failed!" @ HunterShotContext == none @ HunterShotMarkerStart == none @ HunterShotMarkerEnd == none @ MarkerStart == none || MarkerEnd == none,, 'WOTCMoreSparkWeapons');
+		XComGameStateContext_Ability(BuildTree.StateChangeContext).SuperMergeIntoVisualizationTree(BuildTree, VisualizationTree);
+		return;
+	}
+
+	VisMgr.ConnectAction(HunterShotMarkerStart, VisualizationTree, false, MarkerStart);
+	VisMgr.ConnectAction(HunterShotMarkerEnd, VisualizationTree, false, MarkerEnd);
+}
+
+static function X2Action FindActionWithClosestHistoryIndex(const array<X2Action> FindActions, const int DesiredHistoryIndex)
+{
+	local X2Action FindAction;
+	local X2Action BestAction;
+	local int	   HistoryIndexDelta;
+
+	if (FindActions.Length == 1)
+		return FindActions[0];
+
+	foreach FindActions(FindAction)
+	{
+		if (FindAction.StateChangeContext.AssociatedState.HistoryIndex == DesiredHistoryIndex)
+		{
+			return FindAction;
+		}
+
+		//	This Action happened later
+		if (FindAction.StateChangeContext.AssociatedState.HistoryIndex > DesiredHistoryIndex)
+		{
+			if (FindAction.StateChangeContext.AssociatedState.HistoryIndex - DesiredHistoryIndex < HistoryIndexDelta)
+			{
+				HistoryIndexDelta = FindAction.StateChangeContext.AssociatedState.HistoryIndex - DesiredHistoryIndex;
+				BestAction = FindAction;
+			}
+		}
+		else	//	This Action happened earlier
+		{
+			if (DesiredHistoryIndex - FindAction.StateChangeContext.AssociatedState.HistoryIndex < HistoryIndexDelta)
+			{
+				HistoryIndexDelta = DesiredHistoryIndex - FindAction.StateChangeContext.AssociatedState.HistoryIndex;
+				BestAction = FindAction;
+			}
+		}
+		//	No break on purpose! We want the cycle to sift through all Fire Actions in the tree.
+	}
+	return BestAction;
+}
+
+function LAC_HunterProtocol_BuildVisualization(XComGameState VisualizeGameState)
+{
+	local XComGameStateHistory				History;
+	local XComGameStateContext_Ability		Context;
+	local XComGameState_Unit				SourceUnitState;
+	local array<XComGameState_Unit>			AttachedUnitStates;
+	local XComGameState_Unit				CosmeticUnit;
+	local VisualizationActionMetadata		EmptyMetadata;
+	local VisualizationActionMetadata		ActionMetadata;
+	local X2AbilityTemplate					AbilityTemplate;
+	local XComGameState_Item				CosmeticHeavyWeapon;
+	local X2Action_ExitCover				ExitCoverAction;
+	local X2Action_ExitCover				SourceExitCoverAction;
+	local X2Action_EnterCover				EnterCoverAction;
+	local X2Action_Fire						FireAction;
+	local XComGameStateVisualizationMgr		VisMgr;
+	local Actor								SourceVisualizer;
+	local Array<X2Action>					ParentArray;
+	local Array<X2Action>					TempDamageNodes;
+	local Array<X2Action>					DamageNodes;
+	local int								ScanNodes;
+
+	local Array<X2Action>					FindActions;
+	local X2Action							FindAction;
+	local X2Action								SparkFireAction;
+	local X2Action								SparkExitCoverAction;
+	local X2Action								SparkEnterCoverAction;
+	local X2Action_MarkerNamed					FireReplace;
+	local X2Action_MarkerNamed					ExitReplace;
+	local X2Action_MarkerNamed					EnterReplace;	
+
+	VisMgr = `XCOMVISUALIZATIONMGR;
+	// Jwats: Build the standard visualization
+	TypicalAbility_BuildVisualization(VisualizeGameState);
+
+	// Jwats: Now handle the cosmetic unit
+	History = `XCOMHISTORY;
+	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager().FindAbilityTemplate(Context.InputContext.AbilityTemplateName);
+
+	SourceUnitState = XComGameState_Unit(History.GetGameStateForObjectID(Context.InputContext.SourceObject.ObjectID));
+	SourceVisualizer = History.GetVisualizer(SourceUnitState.ObjectID);
+	SourceUnitState.GetAttachedUnits(AttachedUnitStates, VisualizeGameState);
+
+	CosmeticUnit = AttachedUnitStates[0];
+
+	CosmeticHeavyWeapon = CosmeticUnit.GetItemInSlot(eInvSlot_HeavyWeapon);
+	`LOG("Cosmetic heavy weapon:" @ CosmeticHeavyWeapon.GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+
+	// Jwats: Because the shooter might be using a unique fire action we'll replace it with the standard fire action to just
+	//			command the cosmetic unit
+	SourceExitCoverAction = X2Action_ExitCover(VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_ExitCover', SourceVisualizer));
+	FireAction = X2Action_Fire(VisMgr.GetNodeOfType(VisMgr.BuildVisTree, AbilityTemplate.ActionFireClass, SourceVisualizer));
+
+	// Jwats: Replace the current fire action with this fire action
+	//NewFireAction = X2Action_Fire(class'X2Action_Fire'.static.CreateVisualizationAction(Context, SourceVisualizer));
+	//NewFireAction.SetFireParameters(Context.IsResultContextHit());
+	//VisMgr.ReplaceNode(NewFireAction, FireAction);
+
+	//	************* Get SPARK's main actions, we'll be removing them later.
+	SparkFireAction = VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_Fire', SourceVisualizer);
+	SparkExitCoverAction = VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_ExitCover', SourceVisualizer);
+	SparkEnterCoverAction = VisMgr.GetNodeOfType(VisMgr.BuildVisTree, class'X2Action_EnterCover', SourceVisualizer);
+
+	// Jwats: Have the bit do an exit cover/fire/enter cover
+	ActionMetadata = EmptyMetadata;
+	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(CosmeticUnit.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
+	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(CosmeticUnit.ObjectID);
+	if( ActionMetadata.StateObject_NewState == none )
+		ActionMetadata.StateObject_NewState = ActionMetadata.StateObject_OldState;
+	ActionMetadata.VisualizeActor = History.GetVisualizer(CosmeticUnit.ObjectID);
+
+	// Jwats: Wait to exit cover until the main guy is ready
+	ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, Context, false, , SourceExitCoverAction.ParentActions));
+	FireAction = X2Action_Fire(AbilityTemplate.ActionFireClass.static.AddToVisualizationTree(ActionMetadata, Context, false));
+	EnterCoverAction = X2Action_EnterCover(class'X2Action_EnterCover'.static.AddToVisualizationTree(ActionMetadata, Context, false, FireAction));
+	ExitCoverAction.UseWeapon = XGWeapon(History.GetVisualizer(CosmeticHeavyWeapon.ObjectID));
+	FireAction.SetFireParameters(Context.IsResultContextHit());
+	
+	// Jwats: Make sure that the fire actions are in sync! Wait until both have completed their exit cover
+	ParentArray.Length = 0;
+	ParentArray.AddItem(ExitCoverAction);
+	ParentArray.AddItem(SourceExitCoverAction);
+	VisMgr.ConnectAction(FireAction, VisMgr.BuildVisTree, false, , ParentArray);
+	VisMgr.ConnectAction(SparkFireAction, VisMgr.BuildVisTree, false, , ParentArray);
+
+	// Jwats: Update the apply weapon damage nodes to have the bit's fire flamethrower as their parent instead of the spark's fire node
+	VisMgr.GetNodesOfType(VisMgr.BuildVisTree, class'X2Action_ApplyWeaponDamageToUnit', TempDamageNodes);
+	DamageNodes = TempDamageNodes;
+	VisMgr.GetNodesOfType(VisMgr.BuildVisTree, class'X2Action_ApplyWeaponDamageToTerrain', TempDamageNodes);
+
+	for( ScanNodes = 0; ScanNodes < TempDamageNodes.Length; ++ScanNodes )
+	{
+		DamageNodes.AddItem(TempDamageNodes[ScanNodes]);
+	}
+	
+	for( ScanNodes = 0; ScanNodes < DamageNodes.Length; ++ScanNodes )
+	{
+		if( DamageNodes[ScanNodes].ParentActions[0] == SparkFireAction )
+		{
+			VisMgr.DisconnectAction(DamageNodes[ScanNodes]);
+			VisMgr.ConnectAction(DamageNodes[ScanNodes], VisMgr.BuildVisTree, false, FireAction);
+		}
+	}
+
+	// Jwats: Now make sure the enter cover of the bit is a child of all the apply weapon damage nodes
+	VisMgr.ConnectAction(EnterCoverAction, VisMgr.BuildVisTree, false, , DamageNodes);
+
+	//	************* Remove SPARK's visualization of actions.
+	if (SparkFireAction != none)
+	{
+		FireReplace = X2Action_MarkerNamed(class'X2Action'.static.CreateVisualizationActionClass(class'X2Action_MarkerNamed', Context));
+		FireReplace.SetName("FireActionCounterAttackStub");
+		VisMgr.ReplaceNode(FireReplace, SparkFireAction);
+	}
+	if (SparkExitCoverAction != none)
+	{
+		ExitReplace = X2Action_MarkerNamed(class'X2Action'.static.CreateVisualizationActionClass(class'X2Action_MarkerNamed', Context));
+		ExitReplace.SetName("ExitActionCounterAttackStub");
+		VisMgr.ReplaceNode(ExitReplace, SparkExitCoverAction);
+	}	
+	if (SparkEnterCoverAction != none)
+	{
+		EnterReplace = X2Action_MarkerNamed(class'X2Action'.static.CreateVisualizationActionClass(class'X2Action_MarkerNamed', Context));
+		EnterReplace.SetName("EnterActionCounterAttackStub");
+		VisMgr.ReplaceNode(EnterReplace, SparkEnterCoverAction);
+	}
+
+	//	Remove Unit Take Damage actions belonging to the SPARK, as they are likely flinch caused by the BIT's shot. Delays proper viz.
+	VisMgr.GetNodesOfType(VisMgr.BuildVisTree, class'X2Action_ApplyWeaponDamageToUnit', FindActions, SourceVisualizer);
+	foreach FindActions(FindAction)
+	{
+		EnterReplace = X2Action_MarkerNamed(class'X2Action'.static.CreateVisualizationActionClass(class'X2Action_MarkerNamed', Context));
+		EnterReplace.SetName("DamageUnitActionStub");
+		VisMgr.ReplaceNode(EnterReplace, FindAction);
+	}
+}
 
 //	========================================
 //				COMMON CODE

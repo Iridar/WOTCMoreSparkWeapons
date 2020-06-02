@@ -27,7 +27,7 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Autogun -> perfect targeting method, tune environment damage
+//	Autogun -> Hunter Protocol Overwatch? Follow up shots? perhaps potential ideas for the future.
 
 //	Electro Pulse - gameplay effects
 //	Electro Pulse buffs Nova?
