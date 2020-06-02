@@ -106,6 +106,9 @@
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_OrdnanceLauncher.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Action_ApplyDamageSpacer.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Action_FireJavelin.uc">
       <SubType>Content</SubType>
     </Content>

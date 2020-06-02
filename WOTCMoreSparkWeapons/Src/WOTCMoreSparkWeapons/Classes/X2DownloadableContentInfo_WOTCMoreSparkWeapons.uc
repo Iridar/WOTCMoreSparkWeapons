@@ -27,11 +27,6 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Autogun -> Hunter Protocol Overwatch? Follow up shots? perhaps potential ideas for the future.
-
-//	Electro Pulse - gameplay effects
-//	Electro Pulse buffs Nova?
-//	Pulse is more of an AoE bot stun with small damage. Nova's just straight damage, and it damages the SPARK. it's also limited to them.
 //	Fix BIT EM Pulse visualization
 
 //	Balance Heavy Weapons in Aux Slot
@@ -96,13 +91,16 @@ Ordnance Projector*/
 
 //	Clean up debug logging
 
+//	LONG TERM:
+//	1) Make equipping a BIT autoequip a Heavy Weapon once this is merged: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/741
+//	2) Get rid of OverrideHasHeavyWeapon Event Listener when this is merged: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/881
+
 static event OnPostTemplatesCreated()
 {
 	PatchSoldierClassTemplates();
 	PatchCharacterTemplates();
 	CopyLocalizationForAbilities();
-	PatchRainmaker();
-	PatchRepair();
+	PatchAbilityTemplates();
 	PatchWeaponTemplates();
 }
 
@@ -127,7 +125,6 @@ static function PatchSoldierClassTemplates()
 				if (default.AbilitiesToRemove.Find(SoldierClassTemplate.SoldierRanks[0].AbilitySlots[i].AbilityType.AbilityName) != INDEX_NONE)
 				{
 					SoldierClassTemplate.SoldierRanks[0].AbilitySlots.Remove(i, 1);
-					break;
 				}
 			}
 		}		
@@ -226,16 +223,18 @@ static function PatchCharacterTemplates()
 }
 
 
-static function PatchRainmaker()
+static function PatchAbilityTemplates()
 {
-	local X2AbilityTemplateManager	AbilityTemplateManager;
-	local X2DataTemplate			DataTemplate;
-	local X2AbilityTemplate			Template;
-	local X2Effect_IRI_Rainmaker	Rainmaker;
-	local X2Effect					Effect;
+	local X2AbilityTemplateManager		AbilityTemplateManager;
+	local X2DataTemplate				DataTemplate;
+	local X2AbilityTemplate				Template;
+	local X2Effect_IRI_Rainmaker		Rainmaker;
+	local X2Effect						Effect;
+	local X2Condition_SourceWeaponCat	WeaponCondition;
 
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 
+	//	Rainmaker
 	//	Get the Rainmaker ability template so we can use it for the purposes of our effect's localization.
 	Template = AbilityTemplateManager.FindAbilityTemplate('Rainmaker');
 	if (Template != none)
@@ -281,16 +280,8 @@ static function PatchRainmaker()
 		}
 	}
 	else `LOG("ERROR, Could not find Rainmaker ability template.",, 'WOTCMoreSparkWeapons');
-}	
 
-static function PatchRepair()
-{
-	local X2AbilityTemplateManager		AbilityTemplateManager;
-	local X2AbilityTemplate				Template;
-	local X2Condition_SourceWeaponCat	WeaponCondition;
-
-	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
-
+	//	Repair
 	Template = AbilityTemplateManager.FindAbilityTemplate('Repair');
 	if (Template != none)
 	{
@@ -300,6 +291,7 @@ static function PatchRepair()
 	}
 	else `LOG("ERROR, Could not find Repair ability template.",, 'WOTCMoreSparkWeapons');
 }	
+
 
 static function PatchWeaponTemplates()
 {
@@ -321,8 +313,8 @@ static function PatchWeaponTemplates()
 			WeaponTemplate.Abilities.AddItem('IRI_ActiveCamo');
 
 			//	Pure passives with localization, just to let the player know.
-			WeaponTemplate.Abilities.AddItem('IRI_Fake_IntrusionProtocol');
-			WeaponTemplate.Abilities.AddItem('IRI_Fake_Arsenal');
+			WeaponTemplate.Abilities.AddItem('IntrusionProtocol');
+			WeaponTemplate.Abilities.AddItem('Arsenal');
         }
 
 		//	Duplicate Launch Grenade icons for my Launch Ordnance abilities.
@@ -375,8 +367,6 @@ static function CopyLocalizationForAbilities()
 	CopyLocalization(AbilityTemplateManager, 'IRI_SparkFlamethrowerMk2', 'SparkFlamethrowerMk2');
 	CopyLocalization(AbilityTemplateManager, 'IRI_SparkBlasterLauncher', 'SparkBlasterLauncher');
 	CopyLocalization(AbilityTemplateManager, 'IRI_SparkPlasmaBlaster', 'SparkPlasmaBlaster');
-	CopyLocalization(AbilityTemplateManager, 'IRI_Fake_IntrusionProtocol', 'IntrusionProtocol');	
-	CopyLocalization(AbilityTemplateManager, 'IRI_Fake_Arsenal', 'Arsenal');	
 	
 	CopyLocalization(AbilityTemplateManager, 'IRI_Bombard', 'Bombard');
 }

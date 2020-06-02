@@ -8,10 +8,6 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_LaunchOrdnance('IRI_BlastOrdnance', true));
 
 	Templates.AddItem(IRI_ActiveCamo());
-	Templates.AddItem(PurePassive('IRI_Fake_IntrusionProtocol', "img:///UILibrary_PerkIcons.UIPerk_comm_hack"));
-	Templates.AddItem(PurePassive('IRI_Fake_Arsenal', "img:///UILibrary_DLC3Images.UIPerk_spark_arsenal"));
-	
-
 	Templates.AddItem(Create_IRI_Bombard());
 
 	// Separate versions of abilities to fire from the arm cannon with a different cinecam.

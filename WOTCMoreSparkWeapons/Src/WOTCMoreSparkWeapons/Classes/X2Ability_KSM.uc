@@ -668,18 +668,45 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 //			ELECTRO PULSE
 //	==============================================================
 
+static function SetUpElectroPulseEffects(X2AbilityTemplate Template)
+{
+	local X2Effect_Stunned						StunnedEffect;
+	local X2Effect_RemoveEffects				RemoveEffects;
+	local X2Condition_UnitProperty				UnitCondition;
+
+	//	Remove Energy Shields from all units in AOE
+	RemoveEffects = new class'X2Effect_RemoveEffects';
+	RemoveEffects.EffectNamesToRemove.AddItem(class'X2Effect_EnergyShield'.default.EffectName);
+	Template.AddMultiTargetEffect(RemoveEffects);
+
+	//	Disable Weapons on all units in AOE
+	Template.AddMultiTargetEffect(new class'X2Effect_DisableWeapon');
+
+	//	Stun Robots and similar units
+	UnitCondition = new class'X2Condition_UnitProperty';
+	UnitCondition.ExcludeOrganic = true;
+	UnitCondition.IncludeWeakAgainstTechLikeRobot = true;
+	UnitCondition.ExcludeFriendlyToSource = false;
+
+	StunnedEffect = class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, 100, false);
+	StunnedEffect.SetDisplayInfo(ePerkBuff_Penalty, class'X2StatusEffects'.default.RoboticStunnedFriendlyName, class'X2StatusEffects'.default.RoboticStunnedFriendlyDesc, "img:///UILibrary_PerkIcons.UIPerk_stun");
+	StunnedEffect.TargetConditions.AddItem(UnitCondition);
+	Template.AddMultiTargetEffect(StunnedEffect);
+
+	//	Make Robots easier to hack
+	UnitCondition = new class'X2Condition_UnitProperty';
+	UnitCondition.ExcludeOrganic = true;
+	Template.AddMultiTargetEffect(class'X2StatusEffects'.static.CreateHackDefenseChangeStatusEffect(20, UnitCondition));
+}
+
 static function X2AbilityTemplate Create_ElectroPulse()
 {
 	local X2AbilityTemplate						Template;
 	local X2AbilityCost_Ammo					AmmoCost;
 	local X2AbilityCost_ActionPoints			ActionPointCost;
-	local X2Effect_RemoveEffects				RemoveEffects;
-	local X2Condition_UnitProperty				UnitCondition;
 	//local array<name>							SkipExclusions;
 	local X2AbilityMultiTarget_Radius			MultiTargetStyle;
-	local X2Effect_ApplyWeaponDamage			WeaponDamageEffect;
-	local X2Effect_Stunned						StunnedEffect;
-
+	
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ElectroPulse');
 
 	//	Icon Setup
@@ -716,31 +743,8 @@ static function X2AbilityTemplate Create_ElectroPulse()
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
 	Template.AddShooterEffectExclusions();
 
-	//	Multi Target Conditions
-	UnitCondition = new class'X2Condition_UnitProperty';
-	UnitCondition.ExcludeOrganic = true;
-	UnitCondition.IncludeWeakAgainstTechLikeRobot = true;
-	UnitCondition.ExcludeFriendlyToSource = false;
-
 	//	Multi Target Effects
-	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
-	WeaponDamageEffect.bExplosiveDamage = true;
-	WeaponDamageEffect.TargetConditions.AddItem(UnitCondition);
-	WeaponDamageEffect.bShowImmunityAnyFailure = true;
-	Template.AddMultiTargetEffect(WeaponDamageEffect);
-	
-	RemoveEffects = new class'X2Effect_RemoveEffects';
-	RemoveEffects.EffectNamesToRemove.AddItem(class'X2Effect_EnergyShield'.default.EffectName);
-	Template.AddMultiTargetEffect(RemoveEffects);
-
-	StunnedEffect = class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, 33, false);
-	StunnedEffect.SetDisplayInfo(ePerkBuff_Penalty, class'X2StatusEffects'.default.RoboticStunnedFriendlyName, class'X2StatusEffects'.default.RoboticStunnedFriendlyDesc, "img:///UILibrary_PerkIcons.UIPerk_stun");
-	StunnedEffect.TargetConditions.AddItem(UnitCondition);
-	Template.AddMultiTargetEffect(StunnedEffect);
-
-	UnitCondition = new class'X2Condition_UnitProperty';
-	UnitCondition.ExcludeOrganic = true;
-	Template.AddMultiTargetEffect(class'X2StatusEffects'.static.CreateHackDefenseChangeStatusEffect(10, UnitCondition));
+	SetUpElectroPulseEffects(Template);
 	
 	Template.CinescriptCameraType = "Iridar_EMPulse_Spark";
 	//	State and Viz
@@ -765,10 +769,6 @@ static function X2DataTemplate Create_ElectroPulse_Bit()
 	local X2AbilityCost_ActionPoints    ActionPointCost;
 	local X2AbilityTarget_Cursor        CursorTarget;
 	local X2AbilityMultiTarget_Radius   RadiusMultiTarget;
-	local X2Effect_RemoveEffects		RemoveEffects;
-	local X2Condition_UnitProperty		UnitCondition;
-	local X2Effect_ApplyWeaponDamage	WeaponDamageEffect;
-	local X2Effect_Stunned				StunnedEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ElectroPulse_Bit');
 
@@ -793,6 +793,7 @@ static function X2DataTemplate Create_ElectroPulse_Bit()
 	RadiusMultiTarget.bIgnoreBlockingCover = false;
 	RadiusMultiTarget.bUseWeaponRadius = false;
 	RadiusMultiTarget.fTargetRadius = class'X2Item_ElectroPulse'.default.PULSE_RADIUS;
+	RadiusMultiTarget.bExcludeSelfAsTargetIfWithinRadius = true;
 	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
 
 	Template.TargetingMethod = class'X2TargetingMethod_GremlinAOE';
@@ -809,36 +810,12 @@ static function X2DataTemplate Create_ElectroPulse_Bit()
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
 	Template.AddShooterEffectExclusions();
 
-	//	Multi Target Conditions
-	UnitCondition = new class'X2Condition_UnitProperty';
-	UnitCondition.ExcludeOrganic = true;
-	UnitCondition.IncludeWeakAgainstTechLikeRobot = true;
-	UnitCondition.ExcludeFriendlyToSource = false;
-
 	//	Multi Target Effects
-	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
-	WeaponDamageEffect.bExplosiveDamage = true;
-	WeaponDamageEffect.bIgnoreBaseDamage = true;
-	WeaponDamageEffect.EffectDamageValue = class'X2Item_ElectroPulse'.default.DAMAGE;
-	WeaponDamageEffect.TargetConditions.AddItem(UnitCondition);
-	WeaponDamageEffect.bShowImmunityAnyFailure = true;
-	Template.AddMultiTargetEffect(WeaponDamageEffect);
-	
-	RemoveEffects = new class'X2Effect_RemoveEffects';
-	RemoveEffects.EffectNamesToRemove.AddItem(class'X2Effect_EnergyShield'.default.EffectName);
-	Template.AddMultiTargetEffect(RemoveEffects);
-
-	StunnedEffect = class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, 33, false);
-	StunnedEffect.SetDisplayInfo(ePerkBuff_Penalty, class'X2StatusEffects'.default.RoboticStunnedFriendlyName, class'X2StatusEffects'.default.RoboticStunnedFriendlyDesc, "img:///UILibrary_PerkIcons.UIPerk_stun");
-	StunnedEffect.TargetConditions.AddItem(UnitCondition);
-	Template.AddMultiTargetEffect(StunnedEffect);
-
-	UnitCondition = new class'X2Condition_UnitProperty';
-	UnitCondition.ExcludeOrganic = true;
-	Template.AddMultiTargetEffect(class'X2StatusEffects'.static.CreateHackDefenseChangeStatusEffect(10, UnitCondition));
+	SetUpElectroPulseEffects(Template);
 
 	//	 Game State and Viz
-	Template.CustomFireAnim = 'HL_SendGremlin';
+	//Template.CustomFireAnim = 'HL_SendGremlin';
+	Template.CustomFireAnim = 'FF_ElectroPulse';
 	Template.CustomSelfFireAnim = 'FF_ElectroPulse';
 	Template.AbilityConfirmSound = "TacticalUI_ActivateAbility";
 	//Template.ActivationSpeech = 'HealingAlly';
@@ -883,7 +860,6 @@ simulated function CapacitorDischarge_BuildVisualization( XComGameState Visualiz
 	local array<PathPoint> Path;
 	local PathingResultData	ResultData;
 
-	local XComGameState_Ability         Ability;
 	local X2Action_PlaySoundAndFlyOver SoundAndFlyOver;
 	local X2Action_PlayAnimation		PlayAnimation;
 
@@ -992,20 +968,22 @@ simulated function CapacitorDischarge_BuildVisualization( XComGameState Visualiz
 
 	//Configure the visualization track for the owner of the Gremlin
 	//****************************************************************************************
-	Ability = XComGameState_Ability(History.GetGameStateForObjectID(Context.InputContext.AbilityRef.ObjectID));
-	if (Ability.GetMyTemplate().ActivationSpeech != '')
+	GremlinOwnerUnitRef = GremlinItem.OwnerStateObject;
+
+	ActionMetadata = EmptyTrack;
+	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(GremlinOwnerUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
+	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(GremlinOwnerUnitRef.ObjectID);
+	ActionMetadata.VisualizeActor = History.GetVisualizer(GremlinOwnerUnitRef.ObjectID);
+
+	if (AbilityTemplate.ActivationSpeech != '')
 	{
-		GremlinOwnerUnitRef = GremlinItem.OwnerStateObject;
-
-		ActionMetadata = EmptyTrack;
-		ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(GremlinOwnerUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
-		ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(GremlinOwnerUnitRef.ObjectID);
-		ActionMetadata.VisualizeActor = History.GetVisualizer(GremlinOwnerUnitRef.ObjectID);
-
 		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyOver'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", Ability.GetMyTemplate().ActivationSpeech, eColor_Good);
+		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", AbilityTemplate.ActivationSpeech, eColor_Good);
+	}
+	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context ));
+	PlayAnimation.Params.AnimName = AbilityTemplate.CustomFireAnim;
 
-			}
+	
 	//****************************************************************************************
 }
 

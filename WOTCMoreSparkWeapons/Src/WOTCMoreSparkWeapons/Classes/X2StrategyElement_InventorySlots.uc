@@ -197,7 +197,7 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 	//	Unit doesn't have the slot, but has some items equipped into it.
 	if (ItemStates.Length > 0 && !HasSlot)
 	{
-		`LOG("WARNING Unit:" @ Unit.GetFullName() @ "soldier class:" @ Unit.GetSoldierClassTemplateName() @ "has an item equipped in the Slot:" @ ItemState.GetMyTemplateName() @ ", but they are not supposed to have the Pistol Slot. Attempting to unequip the item.",, 'WOTCMoreSparkWeapons');
+		`LOG("WARNING Unit:" @ Unit.GetFullName() @ "soldier class:" @ Unit.GetSoldierClassTemplateName() @ "has an item equipped in the Slot:" @ Slot.InvSlot @ ", but they are not supposed to have the Slot. Attempting to unequip the item.",, 'WOTCMoreSparkWeapons');
 
 		foreach ItemStates(ItemState)
 		{
