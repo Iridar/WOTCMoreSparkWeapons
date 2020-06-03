@@ -4,12 +4,13 @@ function Init()
 {
 	super.Init();
 
-	AnimParams.AnimName = Get_KSMKill_AnimName();
+	Get_KSMKill_AnimName(AnimParams.AnimName);
 }
 
-function name Get_KSMKill_AnimName()
+private function Get_KSMKill_AnimName(out name AnimName)
 {
 	local XComGameState_Unit	TargetUnitState;
+	local name					KillSequence, DeathSequence;
 
 	if (AbilityContext.InputContext.MultiTargets.Length > 0 && AbilityContext.IsResultContextMultiHit(0))
 	{
@@ -17,15 +18,14 @@ function name Get_KSMKill_AnimName()
 
 		if (class'X2Condition_UnblockedTile'.static.IsUnitOnAnUnblockedTile(SourceUnitState, TargetUnitState, "FireAction"))
 		{
-			if (InStr(TargetUnitState.GetMyTemplateName(), "ShieldBearer") >= 0)
+			if (class'KSMHelper'.static.GetKillDeathAnimationNamesForCharacterTemplate(TargetUnitState.GetMyTemplateName(), KillSequence, DeathSequence))
 			{
-				if	(UnitPawn.GetAnimTreeController().CanPlayAnimation('FF_KSMKill_ShieldbearerA') && 
-					 TargetUnit.GetPawn().GetAnimTreeController().CanPlayAnimation('FF_KSMDeath_ShieldbearerA'))
+				if	(UnitPawn.GetAnimTreeController().CanPlayAnimation(KillSequence) && 
+					TargetUnit.GetPawn().GetAnimTreeController().CanPlayAnimation(DeathSequence))
 				{
-					return 'FF_KSMKill_ShieldbearerA';
+					AnimName = KillSequence;
 				}
 			}
 		}
 	}
-	return AnimParams.AnimName;
 }

@@ -24,16 +24,13 @@ static event OnLoadedSavedGame()
 static event InstallNewCampaign(XComGameState StartState)
 {}
 
-
 //	Immedaite goals:
 
-//	Fix BIT EM Pulse visualization
+//	Add a regular KSM melee animation that will work with Strike. Make sure it works for non-custom targets in a reasonable way too.
+//	Polish up KSM Kill Trooper animation, fix sounds in it.
 
+//	Make EMPulse stun fully augmented soldiers
 //	Balance Heavy Weapons in Aux Slot
-
-//	Resto Mist - improve textures and tintable
-
-//	Make Ordnance Launchers upgrade with Spark Armor
 
 //	KSM Tintable
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
@@ -50,22 +47,11 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Purifier -> use them as an explosive grenade?
 //	KSM kill animation: https://youtu.be/m8H-FDOLxz0
 
-//	Icon for Active Camo and all other abilities.
-
-//	BIT for Specialists? Include Active Camo animation for specialists.
-
 //	Sparkfall within the context of this mod?
 
 //	Patch Spark Launchers to use eInvSlot_AuxiliaryWeapon
 
 //	Ammo Canister -> +1 Heavy Weapon shot, +1 Ordnance Launcher slot?
-
-//	Cannon loading sound
-//AkEvent'XPACK_SoundEnvironment.Crate_Extract_Advent_Crate_Grab'
-
-//	Music for release vid?
-// https://youtu.be/YLp62WwnGSU
-
 //	BIT - Repair Servos (restore 2HP a turn to a maximum of 6 per mission)?
 //	BIT - AOE holotarget?
 //	BIT - make Active Camo scale with BIT tier?
@@ -73,27 +59,42 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities.
 //	Compatibility config for grenade scatter mod and grenade rebalance mod
 
-/*
-//	Kinetic Strike Module
-//	Kinetic Assault Module
-//	Kinetic Barrage Module
-//	Kinetic Collision Module
+//	Do: Add Weapon if it doesn't exist already for all starting items
+//	Icon for Active Camo and all other abilities.
+//	Localization for everything
+//	Clean up debug logging
 
-Kinetic Drive Module / Kinetic Driver
+//	LOW PRIORITY
+//	Fix BIT EM Pulse visualization
+//	Resto Mist - improve textures and tintable
+//	BIT for Specialists? If so, include Active Camo animation for them.
 
-Ordnance Projector*/
-
- /*	Investigate logs:
+/*	Investigate logs:
 [0155.04] Log: No animation compression exists for sequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit)
 [0155.04] Log: FAnimationUtils::CompressAnimSequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit) SkelMesh not valid, won't be able to use RemoveLinearKeys.
 [0155.04] Log: Compression Requested for Empty Animation NO_SensorSweepA
 */
 
-//	Clean up debug logging
-
 //	LONG TERM:
 //	1) Make equipping a BIT autoequip a Heavy Weapon once this is merged: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/741
 //	2) Get rid of OverrideHasHeavyWeapon Event Listener when this is merged: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/881
+
+//	EXPLOITABLE STUFF
+//	Music for release vid?
+// https://youtu.be/YLp62WwnGSU
+
+//	Cannon loading sound
+//	AkEvent'XPACK_SoundEnvironment.Crate_Extract_Advent_Crate_Grab'
+
+/*	LOCALIZATION
+//	Kinetic Strike Module
+//	Kinetic Assault Module
+//	Kinetic Barrage Module
+//	Kinetic Collision Module
+	Kinetic Drive Module 
+	Kinetic Driver
+	Ordnance Projector
+*/
 
 static event OnPostTemplatesCreated()
 {
@@ -102,6 +103,7 @@ static event OnPostTemplatesCreated()
 	CopyLocalizationForAbilities();
 	PatchAbilityTemplates();
 	PatchWeaponTemplates();
+	class'KSMHelper'.static.AddDeathAnimSetsToCharacterTemplates();
 }
 
 static function PatchSoldierClassTemplates()
@@ -198,26 +200,6 @@ static function PatchCharacterTemplates()
 				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_LAC_Spark")));
 				`LOG("Added matinee for Character Template:" @ CharTemplate.DataName,, 'IRITEST');
 			}
-		}
-	}
-	
-	CharMgr.FindDataTemplateAllDifficulties('AdvShieldBearerM2', DifficultyVariants);
-	foreach DifficultyVariants(DifficultyVariant)
-	{
-		CharTemplate = X2CharacterTemplate(DifficultyVariant);
-		if (CharTemplate != none)
-		{
-			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRIKineticStrikeModule.Anims.AS_Trooper_Death")));
-		}
-	}
-
-	CharMgr.FindDataTemplateAllDifficulties('AdvShieldBearerM3', DifficultyVariants);
-	foreach DifficultyVariants(DifficultyVariant)
-	{
-		CharTemplate = X2CharacterTemplate(DifficultyVariant);
-		if (CharTemplate != none)
-		{
-			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRIKineticStrikeModule.Anims.AS_Trooper_Death")));
 		}
 	}
 }

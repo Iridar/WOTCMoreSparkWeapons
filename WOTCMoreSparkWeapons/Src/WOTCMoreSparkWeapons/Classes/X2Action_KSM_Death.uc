@@ -11,12 +11,10 @@ function Init()
 
 	AttackSequence = XGUnit(DamageDealer).GetPawn().GetAnimTreeController().FullBodyDynamicNode.GetTerminalSequence();
 	
-	if (AttackSequence.AnimSeqName == 'FF_KSMKill_ShieldbearerA')
+	if (class'KSMHelper'.static.GetDeathAnimationNameForCharacterTemplateAndKillName(NewUnitState.GetMyTemplateName(), AttackSequence.AnimSeqName, AnimationToPlay))
 	{
 		UnitPawn.bUseDesiredEndingAtomOnDeath = false;
 		bWaitUntilNotified = true;
-	
-		AnimationToPlay = 'FF_KSMDeath_ShieldbearerA';
 	}
 }
 

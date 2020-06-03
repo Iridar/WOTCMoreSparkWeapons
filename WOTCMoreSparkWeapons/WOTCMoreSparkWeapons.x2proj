@@ -52,6 +52,9 @@
     <Content Include="Config\XComGameData_WeaponData.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\XComKineticStrikeModule.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\XComSparkWeapons.ini">
       <SubType>Content</SubType>
     </Content>
@@ -97,6 +100,9 @@
     <Content Include="ReadMe.txt" />
     <Content Include="ModPreview.jpg" />
     <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\KSMHelper.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_HeavyAutogun.uc">
       <SubType>Content</SubType>
     </Content>

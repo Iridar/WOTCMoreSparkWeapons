@@ -260,6 +260,10 @@ static function X2AbilityTemplate Create_KineticStrike_Passive()
 	DamageEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyLongDescription(), Template.IconImage, true,,Template.AbilitySourceName);
 	Template.AddTargetEffect(DamageEffect);
 
+	//	This will add configured Anim Sets with special Kill animations.
+	//	Only necessary for third party animations.
+	class'KSMHelper'.static.AddDeathAnimSetsToAbilityTemplate(Template);
+
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	//  NOTE: No visualization on purpose!
 
