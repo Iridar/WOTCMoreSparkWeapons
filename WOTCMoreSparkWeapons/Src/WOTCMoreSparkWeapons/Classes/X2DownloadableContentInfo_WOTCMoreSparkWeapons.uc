@@ -26,16 +26,15 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Add a regular KSM melee animation that will work with Strike. Make sure it works for non-custom targets in a reasonable way too.
-//	Polish up KSM Kill Trooper animation, fix sounds in it.
+//	Better heart material for bers heart
+//	Add a regular KSM melee animation that will work with Strike (moving one too!). Make sure it works for non-custom targets in a reasonable way too.
 
-//	Make EMPulse stun fully augmented soldiers
 //	Balance Heavy Weapons in Aux Slot
 
 //	KSM Tintable
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
-//	ADVENT grunts -> stratosphere
-//	Shieldbearers -> double down
+//	## ADVENT grunts -> stratosphere
+//	## Shieldbearers -> double down
 //	Berserker - Rip the heart out
 //	Andromedon - break the glass, kill the pilot
 //	Sectoid - knock over, stomp on the head
@@ -65,7 +64,10 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Clean up debug logging
 
 //	LOW PRIORITY
-//	Fix BIT EM Pulse visualization
+//	During KSM kills, delay damage flyover.
+//	Change KSM Exhaust flames so they turn off gradually instead of instantly.
+//	Add more effects to EM Pulse against fully-augmented soldiers, make a "Augment disabled!" flyover. Blind for head (eyes)
+//	Fix BIT EM Pulse visualization - at least make the Spark play finger-pointing animation. Ideally, make SPARK play EM Charge animation, and then have the energy zap to the BIT. Perhaps, Perk Content tether (or Volt projectile)
 //	Resto Mist - improve textures and tintable
 //	BIT for Specialists? If so, include Active Camo animation for them.
 

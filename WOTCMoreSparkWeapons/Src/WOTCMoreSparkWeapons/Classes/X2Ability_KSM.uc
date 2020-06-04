@@ -109,6 +109,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.AddMultiTargetEffect(KnockbackEffect);
 	Template.bOverrideMeleeDeath = true;*/
 
+	Template.bOverrideMeleeDeath = true;
 	Template.CustomFireAnim = 'FF_Melee';
 	Template.SourceMissSpeech = 'SwordMiss';
 	//Template.ActivationSpeech = 'RocketLauncher';
@@ -677,6 +678,7 @@ static function SetUpElectroPulseEffects(X2AbilityTemplate Template)
 	local X2Effect_Stunned						StunnedEffect;
 	local X2Effect_RemoveEffects				RemoveEffects;
 	local X2Condition_UnitProperty				UnitCondition;
+	local X2Condition_Augmented					AugmentedCondition;
 
 	//	Remove Energy Shields from all units in AOE
 	RemoveEffects = new class'X2Effect_RemoveEffects';
@@ -695,6 +697,18 @@ static function SetUpElectroPulseEffects(X2AbilityTemplate Template)
 	StunnedEffect = class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, 100, false);
 	StunnedEffect.SetDisplayInfo(ePerkBuff_Penalty, class'X2StatusEffects'.default.RoboticStunnedFriendlyName, class'X2StatusEffects'.default.RoboticStunnedFriendlyDesc, "img:///UILibrary_PerkIcons.UIPerk_stun");
 	StunnedEffect.TargetConditions.AddItem(UnitCondition);
+	Template.AddMultiTargetEffect(StunnedEffect);
+
+	//	Stun fully-augmented soldiers.
+	AugmentedCondition = new class'X2Condition_Augmented';
+	AugmentedCondition.Head = true;
+	AugmentedCondition.Torso = true;
+	AugmentedCondition.Arms = true;
+	AugmentedCondition.Legs = true;
+
+	StunnedEffect = class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, 100, false);
+	StunnedEffect.SetDisplayInfo(ePerkBuff_Penalty, class'X2StatusEffects'.default.RoboticStunnedFriendlyName, class'X2StatusEffects'.default.RoboticStunnedFriendlyDesc, "img:///UILibrary_PerkIcons.UIPerk_stun");
+	StunnedEffect.TargetConditions.AddItem(AugmentedCondition);
 	Template.AddMultiTargetEffect(StunnedEffect);
 
 	//	Make Robots easier to hack

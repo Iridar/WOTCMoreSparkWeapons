@@ -2,9 +2,16 @@ class X2Action_KSM_Kill extends X2Action_Fire;
 
 function Init()
 {
+	local XComGameState_Unit PrimaryTargetState;
+
 	super.Init();
 
-	Get_KSMKill_AnimName(AnimParams.AnimName);
+	PrimaryTargetState = XComGameState_Unit(History.GetGameStateForObjectID(PrimaryTargetID));
+
+	if (PrimaryTargetState.IsDead())
+	{
+		Get_KSMKill_AnimName(AnimParams.AnimName);
+	}
 }
 
 private function Get_KSMKill_AnimName(out name AnimName)

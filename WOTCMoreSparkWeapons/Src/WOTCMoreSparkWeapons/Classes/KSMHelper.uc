@@ -153,7 +153,8 @@ static private function array<string> FindKillAnimSets()
 
 	for (i = 0; i < default.KSMSpecialDeathAnimation.Length; i++)
 	{
-		if (default.KSMSpecialDeathAnimation[i].KillAnimSet != "")
+		if (default.KSMSpecialDeathAnimation[i].KillAnimSet != "" && 
+			ReturnArray.Find(default.KSMSpecialDeathAnimation[i].KillAnimSet) == INDEX_NONE) //	Add AnimSet only if it's not already there - just in case.
 		{
 			ReturnArray.AddItem(default.KSMSpecialDeathAnimation[i].DeathAnimSet);
 		}
