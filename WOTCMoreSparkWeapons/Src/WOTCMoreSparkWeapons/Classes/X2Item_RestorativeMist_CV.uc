@@ -1,4 +1,4 @@
-class X2Item_RestorativeMist_CV extends X2Item config(GameData_WeaponData);
+class X2Item_RestorativeMist_CV extends X2Item config(AuxiliaryWeapons);
 
 var config float HEAL_RANGE;
 var config float HEAL_RADIUS;

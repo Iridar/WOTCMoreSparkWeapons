@@ -45,7 +45,16 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Compatibility\XComRocketLaunchers.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\Compatibility\XComSPARKLaunchers.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\Compatibility\XComWeaponSkinReplacer.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\XComAutogunHeavyWeapon.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComAuxiliaryWeapons.ini">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Config\XComClassData.ini">
@@ -55,6 +64,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Config\XComKineticStrikeModule.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComOrdnanceLaunchers.ini">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Config\XComSparkWeapons.ini">
@@ -146,6 +158,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_MeleeDamageBonus.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_StunCyberus.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2EventListener_HasHeavyWeapon.uc">

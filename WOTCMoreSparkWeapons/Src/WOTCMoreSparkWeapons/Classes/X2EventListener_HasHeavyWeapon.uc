@@ -1,5 +1,7 @@
 class X2EventListener_HasHeavyWeapon extends X2EventListener;
 
+//	Currently unused.
+/*
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
@@ -8,7 +10,7 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	return Templates;
 }
-
+*/
 static function CHEventListenerTemplate Create_ListenerTemplate()
 {
 	local CHEventListenerTemplate Template;

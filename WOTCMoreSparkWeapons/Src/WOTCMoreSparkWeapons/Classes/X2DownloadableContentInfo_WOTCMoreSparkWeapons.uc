@@ -3,9 +3,11 @@ class X2DownloadableContentInfo_WOTCMoreSparkWeapons extends X2DownloadableConte
 var config(SparkWeapons) array<name> SparkCharacterTemplates;
 var config(SparkWeapons) bool bRocketLaunchersModPresent;
 var config(SparkWeapons) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
+var config(SparkWeapons) bool bRemoveHeavyWeaponSlotWithoutBIT;
 var config(SparkWeapons) array<name> WeaponCategoriesAddHeavyWeaponSlot;
 var config(GameData_WeaponData) bool bOrdnanceAmplifierUsesBlasterLauncherTargeting;
-var config(GameData_WeaponData) array<name> MeleeAbilitiesUseKSM;
+
+var config(KineticStrikeModule) array<name> MeleeAbilitiesUseKSM;
 
 var config(ClassData) array<name> ClassesToRemoveAbilitiesFrom;
 var config(ClassData) array<name> AbilitiesToRemove;
@@ -29,19 +31,15 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities, ABB, Heavy Support Item, Freezer Heavy Weapon
 
 //	See if it's possible to make KSM not deal environmental damage to floor tiles.
-//	Add a regular KSM melee animation that will work with Strike (moving one too!).
-//  Make sure Kinetic Strike works for non-custom targets in a reasonable way too.
 //	Balance Heavy Weapons in Aux Slot, and the Aux Slot itself
-//	Patch Spark Launchers to use eInvSlot_AuxiliaryWeapon, and nerf their charges
+
 //	Do: Add Weapon if it doesn't exist already for all starting items
 //	Localization for everything
 //	Clean up debug logging
-//	Icon for Active Camo and all other abilities.
 //	Give large detection radius to sparks
-//	Resto Mist can be built
 //	Compatibility config for grenade scatter mod and grenade rebalance mod
-//	Add charges to EM Pulse
-//	See if X2 DLC Info heavy weapon hook can be used instead of the Event Listener.
+
+//	Icon for Active Camo and all other abilities.
 
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	## ADVENT grunts -> stratosphere
@@ -72,7 +70,7 @@ static event InstallNewCampaign(XComGameState StartState)
 //	During KSM kills, delay damage flyover.
 //	Change KSM Exhaust flames so they turn off gradually instead of instantly.
 //	Add more effects to EM Pulse against fully-augmented soldiers, make a "Augment disabled!" flyover. Blind for head (eyes)
-//	Fix BIT EM Pulse visualization - at least make the Spark play finger-pointing animation. Ideally, make SPARK play EM Charge animation, and then have the energy zap to the BIT. Perhaps, Perk Content tether (or Volt projectile)
+//	Fix BIT EM Pulse visualization - at least make the Spark play finger-pointing animation and make multi target effects visualize at the same time. Ideally, make SPARK play EM Charge animation, and then have the energy zap to the BIT. Perhaps, Perk Content tether (or Volt projectile)
 //	Resto Mist - improve textures and tintable
 //	BIT for Specialists? If so, include Active Camo animation for them.
 
@@ -92,6 +90,8 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Cannon loading sound
 //	AkEvent'XPACK_SoundEnvironment.Crate_Extract_Advent_Crate_Grab'
+//	Click sounds
+//	AkEvent'SoundUnreal3DSounds.Unreal3DSounds_GrabSyringe'
 
 /*	LOCALIZATION
 //	Kinetic Strike Module
@@ -139,41 +139,18 @@ static function PatchSoldierClassTemplates()
 		}		
 	}	 
 }
-/*
+
 static function GetNumHeavyWeaponSlotsOverride(out int NumHeavySlots, XComGameState_Unit UnitState, XComGameState CheckGameState)
-{	
-	local XComGameState_Item ItemState;
-	local name WeaponCat;
-	local int i;
-
-
-	//	TODO: Maybe change this to cycle through all inventory items.
-	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
+{
+	if (default.bRemoveHeavyWeaponSlotWithoutBIT && 
+		default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && 
+		!class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
 	{
+		//	Remove one Heavy Weapon slot if the SPARK doesn't have a BIT equipped.
 		NumHeavySlots--;
-
-		ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
-		
-		if (ItemState != none)
-		{
-			WeaponCat = ItemState.GetWeaponCategory();
-			if (WeaponCat != '')
-			{
-				for (i = 0; i < default.WeaponCategoriesAddHeavyWeaponSlot.Length; i++)
-				{
-					if (default.WeaponCategoriesAddHeavyWeaponSlot[i] == WeaponCat)
-					{
-						NumHeavySlots++;
-				
-					}
-				}
-			}
-
-			`LOG("GetNumHeavyWeaponSlotsOverride: Unit:" @ UnitState.GetFullName() @ "has heavy weapon slot:" @ NumHeavySlots,, 'WOTCMoreSparkWeapons');
-		}
 	}
 }
-*/
+
 static function PatchCharacterTemplates()
 {
     local X2CharacterTemplateManager    CharMgr;

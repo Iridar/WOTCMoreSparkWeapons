@@ -1,4 +1,4 @@
-class X2StrategyElement_AuxSlot extends CHItemSlotSet config(SparkWeapons);
+class X2StrategyElement_AuxSlot extends CHItemSlotSet config(AuxiliaryWeapons);
 
 var localized string strSlotFirstLetter;
 var localized string strSlotLocName;
@@ -73,6 +73,13 @@ private static function bool IsTemplateValidForSlot(X2ItemTemplate ItemTemplate,
 {
 	local XComGameState_Item	OrdLauncherState;
 	local X2WeaponTemplate		WeaponTemplate;
+	local X2EquipmentTemplate	EqTemplate;
+
+	EqTemplate = X2EquipmentTemplate(ItemTemplate);
+	if (EqTemplate != none && EqTemplate.InventorySlot == eInvSlot_AuxiliaryWeapon)
+	{
+		return true;
+	}
 
 	//	If the ordnance launcher is equipped, allow equipping grenades in the slot.
 	OrdLauncherState = UnitState.GetItemInSlot(class'X2Item_OrdnanceLauncher_CV'.default.INVENTORY_SLOT, CheckGameState);

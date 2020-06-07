@@ -1,4 +1,4 @@
-class X2StrategyElement_InventorySlots extends CHItemSlotSet config(GameData_WeaponData);
+class X2StrategyElement_InventorySlots extends CHItemSlotSet config(OrdnanceLaunchers);
 
 var localized string strSlotFirstLetter;
 

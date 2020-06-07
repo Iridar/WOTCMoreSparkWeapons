@@ -1,7 +1,15 @@
-class X2Item_ElectroPulse extends X2Item config(GameData_WeaponData);
+class X2Item_ElectroPulse extends X2Item config(AuxiliaryWeapons);
 
 var config float PULSE_RANGE;
 var config float PULSE_RADIUS;
+var config int  CHARGES;
+var config int	COOLDOWN;
+var config int HACK_DEFENSE_REDUCTION;
+var config int STUN_DURATION_ACTIONS;
+var config int STUN_CHANCE;
+var config array<name> REMOVE_EFFECTS;
+var config bool DISABLE_WEAPONS;
+var config bool DEAL_DAMAGE;
 
 var config WeaponDamageValue DAMAGE;
 var config array <WeaponDamageValue> EXTRA_DAMAGE;

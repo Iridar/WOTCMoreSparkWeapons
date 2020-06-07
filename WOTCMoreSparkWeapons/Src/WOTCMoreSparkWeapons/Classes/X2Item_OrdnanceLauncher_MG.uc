@@ -1,4 +1,4 @@
-class X2Item_OrdnanceLauncher_MG extends X2Item config(GameData_WeaponData);
+class X2Item_OrdnanceLauncher_MG extends X2Item config(OrdnanceLaunchers);
 
 var config int MAG_LAUNCHER_RADIUSBONUS;
 var config int MAG_LAUNCHER_RANGEBONUS;

@@ -33,9 +33,11 @@ Similar to Grenade Launchers, Ordnance Launchers provide a boost to grenades' ra
 
 [h1]Kinetic Strike Module[/h1]
 
-New Secondary Weapon, grants [b]Kinetic Strike[/b] ability that works similarly to Enemy Within - target an adjacent tile, and everything on it gets pulverized. Having a KSM equipped also passively boosts damage of other melee abilities, such as [b]Strike[/b].
+New Secondary Weapon, grants [b]Kinetic Strike[/b] ability that works similarly to Enemy Within - target an adjacent tile, and everything on it gets pulverized. Its damage scales with SPARK Armor, same as for the [b]Strike[/b] ability. Having a KSM equipped also passively boosts damage of other melee abilities, such as the mentioned [b]Strike[/b].
 
 Kinetic Strike ability has unique kill/death animations for some enemies. I made it possible for third party mods to supply their own unique animations through config. If you're modder and are interested in adding some, please [b][url=]read this[/url][/b].
+
+There is only one tier of KSM, it can be built in Engineering one at a time after ADVENT MEC autopsy.
 
 [h1]Kiruka Autogun[/h1]
 

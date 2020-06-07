@@ -1,6 +1,7 @@
-class X2Item_KSM extends X2Item config(GameData_WeaponData);
+class X2Item_KSM extends X2Item config(KineticStrikeModule);
 
-var config int MELEE_DAMAGE_BONUS;
+var config int MELEE_DAMAGE_BONUS_FLAT;
+var config float MELEE_DAMAGE_BONUS_MULTIPLIER;
 
 var config WeaponDamageValue DAMAGE;
 var config array <WeaponDamageValue> EXTRA_DAMAGE;
@@ -49,9 +50,9 @@ static function X2DataTemplate Create_Item()
 	local ArtifactCost Resources;
 	local int i;
 	
-	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_KineticStrikeModule_CV');
+	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_KineticStrikeModule');
 
-	Template.SetUIStatMarkup(class'XLocalizedData'.default.MeleeBonus,, default.MELEE_DAMAGE_BONUS);
+	Template.SetUIStatMarkup(class'XLocalizedData'.default.MeleeBonus,, Round(default.MELEE_DAMAGE_BONUS_MULTIPLIER * 100),,, "%");
 	
 	Template.WeaponPanelImage = "_ConventionalRifle";
 	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_AssaultRifle';
@@ -89,6 +90,7 @@ static function X2DataTemplate Create_Item()
 	Template.Aim = default.AIM;
 	Template.CritChance = default.CRITCHANCE;
 	Template.iClipSize = default.ICLIPSIZE;
+	Template.bHideClipSizeStat = true;
 	Template.InfiniteAmmo = true;
 	Template.iSoundRange = default.ISOUNDRANGE;
 	Template.iEnvironmentDamage = default.IENVIRONMENTDAMAGE;
