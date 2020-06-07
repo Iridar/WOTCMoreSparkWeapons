@@ -3,7 +3,9 @@
   <PropertyGroup>
     <Guid>26eb64ba-f2c3-4a5d-b31c-3d99bc074600</Guid>
     <Name>WOTCMoreSparkWeapons</Name>
-    <Description>Adds additional weapon options for SPARKs and MEC Troopers.</Description>
+    <Description>Adds new weapons and tools for SPARKs and MEC Troopers.
+
+tags= war of the chosen, item, weapon</Description>
     <SteamPublishID>0</SteamPublishID>
     <AssemblyName>WOTCMoreSparkWeapons</AssemblyName>
     <RootNamespace>WOTCMoreSparkWeapons</RootNamespace>

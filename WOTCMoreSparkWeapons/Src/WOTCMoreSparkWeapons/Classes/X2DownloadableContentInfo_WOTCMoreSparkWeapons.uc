@@ -26,12 +26,23 @@ static event InstallNewCampaign(XComGameState StartState)
 
 //	Immedaite goals:
 
-//	Better heart material for bers heart
-//	Add a regular KSM melee animation that will work with Strike (moving one too!). Make sure it works for non-custom targets in a reasonable way too.
+//	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities, ABB, Heavy Support Item, Freezer Heavy Weapon
 
-//	Balance Heavy Weapons in Aux Slot
+//	See if it's possible to make KSM not deal environmental damage to floor tiles.
+//	Add a regular KSM melee animation that will work with Strike (moving one too!).
+//  Make sure Kinetic Strike works for non-custom targets in a reasonable way too.
+//	Balance Heavy Weapons in Aux Slot, and the Aux Slot itself
+//	Patch Spark Launchers to use eInvSlot_AuxiliaryWeapon, and nerf their charges
+//	Do: Add Weapon if it doesn't exist already for all starting items
+//	Localization for everything
+//	Clean up debug logging
+//	Icon for Active Camo and all other abilities.
+//	Give large detection radius to sparks
+//	Resto Mist can be built
+//	Compatibility config for grenade scatter mod and grenade rebalance mod
+//	Add charges to EM Pulse
+//	See if X2 DLC Info heavy weapon hook can be used instead of the Event Listener.
 
-//	KSM Tintable
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	## ADVENT grunts -> stratosphere
 //	## Shieldbearers -> double down
@@ -46,24 +57,18 @@ static event InstallNewCampaign(XComGameState StartState)
 //	Purifier -> use them as an explosive grenade?
 //	KSM kill animation: https://youtu.be/m8H-FDOLxz0
 
-//	Sparkfall within the context of this mod?
-
-//	Patch Spark Launchers to use eInvSlot_AuxiliaryWeapon
-
 //	Ammo Canister -> +1 Heavy Weapon shot, +1 Ordnance Launcher slot?
 //	BIT - Repair Servos (restore 2HP a turn to a maximum of 6 per mission)?
 //	BIT - AOE holotarget?
 //	BIT - make Active Camo scale with BIT tier?
 
-//	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities.
-//	Compatibility config for grenade scatter mod and grenade rebalance mod
-
-//	Do: Add Weapon if it doesn't exist already for all starting items
-//	Icon for Active Camo and all other abilities.
-//	Localization for everything
-//	Clean up debug logging
+//	Artillery Cannons
+//	support for Demolition
 
 //	LOW PRIORITY
+//	Sparkfall within the context of this mod?
+//	Better heart material for bers heart
+//	KSM Tintable
 //	During KSM kills, delay damage flyover.
 //	Change KSM Exhaust flames so they turn off gradually instead of instantly.
 //	Add more effects to EM Pulse against fully-augmented soldiers, make a "Augment disabled!" flyover. Blind for head (eyes)
