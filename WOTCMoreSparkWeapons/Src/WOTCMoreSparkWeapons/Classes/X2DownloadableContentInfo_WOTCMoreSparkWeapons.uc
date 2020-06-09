@@ -16,10 +16,7 @@ var config(ClassData) array<name> AbilitiesToRemove;
 //	Immedaite goals:
 
 //	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities, ABB, Metal Over Flesh
-//	See if it's possible to make KSM not deal environmental damage to floor tiles.
 //	Balance Heavy Weapons in Aux Slot, and the Aux Slot itself
-//	limit Aux Slot to vanilla heavy weapons.
-//	Only one Autogun per spark
 
 //	Compatibility config for grenade scatter mod and grenade rebalance mod
 //	release video
@@ -28,7 +25,7 @@ var config(ClassData) array<name> AbilitiesToRemove;
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	## ADVENT grunts -> stratosphere
 //	## Shieldbearers -> double down
-//	Berserker - Rip the heart out
+//	## Berserker - Rip the heart out
 //	Andromedon - break the glass, kill the pilot
 //	Sectoid - knock over, stomp on the head
 //	Faceless - flaming elbow drop
@@ -102,6 +99,7 @@ static event OnLoadedSavedGameToStrategy()
 	local name								TemplateName;
 	local X2ItemTemplateManager				ItemMgr;
 	local bool								bChange;
+	local X2StrategyElementTemplateManager	StratMgr;
 
 	History = `XCOMHISTORY;	
 	XComHQ = `XCOMHQ;
@@ -133,6 +131,44 @@ static event OnLoadedSavedGameToStrategy()
 	{
 		History.CleanupPendingGameState(NewGameState);
 	}
+
+	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
+	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ArmCannon_Tech');
+}
+
+
+static function AddProvingGroundsProjectIfItsNotPresent(X2StrategyElementTemplateManager StratMgr, name ProjectName)
+{
+	local XComGameState		NewGameState;
+	local X2TechTemplate	TechTemplate;
+
+	if (!IsResearchInHistory(ProjectName))
+	{
+		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Adding Research Templates");
+
+		TechTemplate = X2TechTemplate(StratMgr.FindStrategyElementTemplate(ProjectName));
+		NewGameState.CreateNewStateObject(class'XComGameState_Tech', TechTemplate);
+
+		`XCOMHISTORY.AddGameStateToHistory(NewGameState);
+	}
+}
+
+static function bool IsResearchInHistory(name ResearchName)
+{
+	// Check if we've already injected the tech templates
+	local XComGameState_Tech	TechState;
+	local XComGameStateHistory	History;
+	
+	History = `XCOMHISTORY;
+
+	foreach History.IterateByClassType(class'XComGameState_Tech', TechState)
+	{
+		if ( TechState.GetMyTemplateName() == ResearchName )
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 static event OnPostTemplatesCreated()
@@ -464,41 +500,54 @@ static function GetNumUtilitySlotsOverride(out int NumUtilitySlots, XComGameStat
 		NumUtilitySlots++;
 	}
 }
-
-static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, int Quantity, XComGameState_Unit UnitState, optional XComGameState CheckGameState, optional out string DisabledReason, optional XComGameState_Item ItemState)
+*/
+static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, int Quantity, XComGameState_Unit UnitState, optional XComGameState CheckGameState, optional out string DisabledReason, optional XComGameState_Item ItemState) 
 {
     local XGParamTag                    LocTag;
-    local X2SoldierClassTemplateManager Manager;
+    local bool							OverrideNormalBehavior;
+    local bool							DoNotOverrideNormalBehavior;
+	local XComGameState_Item			OtherItemState;
+	local name							TemplateName;
 
-	//	If this is a Utility Slot, and this character is a SPARK or a MEC
-	if (Slot == eInvSlot_Utility && default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
+    OverrideNormalBehavior = CheckGameState != none;
+    DoNotOverrideNormalBehavior = CheckGameState == none;
+
+    if(DisabledReason != "")
+        return DoNotOverrideNormalBehavior;
+		
+	//	If we're trying to equip an Autogun
+	if (ItemTemplate.DataName == 'IRI_Heavy_Autogun' || ItemTemplate.DataName == 'IRI_Heavy_Autogun_MK2') 
 	{
-		//	Do nothing if the item was already disabled by some other mod.
-		if(DisabledReason != "") return CheckGameState == none; 
-
-		//	Do this only if the unit *should* have zero utility slots according to the character template, meaning we're interacting with the slot we've added ourselves.
-		if (UnitState.GetMyTemplate().CharacterBaseStats[eStat_UtilityItems] == 0)
+		//	Into Heavy Weapon slot
+		if (Slot == eInvSlot_HeavyWeapon)
 		{
-			//	Forbid equipping grenades into utility slot.
-			if (X2GrenadeTemplate(ItemTemplate) == none)
+			//	Grab Item State in the Aux Slot
+			OtherItemState = UnitState.GetItemInSlot(eInvSlot_AuxiliaryWeapon, CheckGameState);
+		}	//	Into Aux SLot
+		else if (Slot == eInvSlot_AuxiliaryWeapon)
+		{
+			//	Grab Item State from the Heavy Weapon slot
+			OtherItemState = UnitState.GetItemInSlot(eInvSlot_HeavyWeapon, CheckGameState);
+		}
+			
+		//	If there's an item in that slot
+		if (OtherItemState != none)
+		{
+			TemplateName = OtherItemState.GetMyTemplateName();
+			//	If it's an Autogun
+			if (TemplateName == 'IRI_Heavy_Autogun' || TemplateName == 'IRI_Heavy_Autogun_MK2')
 			{
-				//	Grenades CANNOT be equipped in the utility slot.
-				bCanAddItem = 0;
-
-				Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+				//	Autogun already equipped, forbid equipping another one.
 				LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
-				LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
-				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
-
-				//	Override normal behavior
-				return CheckGameState != none;
+				LocTag.StrValue0 = class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_HeavyWeapon];				
+				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strCategoryRestricted));
+				bCanAddItem = 0;
+				return OverrideNormalBehavior;
 			}
 		}
 	}
-
-	//	Do not override normal behavior.
-	return CheckGameState == none;
-}*/
+    return DoNotOverrideNormalBehavior;
+}
 
 static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
 {

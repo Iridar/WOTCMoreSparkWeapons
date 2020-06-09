@@ -27,10 +27,12 @@ static function X2AbilityTemplate Create_KineticStrike()
 	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
 	local X2AbilityTarget_Cursor            CursorTarget;
 	local X2AbilityMultiTarget_Cylinder		MultiTarget;
+	local X2Effect_ApplyKSMWorldDamage		KSMWorldDamage;
 	//local X2Effect_AdditionalAnimSets		AnimSetEffect;
 	local X2Effect_OverrideDeathAction		OverrideDeathAction;
 	//local X2Effect_Knockback				KnockbackEffect;
 	//local X2Condition_UnblockedTile			UnblockedTileCondition;
+	//local X2Effect_ApplyDirectionalWorldDamage	WorldDamage;
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_KineticStrike');
 
@@ -97,6 +99,12 @@ static function X2AbilityTemplate Create_KineticStrike()
 	//Template.AddMultiTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
 	WeaponDamageEffect = new class'X2Effect_DLC_3StrikeDamage';
 	Template.AddMultiTargetEffect(WeaponDamageEffect);
+
+	KSMWorldDamage = new class'X2Effect_ApplyKSMWorldDamage';
+	KSMWorldDamage.DamageAmount = class'X2Item_KSM'.default.KINETIC_STRIKE_ENVIRONMENTAL_DAMAGE;
+	KSMWorldDamage.bApplyOnHit = true;
+	KSMWorldDamage.bApplyOnMiss = true;
+	Template.AddMultiTargetEffect(KSMWorldDamage);
 
 	//	Add knockback only to enemies that *are* on blocked tiles.
 	/*
@@ -245,12 +253,12 @@ static function X2AbilityTemplate Create_KineticStrike_Passive()
 	// Icon Properties
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_KineticStrike_Passive');
 
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_momentum";
+	Template.IconImage = "img:///IRIKineticStrikeModule.UI.UI_KSM_MeleeBoost";
 
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
 	Template.Hostility = eHostility_Neutral;
-	Template.bDisplayInUITacticalText = false;
+	Template.bDisplayInUITacticalText = true;
 
 	Template.AbilityToHitCalc = default.DeadEye;
 	Template.AbilityTargetStyle = default.SelfTarget;
@@ -755,7 +763,7 @@ static function X2AbilityTemplate Create_ElectroPulse()
 
 	SetUpElectroPulse(Template);
 
-	Template.IconImage = "img:///IRIElectroPulse.UI.UI_EMPulse_BIT";
+	Template.IconImage = "img:///IRIElectroPulse.UI.UI_EMPulse";
 
 	//	Targeting and Triggering
 	Template.AbilityTargetStyle = default.SelfTarget;

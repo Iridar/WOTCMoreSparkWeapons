@@ -4,6 +4,8 @@ var localized string strSlotFirstLetter;
 var localized string strSlotLocName;
 
 var config array<name> AuxSlotAllowedWeaponCategories;
+var config array<name> AuxSlotAllowedItems;
+var config name		   TechRequiredForItems;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -71,10 +73,27 @@ static function bool CanAddItemToSlot(CHItemSlot Slot, XComGameState_Unit UnitSt
 
 private static function bool IsTemplateValidForSlot(X2ItemTemplate ItemTemplate, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
-	local XComGameState_Item	OrdLauncherState;
-	local X2WeaponTemplate		WeaponTemplate;
-	local X2EquipmentTemplate	EqTemplate;
+	local XComGameState_Item				OrdLauncherState;
+	local X2WeaponTemplate					WeaponTemplate;
+	local X2EquipmentTemplate				EqTemplate;
+	local XComGameState_HeadquartersXCom	XComHQ;
 
+	
+	//	Whitelist items by template name
+	if (default.AuxSlotAllowedItems.Find(ItemTemplate.DataName) != INDEX_NONE)
+	{
+		if (default.TechRequiredForItems != '')
+		{
+			XComHQ = `XCOMHQ;
+			if (XComHQ.IsTechResearched(default.TechRequiredForItems))
+			{
+				return true;
+			}
+		}
+		else return true;	//	Allow equipping specified items if no required Tech is specified.
+	}	
+
+	//	Whitelist items by inventory slot - in case an item was made or patched to be here.
 	EqTemplate = X2EquipmentTemplate(ItemTemplate);
 	if (EqTemplate != none && EqTemplate.InventorySlot == eInvSlot_AuxiliaryWeapon)
 	{
@@ -88,6 +107,7 @@ private static function bool IsTemplateValidForSlot(X2ItemTemplate ItemTemplate,
 		if (X2GrenadeTemplate(ItemTemplate) != none) return true;
 	}
 
+	//	Whitelist items by weaponcat
 	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
 	if (WeaponTemplate != none)
 	{

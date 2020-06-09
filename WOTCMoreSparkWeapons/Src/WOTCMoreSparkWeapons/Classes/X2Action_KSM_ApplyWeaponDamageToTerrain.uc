@@ -1,5 +1,7 @@
 class X2Action_KSM_ApplyWeaponDamageToTerrain extends X2Action_ApplyWeaponDamageToTerrain;
 
+//	Currently unused
+
 simulated state Executing
 {
 	simulated event BeginState(name nmPrevState)

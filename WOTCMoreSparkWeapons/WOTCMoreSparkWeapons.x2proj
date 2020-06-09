@@ -154,6 +154,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2DownloadableContentInfo_WOTCMoreSparkWeapons.uc" />
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_ApplyKSMWorldDamage.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_IRI_Rainmaker.uc">
       <SubType>Content</SubType>
     </Content>
@@ -188,6 +191,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_RestorativeMist_CV.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_ArmCannonTech.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_AuxSlot.uc">

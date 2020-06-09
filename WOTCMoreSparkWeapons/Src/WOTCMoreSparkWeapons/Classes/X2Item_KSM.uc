@@ -2,6 +2,7 @@ class X2Item_KSM extends X2Item config(KineticStrikeModule);
 
 var config int MELEE_DAMAGE_BONUS_FLAT;
 var config float MELEE_DAMAGE_BONUS_MULTIPLIER;
+var config int KINETIC_STRIKE_ENVIRONMENTAL_DAMAGE;
 
 var config WeaponDamageValue DAMAGE;
 var config array <WeaponDamageValue> EXTRA_DAMAGE;
