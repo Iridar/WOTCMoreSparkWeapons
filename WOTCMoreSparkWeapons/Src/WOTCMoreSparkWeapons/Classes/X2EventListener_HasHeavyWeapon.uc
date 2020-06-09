@@ -47,7 +47,7 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 	Tuple = XComLWTuple(EventData);
 	UnitState = XComGameState_Unit(EventSource);
 
-	`LOG("Override: for unit:" @ UnitState.GetFullName(),, 'WOTCMoreSparkWeapons');
+	//`LOG("Override: for unit:" @ UnitState.GetFullName(),, 'WOTCMoreSparkWeapons');
 
 	if (Tuple != none && UnitState != none && !Tuple.Data[0].b)
 	{
@@ -66,14 +66,14 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 				//	Grant HW slot if the secondary weapon's category is listed.
 				Tuple.Data[1].b = class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.WeaponCategoriesAddHeavyWeaponSlot.Find(ItemState.GetWeaponCategory()) != INDEX_NONE;
 
-				`LOG("Override: unit has heavy weapon:" @ Tuple.Data[0].b,, 'WOTCMoreSparkWeapons');
+				//`LOG("Override: unit has heavy weapon:" @ Tuple.Data[0].b,, 'WOTCMoreSparkWeapons');
 
 				return ELR_NoInterrupt;
 			}
 			//	Forbid the unit to have a HW slot if the listed weapon category is not present.
 			Tuple.Data[1].b = false;
 
-			`LOG("Override: unit has heavy weapon Stage2:" @ Tuple.Data[0].b,, 'WOTCMoreSparkWeapons');
+			//`LOG("Override: unit has heavy weapon Stage2:" @ Tuple.Data[0].b,, 'WOTCMoreSparkWeapons');
 		}
 	}
 	return ELR_NoInterrupt;

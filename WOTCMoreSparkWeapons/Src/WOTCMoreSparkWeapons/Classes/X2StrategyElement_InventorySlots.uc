@@ -103,11 +103,7 @@ static function bool ShowItemInLockerList(CHItemSlot Slot, XComGameState_Unit Un
 
 static function bool CanAddItemToSlot(CHItemSlot Slot, XComGameState_Unit UnitState, X2ItemTemplate ItemTemplate, optional XComGameState CheckGameState, optional int Quantity = 1, optional XComGameState_Item ItemState)
 {    
-	//	If there is no item in the slot
-	//if(UnitState.GetItemInSlot(Slot.InvSlot, CheckGameState) == none)
-	//{
-		return X2GrenadeTemplate(ItemTemplate) != none;
-	//}
+	return X2GrenadeTemplate(ItemTemplate) != none;
 
 	//	Slot is already occupied, cannot add any more items to it.
 	return false;
@@ -137,23 +133,6 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 	HasSlot = Slot.UnitHasSlot(Unit, strDummy, NewGameState);
 
 	iMaxItems = Slot.GetMaxItemCountFn(Slot, Unit, NewGameState);
-	/*
-	if(ItemState == none && HasSlot )
-	{
-		ItemState = FindBestWeapon(Unit, Slot.InvSlot, XComHQ, NewGameState);
-		if (ItemState != none)
-		{
-			`LOG("Empty slot is not allowed, equipping:" @ ItemState.GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
-			if (Unit.AddItemToInventory(ItemState, Slot.InvSlot, NewGameState))
-			{
-				`LOG("Equipped successfully!",, 'WOTCMoreSparkWeapons');
-			}
-			else `LOG("WARNING, could not equip it!",, 'WOTCMoreSparkWeapons');
-
-			return;
-		}
-		else `LOG("Empty slot is not allowed, but the mod was unable to find an infinite item to fill the slot.",, 'WOTCMoreSparkWeapons');
-	}	*/
 
 	//	Unit has slot
 	if (HasSlot)
@@ -164,12 +143,7 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 			ItemState = FindBestWeapon(Unit, Slot.InvSlot, XComHQ, NewGameState);
 			if (ItemState != none)
 			{
-				`LOG("Empty slot is not allowed, equipping:" @ ItemState.GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
-				if (Unit.AddItemToInventory(ItemState, Slot.InvSlot, NewGameState))
-				{
-					`LOG("Equipped successfully!",, 'WOTCMoreSparkWeapons');
-				}
-				else `LOG("WARNING, could not equip it!",, 'WOTCMoreSparkWeapons');
+				Unit.AddItemToInventory(ItemState, Slot.InvSlot, NewGameState);
 			}
 			else return;	//	Could not find a weapon to put into the slot - exit.
 		}	
@@ -184,10 +158,9 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 			{
 				if (Unit.RemoveItemFromInventory(ItemState, NewGameState))
 				{
-					`LOG("Successfully unequipped the item. Putting it into HQ Inventory.",, 'WOTCMoreSparkWeapons');
+					//`LOG("Successfully unequipped the item. Putting it into HQ Inventory.",, 'WOTCMoreSparkWeapons');
 					XComHQ.PutItemInInventory(NewGameState, ItemState);
 				}
-				else `LOG("WARNING, failed to unequip the item!",, 'WOTCMoreSparkWeapons');
 			}
 		}	
 		
@@ -197,18 +170,14 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 	//	Unit doesn't have the slot, but has some items equipped into it.
 	if (ItemStates.Length > 0 && !HasSlot)
 	{
-		`LOG("WARNING Unit:" @ Unit.GetFullName() @ "soldier class:" @ Unit.GetSoldierClassTemplateName() @ "has an item equipped in the Slot:" @ Slot.InvSlot @ ", but they are not supposed to have the Slot. Attempting to unequip the item.",, 'WOTCMoreSparkWeapons');
-
 		foreach ItemStates(ItemState)
 		{
 			ItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', ItemState.ObjectID));
 
 			if (Unit.RemoveItemFromInventory(ItemState, NewGameState))
 			{
-				`LOG("Successfully unequipped the item. Putting it into HQ Inventory.",, 'WOTCMoreSparkWeapons');
 				XComHQ.PutItemInInventory(NewGameState, ItemState);
 			}
-			else `LOG("WARNING, failed to unequip the item!",, 'WOTCMoreSparkWeapons');
 		}
 	}
 }

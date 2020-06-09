@@ -32,13 +32,13 @@ static function bool IsUnitOnAnUnblockedTile(const XComGameState_Unit SourceUnit
 	TargetLocation = WorldData.GetPositionFromTileCoordinates(TargetUnit.TileLocation);
 	WorldData.CollectTilesInCylinder(Tiles, TargetLocation, 96.0f, 0); // grabs only directly adjacent tiles (non-diagonal)
 
-	`LOG(LogPart @ "## Checking if unit:" @ TargetUnit.GetFullName() @ "is on an unblocked tile. Gathered:" @ Tiles.Length @ "tiles.",, 'WOTCMoreSparkWeapons');
+	//`LOG(LogPart @ "## Checking if unit:" @ TargetUnit.GetFullName() @ "is on an unblocked tile. Gathered:" @ Tiles.Length @ "tiles.",, 'WOTCMoreSparkWeapons');
 
 	for (i = 0; i < Tiles.Length; i++)
 	{
 		if (WorldData.IsFloorTile(Tiles[i].Tile) && Tiles[i].Tile != TargetUnit.TileLocation && Tiles[i].Tile != SourceUnit.TileLocation && !WorldData.IsTileOutOfRange(Tiles[i].Tile))
 		{	
-			`LOG(LogPart @ "## Checking floor tile:" @ i @ ":" @ Tiles[i].Tile.X @ Tiles[i].Tile.Y @ Tiles[i].Tile.Z @ ". Tile is blocked:" @ !WorldData.CanUnitsEnterTile(Tiles[i].Tile),, 'WOTCMoreSparkWeapons');
+			//`LOG(LogPart @ "## Checking floor tile:" @ i @ ":" @ Tiles[i].Tile.X @ Tiles[i].Tile.Y @ Tiles[i].Tile.Z @ ". Tile is blocked:" @ !WorldData.CanUnitsEnterTile(Tiles[i].Tile),, 'WOTCMoreSparkWeapons');
 			if (!WorldData.CanUnitsEnterTile(Tiles[i].Tile)) return bReverseConditionReturn;
 		}			
 	}

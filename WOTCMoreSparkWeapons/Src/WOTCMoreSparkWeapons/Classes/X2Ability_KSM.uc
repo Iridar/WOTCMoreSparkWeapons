@@ -171,7 +171,7 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 
 	for (i = 0; i < AbilityContext.InputContext.MultiTargets.Length; i++)
 	{
-		`LOG("Target unit:" @ XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID)).GetFullName(),, 'WOTCMoreSparkWeapons');
+		//`LOG("Target unit:" @ XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID)).GetFullName(),, 'WOTCMoreSparkWeapons');
 	}
 
 	//	Make the "primary target" of the ability rotate towards the spark
@@ -227,7 +227,7 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 			//VisMgr.ReplaceNode(DamageTerrainAction, FindAction);
 
 			//DamageTerrainAction = X2Action_ApplyWeaponDamageToTerrain(FindAction);
-			//`LOG("Damage radius:" @ DamageTerrainAction.DamageEvent.DamageRadius,, 'WOTCMoreSparkWeapons');
+			////`LOG("Damage radius:" @ DamageTerrainAction.DamageEvent.DamageRadius,, 'WOTCMoreSparkWeapons');
 			//DamageTerrainAction.DamageEvent.DamageRadius = 17.0f;
 			//DamageTerrainAction.DamageInfluenceRadiusMultiplier = -1;
 			//VisMgr.DisconnectAction(FindAction);
@@ -466,14 +466,14 @@ simulated function XComGameState SendBITToLocation_BuildGameState( XComGameState
 	AbilityContext = XComGameStateContext_Ability(Context);
 	NewGameState = TypicalAbility_BuildGameState(Context);
 
-	`LOG("SendBITToLocation_BuildGameState: begin. Source Item:" @ AbilityContext.InputContext.ItemObject.ObjectID,, 'WOTCMoreSparkWeapons');
+	//`LOG("SendBITToLocation_BuildGameState: begin. Source Item:" @ AbilityContext.InputContext.ItemObject.ObjectID,, 'WOTCMoreSparkWeapons');
 
 	GremlinItemState = XComGameState_Item(NewGameState.GetGameStateForObjectID(AbilityContext.InputContext.ItemObject.ObjectID));
 	if (GremlinItemState == none)
 	{
 		GremlinItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', AbilityContext.InputContext.ItemObject.ObjectID));
 	}
-	`LOG("SendBITToLocation_BuildGameState: begin. GremlinItemState:" @ GremlinItemState.GetMyTemplateName() @ GremlinItemState.CosmeticUnitRef.ObjectID,, 'WOTCMoreSparkWeapons');
+	//`LOG("SendBITToLocation_BuildGameState: begin. GremlinItemState:" @ GremlinItemState.GetMyTemplateName() @ GremlinItemState.CosmeticUnitRef.ObjectID,, 'WOTCMoreSparkWeapons');
 
 	GremlinUnitState = XComGameState_Unit(NewGameState.GetGameStateForObjectID(GremlinItemState.CosmeticUnitRef.ObjectID));
 	if (GremlinUnitState == none)
@@ -485,7 +485,7 @@ simulated function XComGameState SendBITToLocation_BuildGameState( XComGameState
 	TargetPos = AbilityContext.InputContext.TargetLocations[0];
 	GremlinUnitState.SetVisibilityLocationFromVector(TargetPos);
 
-	`LOG("SendBITToLocation_BuildGameState: end",, 'WOTCMoreSparkWeapons');
+	//`LOG("SendBITToLocation_BuildGameState: end",, 'WOTCMoreSparkWeapons');
 
 	return NewGameState;
 }
@@ -523,7 +523,7 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 	local XComGameState_Unit SparkUnitState;
 	local int BITObjectID;
 
-	`LOG("RestorativeMist_BIT_BuildVisualization: begin",, 'WOTCMoreSparkWeapons');
+	//`LOG("RestorativeMist_BIT_BuildVisualization: begin",, 'WOTCMoreSparkWeapons');
 
 	History = `XCOMHISTORY;
 	WorldData = `XWORLD;
@@ -533,7 +533,7 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 
 	//****************************************************************************************
 	//Configure the visualization track for the owner of the Gremlin
-	`LOG("RestorativeMist_BIT_BuildVisualization: begin shooter",, 'WOTCMoreSparkWeapons');
+	//`LOG("RestorativeMist_BIT_BuildVisualization: begin shooter",, 'WOTCMoreSparkWeapons');
 	SparkUnitState = XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(Context.InputContext.SourceObject.ObjectID));
 
 	ActionMetadata = EmptyTrack;
@@ -541,14 +541,14 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 	ActionMetadata.StateObject_NewState = SparkUnitState;
 	ActionMetadata.VisualizeActor = History.GetVisualizer(SparkUnitState.ObjectID);
 
-	`LOG("RestorativeMist_BIT_BuildVisualization: play animation",, 'WOTCMoreSparkWeapons');
+	//`LOG("RestorativeMist_BIT_BuildVisualization: play animation",, 'WOTCMoreSparkWeapons');
 
 	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context ));
 	PlayAnimation.Params.AnimName = 'HL_SendGremlinA';
 
 	if (AbilityTemplate.ActivationSpeech != '')
 	{
-		`LOG("RestorativeMist_BIT_BuildVisualization: speech and flyover",, 'WOTCMoreSparkWeapons');
+		//`LOG("RestorativeMist_BIT_BuildVisualization: speech and flyover",, 'WOTCMoreSparkWeapons');
 
 		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyOver'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
 		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", AbilityTemplate.ActivationSpeech, eColor_Good);
@@ -558,7 +558,7 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 	//Configure the visualization track for the Gremlin
 	BITObjectID = Context.InputContext.ItemObject.ObjectID;
 
-	`LOG("RestorativeMist_BIT_BuildVisualization: Gremling:" @ BITObjectID,, 'WOTCMoreSparkWeapons');
+	//`LOG("RestorativeMist_BIT_BuildVisualization: Gremling:" @ BITObjectID,, 'WOTCMoreSparkWeapons');
 
 	GremlinItem = XComGameState_Item( History.GetGameStateForObjectID( BITObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1 ) );
 	GremlinUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.CosmeticUnitRef.ObjectID ) );
@@ -571,7 +571,7 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 	ActionMetadata.StateObject_NewState = ActionMetadata.StateObject_OldState;
 	ActionMetadata.VisualizeActor = History.GetVisualizer( InteractingUnitRef.ObjectID );
 
-	`LOG("RestorativeMist_BIT_BuildVisualization: shooter effects",, 'WOTCMoreSparkWeapons');
+	//`LOG("RestorativeMist_BIT_BuildVisualization: shooter effects",, 'WOTCMoreSparkWeapons');
 
 	//If there are effects added to the shooter, add the visualizer actions for them
 	for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityShooterEffects.Length; ++EffectIndex)
@@ -581,7 +581,7 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 
 	if (Context.InputContext.TargetLocations.Length > 0)
 	{
-		`LOG("RestorativeMist_BIT_BuildVisualization: target position",, 'WOTCMoreSparkWeapons');
+		//`LOG("RestorativeMist_BIT_BuildVisualization: target position",, 'WOTCMoreSparkWeapons');
 
 		TargetPosition = Context.InputContext.TargetLocations[0];
 		TargetTile = `XWORLD.GetTileCoordinatesFromPosition( TargetPosition );
@@ -593,7 +593,7 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 
 		if (!WorldData.IsTileFullyOccupied( TargetTile ))
 		{
-			`LOG("RestorativeMist_BIT_BuildVisualization: pathing",, 'WOTCMoreSparkWeapons');
+			//`LOG("RestorativeMist_BIT_BuildVisualization: pathing",, 'WOTCMoreSparkWeapons');
 
 			class'X2PathSolver'.static.BuildPath( GremlinUnitState, AttachedUnitState.TileLocation, TargetTile, PathData.MovementTiles );
 			class'X2PathSolver'.static.GetPathPointsFromPath( GremlinUnitState, PathData.MovementTiles, Path );
@@ -609,41 +609,41 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 		}
 		else
 		{
-			`LOG("Gremlin was unable to find a location to move to for ability "@Context.InputContext.AbilityTemplateName,, 'WOTCMoreSparkWeapons');
+			//`LOG("Gremlin was unable to find a location to move to for ability "@Context.InputContext.AbilityTemplateName,, 'WOTCMoreSparkWeapons');
 			`redscreen("Gremlin was unable to find a location to move to for ability "@Context.InputContext.AbilityTemplateName);
 		}
 	}
 	else
 	{
-		`LOG("Gremlin was not provided a location to move to for ability " @Context.InputContext.AbilityTemplateName,, 'WOTCMoreSparkWeapons');
+		//`LOG("Gremlin was not provided a location to move to for ability " @Context.InputContext.AbilityTemplateName,, 'WOTCMoreSparkWeapons');
 		`redscreen("Gremlin was not provided a location to move to for ability "@Context.InputContext.AbilityTemplateName);
 	}
 
-	`LOG("Perk start action",, 'WOTCMoreSparkWeapons');
+	//`LOG("Perk start action",, 'WOTCMoreSparkWeapons');
 	PerkStartAction = X2Action_AbilityPerkStart(class'X2Action_AbilityPerkStart'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
 	PerkStartAction.NotifyTargetTracks = true;
 
-	`LOG("play animation",, 'WOTCMoreSparkWeapons');
+	//`LOG("play animation",, 'WOTCMoreSparkWeapons');
 	PlayAnimation = none;
 	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context ));
 	PlayAnimation.Params.AnimName = AbilityTemplate.CustomSelfFireAnim;
 
 	// build in a delay before we hit the end (which stops activation effects)
-	`LOG("Delay action",, 'WOTCMoreSparkWeapons');
+	//`LOG("Delay action",, 'WOTCMoreSparkWeapons');
 	DelayAction = X2Action_WaitForAbilityEffect( class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context ) );
 	DelayAction.ChangeTimeoutLength( class'X2Ability_SpecialistAbilitySet'.default.GREMLIN_PERK_EFFECT_WINDOW );
 
-	`LOG("Perk end",, 'WOTCMoreSparkWeapons');
+	//`LOG("Perk end",, 'WOTCMoreSparkWeapons');
 
 	class'X2Action_AbilityPerkEnd'.static.AddToVisualizationTree( ActionMetadata, Context );
 
 	//****************************************************************************************
 	//Configure the visualization track for the targets
 	//****************************************************************************************
-	`LOG("Targets",, 'WOTCMoreSparkWeapons');
+	//`LOG("Targets",, 'WOTCMoreSparkWeapons');
 	for (i = 0; i < Context.InputContext.MultiTargets.Length; ++i)
 	{
-		`LOG("Target:" @ i,, 'WOTCMoreSparkWeapons');
+		//`LOG("Target:" @ i,, 'WOTCMoreSparkWeapons');
 
 		InteractingUnitRef = Context.InputContext.MultiTargets[i];
 		ActionMetadata = EmptyTrack;
@@ -667,7 +667,7 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 	}
 	//****************************************************************************************
 
-	`LOG("RestorativeMist_BIT_BuildVisualization: end",, 'WOTCMoreSparkWeapons');
+	//`LOG("RestorativeMist_BIT_BuildVisualization: end",, 'WOTCMoreSparkWeapons');
 }
 
 
@@ -1183,7 +1183,7 @@ static function PrintActionRecursive(X2Action Action, int iLayer)
 {
 	local X2Action ChildAction;
 
-	`LOG("Action layer: " @ iLayer @ ": " @ Action.Class.Name @ Action.StateChangeContext.AssociatedState.HistoryIndex,, 'IRIPISTOLVIZ'); 
+	//`LOG("Action layer: " @ iLayer @ ": " @ Action.Class.Name @ Action.StateChangeContext.AssociatedState.HistoryIndex,, 'IRIPISTOLVIZ'); 
 	foreach Action.ChildActions(ChildAction)
 	{
 		PrintActionRecursive(ChildAction, iLayer + 1);

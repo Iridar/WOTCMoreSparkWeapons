@@ -192,19 +192,19 @@ static function XComGameState AttachGremlinToTarget_BuildGameState( XComGameStat
 	local XComGameState_Unit GremlinUnitState, TargetUnitState;
 	local TTile TargetTile;
 
-	`LOG("AttachGremlinToTarget_BuildGameState: enter",, 'WOTCMoreSparkWeapons');
+	//`LOG("AttachGremlinToTarget_BuildGameState: enter",, 'WOTCMoreSparkWeapons');
 
 	AbilityContext = XComGameStateContext_Ability(Context);
 	NewGameState = TypicalAbility_BuildGameState(Context);
 
-	`LOG("AttachGremlinToTarget_BuildGameState: step 1",, 'WOTCMoreSparkWeapons');
+	//`LOG("AttachGremlinToTarget_BuildGameState: step 1",, 'WOTCMoreSparkWeapons');
 
 	TargetUnitState = XComGameState_Unit(NewGameState.GetGameStateForObjectID(AbilityContext.InputContext.PrimaryTarget.ObjectID));
 	if (TargetUnitState == none)
 	{
 		TargetUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', AbilityContext.InputContext.PrimaryTarget.ObjectID));
 	}
-	`LOG("AttachGremlinToTarget_BuildGameState: step 2",, 'WOTCMoreSparkWeapons');
+	//`LOG("AttachGremlinToTarget_BuildGameState: step 2",, 'WOTCMoreSparkWeapons');
 
 
 	//	This is Heavy Weapon
@@ -213,7 +213,7 @@ static function XComGameState AttachGremlinToTarget_BuildGameState( XComGameStat
 	{
 		GremlinItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', AbilityContext.InputContext.ItemObject.ObjectID));
 	}
-	`LOG("AttachGremlinToTarget_BuildGameState: step 3",, 'WOTCMoreSparkWeapons');
+	//`LOG("AttachGremlinToTarget_BuildGameState: step 3",, 'WOTCMoreSparkWeapons');
 
 	//	This is none
 	GremlinUnitState = XComGameState_Unit(NewGameState.GetGameStateForObjectID(GremlinItemState.CosmeticUnitRef.ObjectID));
@@ -221,18 +221,18 @@ static function XComGameState AttachGremlinToTarget_BuildGameState( XComGameStat
 	{
 		GremlinUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', GremlinItemState.CosmeticUnitRef.ObjectID));
 	}
-	`LOG("AttachGremlinToTarget_BuildGameState: step 4",, 'WOTCMoreSparkWeapons');
+	//`LOG("AttachGremlinToTarget_BuildGameState: step 4",, 'WOTCMoreSparkWeapons');
 
 	GremlinItemState.AttachedUnitRef = TargetUnitState.GetReference();
 
 	//Handle height offset for tall units
 	TargetTile = TargetUnitState.GetDesiredTileForAttachedCosmeticUnit();
 
-	`LOG("AttachGremlinToTarget_BuildGameState: step 5",, 'WOTCMoreSparkWeapons');
+	//`LOG("AttachGremlinToTarget_BuildGameState: step 5",, 'WOTCMoreSparkWeapons');
 
 	GremlinUnitState.SetVisibilityLocation(TargetTile);
 
-	`LOG("AttachGremlinToTarget_BuildGameState: exit",, 'WOTCMoreSparkWeapons');
+	//`LOG("AttachGremlinToTarget_BuildGameState: exit",, 'WOTCMoreSparkWeapons');
 
 	return NewGameState;
 }
@@ -276,7 +276,7 @@ function SparkHeavyWeaponVisualization(XComGameState VisualizeGameState)
 	CosmeticUnit = AttachedUnitStates[0];
 
 	CosmeticHeavyWeapon = CosmeticUnit.GetItemInSlot(eInvSlot_HeavyWeapon);
-	`LOG("Cosmetic heavy weapon:" @ CosmeticHeavyWeapon.GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+	//`LOG("Cosmetic heavy weapon:" @ CosmeticHeavyWeapon.GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 
 	// Jwats: Because the shooter might be using a unique fire action we'll replace it with the standard fire action to just
 	//			command the cosmetic unit
@@ -497,7 +497,7 @@ static function PrintActionRecursive(X2Action Action, int iLayer)
 {
 	local X2Action ChildAction;
 
-	`LOG("Action layer: " @ iLayer @ ": " @ Action.Class.Name @ Action.StateChangeContext.AssociatedState.HistoryIndex,, 'IRIPISTOLVIZ'); 
+	//`LOG("Action layer: " @ iLayer @ ": " @ Action.Class.Name @ Action.StateChangeContext.AssociatedState.HistoryIndex,, 'IRIPISTOLVIZ'); 
 	foreach Action.ChildActions(ChildAction)
 	{
 		PrintActionRecursive(ChildAction, iLayer + 1);

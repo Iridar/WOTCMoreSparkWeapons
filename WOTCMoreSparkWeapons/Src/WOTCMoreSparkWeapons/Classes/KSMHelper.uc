@@ -114,7 +114,7 @@ static public function AddDeathAnimSetsToCharacterTemplates()
 		AnimSetPaths = FindDeathAnimSetsForCharacterTemplate(DataTemplate.DataName);
 		if (AnimSetPaths.Length > 0)
 		{
-			`LOG("Adding KSM Death Anim Sets to:" @ DataTemplate.DataName,,'WOTCMoreSparkWeapons');
+			//`LOG("Adding KSM Death Anim Sets to:" @ DataTemplate.DataName,,'WOTCMoreSparkWeapons');
 			CharMgr.FindDataTemplateAllDifficulties(DataTemplate.DataName, DifficultyVariants);
 
 			foreach DifficultyVariants(DifficultyVariant)

@@ -604,7 +604,7 @@ static function PrintActionRecursive(X2Action Action, int iLayer)
 {
 	local X2Action ChildAction;
 
-	`LOG("Action layer: " @ iLayer @ ": " @ Action.Class.Name @ Action.StateChangeContext.AssociatedState.HistoryIndex,, 'IRIPISTOLVIZ'); 
+	//`LOG("Action layer: " @ iLayer @ ": " @ Action.Class.Name @ Action.StateChangeContext.AssociatedState.HistoryIndex,, 'IRIPISTOLVIZ'); 
 	foreach Action.ChildActions(ChildAction)
 	{
 		PrintActionRecursive(ChildAction, iLayer + 1);
