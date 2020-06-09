@@ -5,41 +5,26 @@ var config(SparkWeapons) bool bRocketLaunchersModPresent;
 var config(SparkWeapons) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
 var config(SparkWeapons) bool bRemoveHeavyWeaponSlotWithoutBIT;
 var config(SparkWeapons) array<name> WeaponCategoriesAddHeavyWeaponSlot;
-var config(GameData_WeaponData) bool bOrdnanceAmplifierUsesBlasterLauncherTargeting;
+var config(SparkWeapons) array<name> StartingItemsToAddOnSaveLoad;
+var config(OrdnanceLaunchers) bool bOrdnanceAmplifierUsesBlasterLauncherTargeting;
 
 var config(KineticStrikeModule) array<name> MeleeAbilitiesUseKSM;
 
 var config(ClassData) array<name> ClassesToRemoveAbilitiesFrom;
 var config(ClassData) array<name> AbilitiesToRemove;
 
-/// <summary>
-/// This method is run if the player loads a saved game that was created prior to this DLC / Mod being installed, and allows the 
-/// DLC / Mod to perform custom processing in response. This will only be called once the first time a player loads a save that was
-/// create without the content installed. Subsequent saves will record that the content was installed.
-/// </summary>
-static event OnLoadedSavedGame()
-{}
-
-/// <summary>
-/// Called when the player starts a new campaign while this DLC / Mod is installed
-/// </summary>
-static event InstallNewCampaign(XComGameState StartState)
-{}
-
 //	Immedaite goals:
 
 //	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities, ABB, Heavy Support Item, Freezer Heavy Weapon
-
 //	See if it's possible to make KSM not deal environmental damage to floor tiles.
 //	Balance Heavy Weapons in Aux Slot, and the Aux Slot itself
 
-//	Do: Add Weapon if it doesn't exist already for all starting items
 //	Localization for everything
 //	Clean up debug logging
 //	Give large detection radius to sparks
 //	Compatibility config for grenade scatter mod and grenade rebalance mod
 
-//	Icon for Active Camo and all other abilities.
+//	Icon for EM pulse without a BIT, icon for KSM melee damage bonus
 
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	## ADVENT grunts -> stratosphere
@@ -102,6 +87,52 @@ static event InstallNewCampaign(XComGameState StartState)
 	Kinetic Driver
 	Ordnance Projector
 */
+
+/// <summary>
+/// This method is run when the player loads a saved game directly into Strategy while this DLC is installed
+/// </summary>
+static event OnLoadedSavedGameToStrategy()
+{
+	local XComGameStateHistory				History;
+	local XComGameState						NewGameState;
+	local XComGameState_HeadquartersXCom	XComHQ;
+	local XComGameState_Item				ItemState;
+	local X2ItemTemplate					ItemTemplate;
+	local name								TemplateName;
+	local X2ItemTemplateManager				ItemMgr;
+	local bool								bChange;
+
+	History = `XCOMHISTORY;	
+	XComHQ = `XCOMHQ;
+	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("WOTCMoreSparkWeapons: Add Starting Items");
+	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+
+	//	Add an instance of the specified item template into HQ inventory
+	foreach default.StartingItemsToAddOnSaveLoad(TemplateName)
+	{
+		ItemTemplate = ItemMgr.FindItemTemplate(TemplateName);
+
+		if (ItemTemplate != none && ItemTemplate.StartingItem && !XComHQ.HasItem(ItemTemplate))
+		{	
+			ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+			NewGameState.AddStateObject(ItemState);
+			XComHQ.AddItemToHQInventory(ItemState);	
+
+			bChange = true;
+		}
+	}
+
+	if (bChange)
+	{
+		History.AddGameStateToHistory(NewGameState);
+	}
+	else
+	{
+		History.CleanupPendingGameState(NewGameState);
+	}
+}
 
 static event OnPostTemplatesCreated()
 {

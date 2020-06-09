@@ -42,7 +42,7 @@ static function X2DataTemplate Create_LaunchOrdnance(optional name TemplateName 
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_HideSpecificErrors;
 	Template.HideErrors.AddItem('AA_CannotAfford_AmmoCost');
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_grenade_launcher";
+	
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.STANDARD_GRENADE_PRIORITY;
 	Template.bDisplayInUITooltip = false;
 	Template.bDisplayInUITacticalText = false;
@@ -64,10 +64,12 @@ static function X2DataTemplate Create_LaunchOrdnance(optional name TemplateName 
 	if (bBlasterLauncherTargeting)
 	{
 		Template.TargetingMethod = class'X2TargetingMethod_BlasterLauncher';
+		Template.IconImage = "img:///IRIOrdnanceLauncher.UI.UI_BlastOrdnance";
 	}
 	else
 	{
 		Template.TargetingMethod = class'X2TargetingMethod_OrdnanceLauncher';
+		Template.IconImage = "img:///IRIOrdnanceLauncher.UI.UI_LaunchGrenade";
 	}
 	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
 	RadiusMultiTarget.bUseWeaponRadius = true;
@@ -151,8 +153,9 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ActiveCamo');
 
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
-	Template.IconImage = "img:///UILibrary_XPACK_Common.PerkIcons.UIPerk_refractionfield";
-	SetHidden(Template);
+	Template.IconImage = "img:///IRISparkHeavyWeapons.UI.UI_ActiveCamo";
+	//SetHidden(Template);
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
 
 	Template.AbilityToHitCalc = default.DeadEye;
 	Template.AbilityTargetStyle = default.SelfTarget;

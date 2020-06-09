@@ -37,7 +37,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	//	Icon setup
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_mecclosecombat";
+	Template.IconImage = "img:///IRIKineticStrikeModule.UI.UI_KineticStrike";
 
 	//	Targeting and Triggering
 	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StandardMelee';
@@ -292,7 +292,7 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_RestorativeMist_Heal');
 
 	//	Icon Setup
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_medkit";
+	Template.IconImage = "img:///IRIRestorativeMist.UI.UI_RestorativeMist";
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
 	Template.bDisplayInUITooltip = true;
 	Template.bLimitTargetIcons = true;
@@ -375,7 +375,7 @@ static function X2DataTemplate Create_RestorativeMist_HealBit()
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.AbilitySourceName = 'eAbilitySource_Item';
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_capacitordischarge";
+	Template.IconImage = "img:///IRIRestorativeMist.UI.UI_RestorativeMist_BIT";
 	Template.bDisplayInUITooltip = false;
 	Template.bDisplayInUITacticalText = false;
 
@@ -687,7 +687,6 @@ static function SetUpElectroPulse(X2AbilityTemplate Template)
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.AbilitySourceName = 'eAbilitySource_Item';
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_capacitordischarge";
 	Template.bDisplayInUITooltip = false;
 	Template.bDisplayInUITacticalText = false;
 
@@ -835,6 +834,8 @@ static function X2DataTemplate Create_ElectroPulse_Bit()
 	local X2AbilityMultiTarget_Radius   RadiusMultiTarget;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ElectroPulse_Bit');
+
+	Template.IconImage = "img:///IRIElectroPulse.UI.UI_EMPulse_BIT";
 
 	SetUpElectroPulse(Template);
 

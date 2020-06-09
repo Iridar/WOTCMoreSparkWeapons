@@ -41,7 +41,7 @@ static function X2AbilityTemplate SetupFire_LAC_Ability(name TemplateName)
 	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
 
 	//	Icon Setup
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_combatprotocol";
+	Template.IconImage = "img:///IRISparkHeavyWeapons.UI.Inv_HeavyAutgoun";
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 	Template.bDisplayInUITacticalText = false;
