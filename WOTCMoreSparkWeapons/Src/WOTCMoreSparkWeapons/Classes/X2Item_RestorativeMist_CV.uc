@@ -4,6 +4,9 @@ var config float HEAL_RANGE;
 var config float HEAL_RADIUS;
 var config int	HEAL_HP;
 var config int	BATTLEFIELD_MEDICINE_HEAL_HP;
+var config bool HEALS_ENEMIES;
+var config int  CHARGES;
+var config int	COOLDOWN;
 
 var config WeaponDamageValue DAMAGE;
 var config array <WeaponDamageValue> EXTRA_DAMAGE;
@@ -57,7 +60,14 @@ static function X2DataTemplate Create_Item()
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.EquipSound = "StrategyUI_Medkit_Equip";
 
-	Template.SetUIStatMarkup(class'XLocalizedData'.default.ChargesLabel, , default.ICLIPSIZE);
+	if (default.CHARGES > 0)
+	{
+		Template.SetUIStatMarkup(class'XLocalizedData'.default.ChargesLabel, , default.CHARGES);
+	}
+	if (default.COOLDOWN > 0)
+	{
+		Template.SetUIStatMarkup(class'XLocalizedData'.default.CooldownLabel, , default.COOLDOWN);
+	}
 	//Template.SetUIStatMarkup(class'XLocalizedData'.default.RangeLabel, , default.HEAL_RANGE);
 	Template.SetUIStatMarkup(class'XLocalizedData'.default.RadiusLabel, , default.HEAL_RADIUS - 1);
 	

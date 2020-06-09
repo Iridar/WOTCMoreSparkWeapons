@@ -15,15 +15,14 @@ var config(ClassData) array<name> AbilitiesToRemove;
 
 //	Immedaite goals:
 
-//	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities, ABB, Heavy Support Item, Freezer Heavy Weapon
+//	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities, ABB, Metal Over Flesh
 //	See if it's possible to make KSM not deal environmental damage to floor tiles.
 //	Balance Heavy Weapons in Aux Slot, and the Aux Slot itself
+//	limit Aux Slot to vanilla heavy weapons.
+//	Only one Autogun per spark
 
-//	Localization for everything
-//	Clean up debug logging
-//	Give large detection radius to sparks
 //	Compatibility config for grenade scatter mod and grenade rebalance mod
-
+//	release video
 //	Icon for EM pulse without a BIT, icon for KSM melee damage bonus
 
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
@@ -49,6 +48,7 @@ var config(ClassData) array<name> AbilitiesToRemove;
 //	support for Demolition
 
 //	LOW PRIORITY
+//	Textures are too dark in Photobooth.
 //	Sparkfall within the context of this mod?
 //	Better heart material for bers heart
 //	KSM Tintable
@@ -68,6 +68,7 @@ var config(ClassData) array<name> AbilitiesToRemove;
 //	LONG TERM:
 //	1) Make equipping a BIT autoequip a Heavy Weapon once this is merged: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/741
 //	2) Get rid of OverrideHasHeavyWeapon Event Listener when this is merged: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/881
+//	3) Make it possible to carry EM Pulse and Resto Heal by regular soldiers in the Heavy Weapon slot when this is merged: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/844
 
 //	EXPLOITABLE STUFF
 //	Music for release vid?
@@ -205,6 +206,8 @@ static function PatchCharacterTemplates()
 			{
 				//	Remove Active Camo from char templates. We'll add it to BIT instead.
 				CharTemplate.Abilities.RemoveItem('ActiveCamo');
+				//	Add an ability that debuffs detection radius when concealed
+				CharTemplate.Abilities.AddItem('IRI_SparkDebuffConcealment');
 
 				//	Always attach Lockon Matinee cuz it's also used by Bombard
 				CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
@@ -860,4 +863,82 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 			}
 		}
 	}		
+}
+
+static function bool AbilityTagExpandHandler(string InString, out string OutString)
+{
+	local name TagText;
+	
+	TagText = name(InString);
+	switch (TagText)
+	{
+	case 'IRI_CONV_LAUNCHER_GRANT_GRENADE_SLOTS':
+		OutString = SetColor(class'X2StrategyElement_InventorySlots'.default.CONV_LAUNCHER_GRANT_GRENADE_SLOTS);
+		return true;
+	case 'IRI_MAG_LAUNCHER_GRANT_GRENADE_SLOTS':
+		OutString = SetColor(class'X2StrategyElement_InventorySlots'.default.MAG_LAUNCHER_GRANT_GRENADE_SLOTS);
+		return true;
+	case 'IRI_BEAM_LAUNCHER_GRANT_GRENADE_SLOTS':
+		OutString = SetColor(class'X2StrategyElement_InventorySlots'.default.BEAM_LAUNCHER_GRANT_GRENADE_SLOTS);
+		return true;
+	//	===================================================
+	default:
+            return false;
+    }  
+}
+
+
+static function string SetColor(coerce string Value)
+{	
+	return "<font color='#1ad1cf'>" $ Value $ "</font>";
+}
+
+static function string AddSign(int Value)
+{
+	if (Value > 0) return "+" $ Value;
+
+	return string(Value);
+}
+
+static function string AddSignFloat(float Value)
+{
+	if (Value > 0) return "+" $ TruncateFloat(Value);
+
+	return string(Value);
+}
+
+static function string TruncateFloat(float value)
+{
+	local string FloatString, TempString;
+	local int i;
+	local float TempFloat, TestFloat;
+
+	TempFloat = value;
+	for (i=0; i < 2; i++)
+	{
+		TempFloat *= 10.0;
+	}
+	TempFloat = Round(TempFloat);
+	for (i=0; i < 2; i++)
+	{
+		TempFloat /= 10.0;
+	}
+
+	TempString = string(TempFloat);
+	for (i = InStr(TempString, ".") + 1; i < Len(TempString) ; i++)
+	{
+		FloatString = Left(TempString, i);
+		TestFloat = float(FloatString);
+		if (TempFloat ~= TestFloat)
+		{
+			break;
+		}
+	}
+
+	if (Right(FloatString, 1) == ".")
+	{
+		FloatString $= "0";
+	}
+
+	return FloatString;
 }

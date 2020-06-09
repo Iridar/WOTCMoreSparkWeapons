@@ -45,7 +45,7 @@ static function X2AbilityTemplate SetupFire_LAC_Ability(name TemplateName)
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 	Template.bDisplayInUITacticalText = false;
-	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_CORPORAL_PRIORITY;
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.ARMOR_ACTIVE_PRIORITY;
 
 	//	Targeting and triggering
 	ToHitCalc = new class'X2AbilityToHitCalc_StandardAim';

@@ -35,6 +35,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_KineticStrike');
 
 	//	Icon setup
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SERGEANT_PRIORITY;	//	Same as Strike
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.IconImage = "img:///IRIKineticStrikeModule.UI.UI_KineticStrike";
@@ -277,29 +278,24 @@ static function X2AbilityTemplate Create_KineticStrike_Passive()
 //			RESTORATIVE MIST
 //	==============================================================
 
-static function X2AbilityTemplate Create_RestorativeMist_Heal()
+static function SetUpRestorativeMist(X2AbilityTemplate Template)
 {
-	local X2AbilityTemplate						Template;
-	local X2AbilityCost_Ammo					AmmoCost;
+	local X2Condition_UnitProperty				UnitPropertyCondition;
+	local X2AbilityMultiTarget_Radius			MultiTargetStyle;
 	local X2AbilityCost_ActionPoints			ActionPointCost;
 	local X2Effect_ApplyMedikitHeal				MedikitHeal;
-	local X2Effect_RemoveEffectsByDamageType	RemoveEffects;
-	local X2Condition_UnitProperty				UnitPropertyCondition;
-	//local array<name>							SkipExclusions;
-	local X2AbilityMultiTarget_Radius			MultiTargetStyle;
+	local X2Effect_RemoveEffectsByDamageType	RemoveEffects;	
 	local name									HealType;
 
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_RestorativeMist_Heal');
-
-	//	Icon Setup
-	Template.IconImage = "img:///IRIRestorativeMist.UI.UI_RestorativeMist";
+	//	Icon
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
-	Template.bDisplayInUITooltip = true;
-	Template.bLimitTargetIcons = true;
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+	Template.bDisplayInUITooltip = false;
+	Template.bDisplayInUITacticalText = false;
 
 	//	Targeting and Triggering
 	Template.AbilityToHitCalc = default.DeadEye;
-	Template.AbilityTargetStyle = default.SelfTarget;
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
 	MultiTargetStyle = new class'X2AbilityMultiTarget_Radius';
@@ -308,12 +304,9 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 	MultiTargetStyle.fTargetRadius = class'X2Item_RestorativeMist_CV'.default.HEAL_RADIUS;
 	Template.AbilityMultiTargetStyle = MultiTargetStyle;
 
-	//	Ability Costs
-	Template.bUseAmmoAsChargesForHUD = true;
-	AmmoCost = new class'X2AbilityCost_Ammo';
-	AmmoCost.iAmmo = 1;
-	AmmoCost.bReturnChargesError = true;
-	Template.AbilityCosts.AddItem(AmmoCost);
+	//	Costs
+	AddCharges(Template, class'X2Item_RestorativeMist_CV'.default.CHARGES);
+	AddCooldown(Template, class'X2Item_RestorativeMist_CV'.default.COOLDOWN);
 
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
 	ActionPointCost.iNumPoints = 1;
@@ -327,7 +320,7 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 	//	Multi Target Conditions
 	UnitPropertyCondition = new class'X2Condition_UnitProperty';
 	UnitPropertyCondition.ExcludeDead = true;
-	UnitPropertyCondition.ExcludeHostileToSource = true;
+	UnitPropertyCondition.ExcludeHostileToSource = !class'X2Item_RestorativeMist_CV'.default.HEALS_ENEMIES;
 	UnitPropertyCondition.ExcludeFriendlyToSource = false;
 	UnitPropertyCondition.ExcludeFullHealth = true;
 	UnitPropertyCondition.ExcludeRobotic = true;
@@ -345,15 +338,31 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 		RemoveEffects.DamageTypesToRemove.AddItem(HealType);
 	}
 	Template.AddMultiTargetEffect(RemoveEffects);
-	
+
 	//	State and Viz
 	Template.ActivationSpeech = 'HealingAlly';
 	Template.Hostility = eHostility_Defensive;
-	//Template.CustomSelfFireAnim = 'NO_RestorativeMist';
-	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
+}
+
+static function X2AbilityTemplate Create_RestorativeMist_Heal()
+{
+	local X2AbilityTemplate						Template;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_RestorativeMist_Heal');
+
+	SetUpRestorativeMist(Template);
+
+	//	Icon Setup
+	Template.IconImage = "img:///IRIRestorativeMist.UI.UI_RestorativeMist";
+
+	//	Targeting and Triggering
+	Template.AbilityTargetStyle = default.SelfTarget;
+	
+	//	State and Viz
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 
 	return Template;
 }
@@ -361,95 +370,32 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 static function X2DataTemplate Create_RestorativeMist_HealBit()
 {
 	local X2AbilityTemplate             Template;
-	local X2AbilityCost_ActionPoints    ActionPointCost;
-	local X2Condition_UnitProperty      UnitPropertyCondition;
 	local X2AbilityTarget_Cursor        CursorTarget;
-	local X2Effect_ApplyMedikitHeal		MedikitHeal;
-	local X2Effect_RemoveEffectsByDamageType	RemoveEffects;
-	local X2AbilityMultiTarget_Radius   RadiusMultiTarget;
-	local name							HealType;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_RestorativeMist_HealBit');
 
+	SetUpRestorativeMist(Template);
+
 	//	Icon Setup
-	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
-	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
-	Template.AbilitySourceName = 'eAbilitySource_Item';
 	Template.IconImage = "img:///IRIRestorativeMist.UI.UI_RestorativeMist_BIT";
-	Template.bDisplayInUITooltip = false;
-	Template.bDisplayInUITacticalText = false;
 
 	//	Triggering and Targeting
-	Template.AbilityToHitCalc = default.DeadEye;
-	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
-
 	CursorTarget = new class'X2AbilityTarget_Cursor';
 	CursorTarget.FixedAbilityRange = class'X2Item_RestorativeMist_CV'.default.HEAL_RANGE;
 	CursorTarget.bRestrictToWeaponRange = false;
 	Template.AbilityTargetStyle = CursorTarget;
 
-	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
-	RadiusMultiTarget.bIgnoreBlockingCover = false;
-	RadiusMultiTarget.bUseWeaponRadius = false;
-	RadiusMultiTarget.fTargetRadius = class'X2Item_RestorativeMist_CV'.default.HEAL_RADIUS;
-	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
-
 	Template.TargetingMethod = class'X2TargetingMethod_GremlinAOE';
 
-	//	Costs
-	ActionPointCost = new class'X2AbilityCost_ActionPoints';
-	ActionPointCost.iNumPoints = 1;
-	ActionPointCost.bConsumeAllPoints = true;
-	Template.AbilityCosts.AddItem(ActionPointCost);
-
-	AddCharges(Template, class'X2Item_RestorativeMist_CV'.default.ICLIPSIZE);
-
-	//	Shooter Conditions
-	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
-	Template.AddShooterEffectExclusions();
-
-	//	Multi Target Conditions
-	UnitPropertyCondition = new class'X2Condition_UnitProperty';
-	UnitPropertyCondition.ExcludeDead = true;
-	UnitPropertyCondition.ExcludeHostileToSource = true;
-	UnitPropertyCondition.ExcludeFriendlyToSource = false;
-	UnitPropertyCondition.ExcludeFullHealth = true;
-	UnitPropertyCondition.ExcludeRobotic = true;
-	Template.AbilityMultiTargetConditions.AddItem(UnitPropertyCondition);
-
-	//	Ability Effects
-	MedikitHeal = new class'X2Effect_ApplyMedikitHeal';
-	MedikitHeal.PerUseHP = class'X2Item_RestorativeMist_CV'.default.HEAL_HP;
-	MedikitHeal.IncreasedHealProject = 'BattlefieldMedicine';
-	MedikitHeal.IncreasedPerUseHP = class'X2Item_RestorativeMist_CV'.default.BATTLEFIELD_MEDICINE_HEAL_HP;
-	Template.AddMultiTargetEffect(MedikitHeal);
-
-	RemoveEffects = new class'X2Effect_RemoveEffectsByDamageType';
-	foreach class'X2Ability_DefaultAbilitySet'.default.MedikitHealEffectTypes(HealType)
-	{
-		RemoveEffects.DamageTypesToRemove.AddItem(HealType);
-	}
-	Template.AddMultiTargetEffect(RemoveEffects);
-
 	//	 Game State and Viz
-	//Template.DefaultSourceItemSlot = eInvSlot_SecondaryWeapon;
 	Template.CustomFireAnim = 'HL_SendGremlin';
 	Template.CustomSelfFireAnim = 'FF_RestorativeMistA';
-	Template.Hostility = eHostility_Defensive;
-	Template.AbilityConfirmSound = "TacticalUI_ActivateAbility";
+
 	Template.ActivationSpeech = 'HealingAlly';
 	Template.PostActivationEvents.AddItem('ItemRecalled');
 	Template.bStationaryWeapon = true;
-	//Template.BuildNewGameStateFn = class'X2Ability_SpecialistAbilitySet'.static.SendGremlinToLocation_BuildGameState;
 	Template.BuildNewGameStateFn = SendBITToLocation_BuildGameState;
-	//Template.BuildVisualizationFn = class'X2Ability_SpecialistAbilitySet'.static.CapacitorDischarge_BuildVisualization;
 	Template.BuildVisualizationFn = RestorativeMist_BIT_BuildVisualization;
-
-	//Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	//Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
-	//Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;	
-
-	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
 
 	return Template;
 }
@@ -809,6 +755,8 @@ static function X2AbilityTemplate Create_ElectroPulse()
 
 	SetUpElectroPulse(Template);
 
+	Template.IconImage = "img:///IRIElectroPulse.UI.UI_EMPulse_BIT";
+
 	//	Targeting and Triggering
 	Template.AbilityTargetStyle = default.SelfTarget;
 
@@ -835,9 +783,9 @@ static function X2DataTemplate Create_ElectroPulse_Bit()
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ElectroPulse_Bit');
 
-	Template.IconImage = "img:///IRIElectroPulse.UI.UI_EMPulse_BIT";
-
 	SetUpElectroPulse(Template);
+
+	Template.IconImage = "img:///IRIElectroPulse.UI.UI_EMPulse_BIT";
 
 	CursorTarget = new class'X2AbilityTarget_Cursor';
 	CursorTarget.FixedAbilityRange = class'X2Item_ElectroPulse'.default.PULSE_RANGE;

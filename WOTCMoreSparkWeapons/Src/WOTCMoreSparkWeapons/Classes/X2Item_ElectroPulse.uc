@@ -61,9 +61,16 @@ static function X2DataTemplate Create_Item()
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_ElectroPulse_CV');
 
 	Template.StowedLocation = eSlot_LeftBack;
-	Template.EquipSound = "StrategyUI_Medkit_Equip";
+	Template.EquipSound = "Secondary_Weapon_Equip_Beam";
 
-	//Template.SetUIStatMarkup(class'XLocalizedData'.default.ChargesLabel, , default.ICLIPSIZE);
+	if (default.CHARGES > 0)
+	{
+		Template.SetUIStatMarkup(class'XLocalizedData'.default.ChargesLabel, , default.CHARGES);
+	}
+	if (default.COOLDOWN > 0)
+	{
+		Template.SetUIStatMarkup(class'XLocalizedData'.default.CooldownLabel, , default.COOLDOWN);
+	}
 	Template.SetUIStatMarkup(class'XLocalizedData'.default.RadiusLabel, , default.PULSE_RADIUS - 1);
 	
 	Template.iRange = default.PULSE_RANGE;

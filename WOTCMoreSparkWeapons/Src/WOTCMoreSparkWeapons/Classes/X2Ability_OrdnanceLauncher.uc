@@ -1,4 +1,7 @@
-class X2Ability_OrdnanceLauncher extends X2Ability;
+class X2Ability_OrdnanceLauncher extends X2Ability config(SparkWeapons);
+
+var config float ACTIVE_CAMO_DETECTION_RADIUS_MODIFIER;
+var config float SPARK_BASELINE_DETECTION_RADIUS_MODIFIER;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -8,6 +11,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_LaunchOrdnance('IRI_BlastOrdnance', true));
 
 	Templates.AddItem(IRI_ActiveCamo());
+	Templates.AddItem(IRI_DebuffConcealment());
 	Templates.AddItem(Create_IRI_Bombard());
 
 	// Separate versions of abilities to fire from the arm cannon with a different cinecam.
@@ -149,6 +153,7 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	local X2Effect_Persistent		PersistentEffect;
 	//local X2Effect_RangerStealth    StealthEffect;
 	//local X2AbilityTrigger_EventListener    Trigger;
+	local X2Effect_PersistentStatChange		PersistentStatChangeEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ActiveCamo');
 
@@ -180,16 +185,25 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	//StealthEffect.bRemoveWhenTargetConcealmentBroken = true;
 	//Template.AddTargetEffect(StealthEffect);
 
+	//	Used by Perk Content, nothing else.
 	PersistentEffect = new class'X2Effect_Persistent';
 	PersistentEffect.EffectName = 'IRI_ActiveCamo_Effect';
 	PersistentEffect.BuildPersistentEffect(1, true, false);
 	PersistentEffect.bRemoveWhenTargetConcealmentBroken = true;
+	PersistentEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, false, ,Template.AbilitySourceName);
 	Template.AddTargetEffect(PersistentEffect);
+
+	// Bonus to DetectionRange stat effects
+	PersistentStatChangeEffect = new class'X2Effect_PersistentStatChange';
+	PersistentStatChangeEffect.BuildPersistentEffect(1, true, false, false);
+	PersistentStatChangeEffect.bRemoveWhenTargetConcealmentBroken = true;
+	PersistentStatChangeEffect.AddPersistentStatChange(eStat_DetectionModifier, default.ACTIVE_CAMO_DETECTION_RADIUS_MODIFIER);
+	Template.AddTargetEffect(PersistentStatChangeEffect);
 
 	//	Phantom-like - stay concealed if squad breaks concealment.
 	Effect = new class'X2Effect_StayConcealed';
 	Effect.BuildPersistentEffect(1, true, false);
-	Effect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, false, ,Template.AbilitySourceName);
+	Effect.bRemoveWhenTargetConcealmentBroken = true;
 	Template.AddTargetEffect(Effect);
 
 	Template.Hostility = eHostility_Neutral;
@@ -198,6 +212,35 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	Template.CustomFireAnim = 'NO_Camouflage';
 	//Template.AssociatedPlayTiming = SPT_AfterParallel;
 	//Template.AssociatedPlayTiming = SPT_BeforeParallel;
+
+	return Template;
+}
+
+static function X2AbilityTemplate IRI_DebuffConcealment()
+{
+	local X2AbilityTemplate					Template;
+	local X2Effect_PersistentStatChange		PersistentStatChangeEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_SparkDebuffConcealment');
+	SetHidden(Template);
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+
+	// Bonus to DetectionRange stat effects
+	PersistentStatChangeEffect = new class'X2Effect_PersistentStatChange';
+	PersistentStatChangeEffect.BuildPersistentEffect(1, true, false, false);
+	PersistentStatChangeEffect.bRemoveWhenTargetConcealmentBroken = true;
+	PersistentStatChangeEffect.AddPersistentStatChange(eStat_DetectionModifier, default.SPARK_BASELINE_DETECTION_RADIUS_MODIFIER);
+	Template.AddTargetEffect(PersistentStatChangeEffect);
+
+
+	Template.Hostility = eHostility_Neutral;
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = none;
 
 	return Template;
 }
@@ -219,6 +262,7 @@ static function X2AbilityTemplate Create_IRI_Bombard()
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_AlwaysShow;
 	Template.IconImage = "img:///UILibrary_DLC3Images.UIPerk_spark_bombard";
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_CAPTAIN_PRIORITY;
 
 	//	Targeting and Triggering
 	Template.TargetingMethod = class'X2TargetingMethod_VoidRift';

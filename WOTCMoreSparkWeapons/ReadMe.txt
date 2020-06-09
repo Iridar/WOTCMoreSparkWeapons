@@ -73,7 +73,7 @@ An auxiliary "weapon". Disables weapons and Shieldbearers' [b]Energy Shields[/b]
 
 Can be built in Engineering one at a time after you complete [b]Bluescreen Protocol[/b] proving grounds project.
 
-[h1]BIT REBALANCE[/h1]
+[h1]CONCEALMENT AND BIT REBALANCE[/h1]
 
 SPARKs and MECs without a BIT lose their Heavy Weapon Slot, cannot hack, and their detection radius is increased significantly. They still start missions concealed along with the rest of the squad, but it's much harder for them to keep the concealment as they move around the map.
 [b]Intrusion Protocol[/b] and [b]Arsenal[b] squaddie abilities have been moved from the SPARKs' ability tree to the BIT to relay these changes.
