@@ -10,22 +10,15 @@ var config(OrdnanceLaunchers) bool bOrdnanceAmplifierUsesBlasterLauncherTargetin
 
 var config(KineticStrikeModule) array<name> MeleeAbilitiesUseKSM;
 
+var config(ClassData) array<name> AbilitiesRequireBIT;
 var config(ClassData) array<name> AbilitiesToGrantToBITs;
 var config(ClassData) array<name> ClassesToRemoveAbilitiesFrom;
 var config(ClassData) array<name> AbilitiesToRemove;
 
 //	Immedaite goals:
 
-//	add MEC's melee attacks so they benefit from KSM
-//	blacklist Molotovs
-//	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities, ABB, Metal Over Flesh
-
-//	## Compatibility notes:
-//	Metal Over Flehs » The Heavy Weapon Storage perk in Metal Over Flesh does not affect Heavy Weapons in the auxilary slot.
-
 //	Compatibility config for grenade scatter mod and grenade rebalance mod
 //	release video
-//	Icon for EM pulse without a BIT, icon for KSM melee damage bonus
 
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	## ADVENT grunts -> stratosphere
@@ -274,6 +267,7 @@ static function PatchAbilityTemplates()
 	local X2Effect_IRI_Rainmaker		Rainmaker;
 	local X2Effect						Effect;
 	local X2Condition_SourceWeaponCat	WeaponCondition;
+	local name							AbilityName;
 
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 
@@ -323,13 +317,15 @@ static function PatchAbilityTemplates()
 		}
 	}
 
-	//	Repair
-	Template = AbilityTemplateManager.FindAbilityTemplate('Repair');
-	if (Template != none)
+	foreach default.AbilitiesRequireBIT(AbilityName)
 	{
-		WeaponCondition = new class'X2Condition_SourceWeaponCat';
-		WeaponCondition.MatchWeaponCat = 'sparkbit';
-		Template.AbilityShooterConditions.AddItem(WeaponCondition);
+		Template = AbilityTemplateManager.FindAbilityTemplate(AbilityName);
+		if (Template != none)
+		{
+			WeaponCondition = new class'X2Condition_SourceWeaponCat';
+			WeaponCondition.MatchWeaponCat = 'sparkbit';
+			Template.AbilityShooterConditions.AddItem(WeaponCondition);
+		}
 	}
 }	
 
@@ -628,42 +624,49 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					break;
 				//	=======	Heavy Weapons =======
 				case 'SparkRocketLauncher':
+				case 'MecRocketLauncher':
 					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkRocketLauncher';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkRocketLauncher');
 					break;
 				case 'SparkShredderGun':
+				case 'MecShredderGun':
 					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkShredderGun';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredderGun');
 					break;
 				case 'SparkShredstormCannon':
+				case 'MecShredstormCannon':
 					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkShredstormCannon';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredstormCannon');
 					break;
 				case 'SparkFlamethrower':
+				case 'MecFlamethrower':
 					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkFlamethrower';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrower');
 					break;
 				case 'SparkFlamethrowerMk2':
+				case 'MecFlamethrowerMk2':
 					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkFlamethrowerMk2';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrowerMk2');
 					break;
 				case 'SparkBlasterLauncher':
+				case 'MecBlasterLauncher':
 					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkBlasterLauncher';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkBlasterLauncher');
 					break;
 				case 'SparkPlasmaBlaster':
+				case 'MecPlasmaBlaster':
 					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
 					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 					SetupData[Index].TemplateName = 'IRI_SparkPlasmaBlaster';
@@ -671,6 +674,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					break;
 				//	=======	Bombard =======
 				case 'Bombard':
+				case 'Bombardment':	//	mechatronic warfare
 					if (!bChangeGrenadesAndRockets) break;
 					SetupData[Index].TemplateName = 'IRI_Bombard';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Bombard');

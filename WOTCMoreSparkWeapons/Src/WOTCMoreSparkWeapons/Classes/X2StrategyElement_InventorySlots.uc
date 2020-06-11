@@ -98,14 +98,24 @@ static function int GetNumSlotsForWeaponTemplate(X2GrenadeLauncherTemplate Weapo
 
 static function bool ShowItemInLockerList(CHItemSlot Slot, XComGameState_Unit Unit, XComGameState_Item ItemState, X2ItemTemplate ItemTemplate, XComGameState CheckGameState)
 {
-	return X2GrenadeTemplate(ItemTemplate) != none;
+	return IsItemValidGrenadeOrRocket(ItemTemplate);
 }
 
 static function bool CanAddItemToSlot(CHItemSlot Slot, XComGameState_Unit UnitState, X2ItemTemplate ItemTemplate, optional XComGameState CheckGameState, optional int Quantity = 1, optional XComGameState_Item ItemState)
 {    
-	return X2GrenadeTemplate(ItemTemplate) != none;
+	return IsItemValidGrenadeOrRocket(ItemTemplate);
+}
 
-	//	Slot is already occupied, cannot add any more items to it.
+private static function bool IsItemValidGrenadeOrRocket(const X2ItemTemplate ItemTemplate)
+{
+	local X2GrenadeTemplate GrenadeTemplate;
+
+	GrenadeTemplate = X2GrenadeTemplate(ItemTemplate);
+
+	if (GrenadeTemplate != none)
+	{
+		return GrenadeTemplate.WeaponCat == 'rocket' || GrenadeTemplate.LaunchedGrenadeEffects.Length > 0;
+	}
 	return false;
 }
 

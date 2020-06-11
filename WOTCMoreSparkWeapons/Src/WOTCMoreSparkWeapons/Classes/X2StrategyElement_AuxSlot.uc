@@ -104,7 +104,7 @@ private static function bool IsTemplateValidForSlot(X2ItemTemplate ItemTemplate,
 	OrdLauncherState = UnitState.GetItemInSlot(class'X2Item_OrdnanceLauncher_CV'.default.INVENTORY_SLOT, CheckGameState);
 	if (OrdLauncherState != none && OrdLauncherState.GetWeaponCategory() == class'X2Item_OrdnanceLauncher_CV'.default.WEAPON_CATEGORY)
 	{
-		if (X2GrenadeTemplate(ItemTemplate) != none) return true;
+		if (IsItemValidGrenade(ItemTemplate)) return true;
 	}
 
 	//	Whitelist items by weaponcat
@@ -112,6 +112,19 @@ private static function bool IsTemplateValidForSlot(X2ItemTemplate ItemTemplate,
 	if (WeaponTemplate != none)
 	{
 		return default.AuxSlotAllowedWeaponCategories.Find(WeaponTemplate.WeaponCat) != INDEX_NONE;
+	}
+	return false;
+}
+
+private static function bool IsItemValidGrenade(const X2ItemTemplate ItemTemplate)
+{
+	local X2GrenadeTemplate GrenadeTemplate;
+
+	GrenadeTemplate = X2GrenadeTemplate(ItemTemplate);
+
+	if (GrenadeTemplate != none)
+	{
+		return GrenadeTemplate.LaunchedGrenadeEffects.Length > 0;
 	}
 	return false;
 }

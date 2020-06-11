@@ -56,7 +56,7 @@ Arm Cannon model and animations are added automatically, you don't need to equip
 [h1]Auxiliary Weapon Slot[/h1]
 
 New Inventory Slot for SPARKs and MECs. Can be used to carry:[list]
-[*] [b]Heavy Weapon[/b] - a heavy weapon carried in the aux slot will be fired from the SPARK's arm cannon.
+[*] [b]Heavy Weapon (requires Proving Grounds project)[/b] - a heavy weapon carried in the aux slot will be fired from the SPARK's arm cannon.
 [*] [b]Restorative Mist[/b] and [b]E.M. Pulse[/b] - described below.
 [*] [b]Rockets[/b] - can always be carried in the aux slot so that SPARKs can Give them to other soldiers.
 [*] [b]Grenades[/b] - can be carried in the aux slot if an Ordnance Launcher is equipped.
@@ -83,11 +83,12 @@ BITs now grant an additional ability: [b]Active Camo[/b] - reduces detection rad
 BITs' bonus to Hacking stat is increased from 0 / 10 / 20 to 40 / 60/ 80. SPARKs still can't hack as good as Specialists, especially in the late game, but now they actually have a decent to chance to get a hack reward on low difficulty hacks.
 
 List of abilities that cannot be used without a BIT:[list]
-[*][b]Repair[/b][/list]
+[*][b]Repair[/b]
+[*][b]Repair (Mechatronic Warfare)[/b][/list]
 
 [h1]OTHER NOTES[/h1]
 
-This mod is balanced around the expectation that SPARKs and MEC Troopers do not have Utility Slots. So if another mod adds some Utility Slots that lets you carry more than 2-3 grenades/rockets, please do not complain that it's overpowered, that is not the intended behavior for this mod, although it is possible, so if that's what you want, by all means.
+This mod is balanced around the expectation that SPARKs and MEC Troopers do not have Utility Slots. So if another mod adds some Utility Slots that lets you carry more than 2-3 grenades/rockets, please do not complain that it's overpowered, that is not the intended behavior for this mod. Though there's nothing mechanically wrong with playing like this, so if that's what you want - by all means.
 
 [h1]REQUIREMENTS[/h1]
 [list]
@@ -149,12 +150,24 @@ If a character template has several KSMSpecialDeathAnimation entries, one will b
 
 [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1499767042][b][WOTC] Mechatronic Warfare: Total SPARK Overhaul[/b][/url]
 
-[url=https://steamcommunity.com/sharedfiles/filedetails/?id=1537675645][b]A Better Barracks: TLE[/b][/url] - nothing incompatible on the first glance, but no playtesting has been done.
+Fully supported. [b]Bombardment[/b] ability can be used with Ordnance Launchers instead of the BIT, but then it will behave exactly the same as vanilla SPARK Bombard ability.
 
-[b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1452700934]MEC Troopers[/url][/b] 
+[url=https://steamcommunity.com/sharedfiles/filedetails/?id=1537675645][b]A Better Barracks: TLE[/b][/url]
 
-[b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1125117203]Metal Over Flesh Redux[/url][/b] 
+Nothing incompatible on the first glance, but no playtesting has been done.
+
+[b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1452700934]MEC Troopers[/url][/b]
+
+Fully supported, except for soldiers' facial expressions during custom animations added by the Arsenal mod.
+
+[b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1125117203]Metal Over Flesh Redux[/url][/b]
+
+Compatible. [b]Heavy Weapon Storage[/b] perk does not affect Heavy Weapons in the auxilary slot, and I'm fine with that.
 
 [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1383408046][b]Honey's Heavy Support Items [WOTC][/b][/url]
 
-[url=https://steamcommunity.com/sharedfiles/filedetails/?id=1891339003][b]Bitterfrost Protocol[/b][/url] - adds a Freeze Rocket Heavy Weapon.
+Compatible, but not supported in the Auxiliary Weapon slot. Same goes for [b][i]ALL[/i][/b] mod-added Heavy Weapons.
+
+[url=https://steamcommunity.com/sharedfiles/filedetails/?id=2025780967][b][WOTC] Iridar's Scatter Mod[/b][/url]
+
+I included some copy-pasted config that will add scatter to grenades launched via Ordnance Launcher.
