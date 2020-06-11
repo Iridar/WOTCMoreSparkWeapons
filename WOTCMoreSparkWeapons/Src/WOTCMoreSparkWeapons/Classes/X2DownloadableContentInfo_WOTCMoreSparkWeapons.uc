@@ -3,20 +3,25 @@ class X2DownloadableContentInfo_WOTCMoreSparkWeapons extends X2DownloadableConte
 var config(SparkWeapons) array<name> SparkCharacterTemplates;
 var config(SparkWeapons) bool bRocketLaunchersModPresent;
 var config(SparkWeapons) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
-var config(SparkWeapons) bool bRemoveHeavyWeaponSlotWithoutBIT;
+
 var config(SparkWeapons) array<name> WeaponCategoriesAddHeavyWeaponSlot;
 var config(SparkWeapons) array<name> StartingItemsToAddOnSaveLoad;
 var config(OrdnanceLaunchers) bool bOrdnanceAmplifierUsesBlasterLauncherTargeting;
 
 var config(KineticStrikeModule) array<name> MeleeAbilitiesUseKSM;
 
+var config(ClassData) array<name> AbilitiesToGrantToBITs;
 var config(ClassData) array<name> ClassesToRemoveAbilitiesFrom;
 var config(ClassData) array<name> AbilitiesToRemove;
 
 //	Immedaite goals:
 
+//	add MEC's melee attacks so they benefit from KSM
+//	blacklist Molotovs
 //	Check Mechatronic Warfare and MEC Troopers ability trees for incompatibilities, ABB, Metal Over Flesh
-//	Balance Heavy Weapons in Aux Slot, and the Aux Slot itself
+
+//	## Compatibility notes:
+//	Metal Over Flehs » The Heavy Weapon Storage perk in Metal Over Flesh does not affect Heavy Weapons in the auxilary slot.
 
 //	Compatibility config for grenade scatter mod and grenade rebalance mod
 //	release video
@@ -210,12 +215,15 @@ static function PatchSoldierClassTemplates()
 
 static function GetNumHeavyWeaponSlotsOverride(out int NumHeavySlots, XComGameState_Unit UnitState, XComGameState CheckGameState)
 {
-	if (default.bRemoveHeavyWeaponSlotWithoutBIT && 
-		default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && 
-		!class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
+	local XComGameState_Item ItemState;
+
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
 	{
-		//	Remove one Heavy Weapon slot if the SPARK doesn't have a BIT equipped.
-		NumHeavySlots--;
+		ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
+		if (ItemState != none && default.WeaponCategoriesAddHeavyWeaponSlot.Find(ItemState.GetWeaponCategory()) != INDEX_NONE)
+		{
+			NumHeavySlots++;
+		}
 	}
 }
 
@@ -333,6 +341,7 @@ static function PatchWeaponTemplates()
     local X2ItemTemplateManager         ItemMgr;
 	local X2GrenadeTemplate				GrenadeTemplate;
 	local AbilityIconOverride			IconOverride;
+	local name							AbilityName;
 
     ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
     arrWeaponTemplates = ItemMgr.GetAllWeaponTemplates();
@@ -342,12 +351,10 @@ static function PatchWeaponTemplates()
 		//	Add some abilities to BITs.
         if (WeaponTemplate.WeaponCat == 'sparkbit')
         {
-			//	Makes BIT grant concealment
-			WeaponTemplate.Abilities.AddItem('IRI_ActiveCamo');
-
-			//	Pure passives with localization, just to let the player know.
-			WeaponTemplate.Abilities.AddItem('IntrusionProtocol');
-			WeaponTemplate.Abilities.AddItem('Arsenal');
+			foreach default.AbilitiesToGrantToBITs(AbilityName)
+			{
+				WeaponTemplate.Abilities.AddItem(AbilityName);
+			}
 
 			AddBITAnimSetsToCharacterTemplate(WeaponTemplate.CosmeticUnitTemplate);
         }

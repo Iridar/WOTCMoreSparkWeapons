@@ -10,14 +10,14 @@ simulated function ApplyEffectToWorld(const out EffectAppliedData ApplyEffectPar
 	local XComGameState_Unit				SourceUnit;
 	local vector							TargetLocation;
 	local XComGameState_EnvironmentDamage	DamageEvent;
-	local XComGameState_Item				ItemState;
-	local X2WeaponTemplate					WeaponTemplate;
+	//local XComGameState_Item				ItemState;
+	//local X2WeaponTemplate					WeaponTemplate;
 	local XComWorldData						WorldData;
 	local Vector							DamageDirection;
 	local Vector							SourceLocation;
 	local TTile								SourceTile, TargetTile;
-	local DestructibleTileData				DestructData;
-	local XComDestructibleActor				DestructActor;
+	//local DestructibleTileData				DestructData;
+	//local XComDestructibleActor				DestructActor;
 
 	`LOG("Applying world damage: start.",, 'WOTCMoreSparkWeapons');
 
