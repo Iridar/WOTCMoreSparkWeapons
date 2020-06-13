@@ -41,6 +41,9 @@ var config(ClassData) array<name> AbilitiesToRemove;
 
 //	Artillery Cannons
 //	support for Demolition
+//	Rocket Pods as Aux Weapon?
+
+//	Use SPARK Redirect from Sacrifce to make a system that would shoot enemy projectiles out of the air?
 
 //	LOW PRIORITY
 //	Textures are too dark in Photobooth.
@@ -50,7 +53,9 @@ var config(ClassData) array<name> AbilitiesToRemove;
 //	During KSM kills, delay damage flyover.
 //	Change KSM Exhaust flames so they turn off gradually instead of instantly.
 //	Add more effects to EM Pulse against fully-augmented soldiers, make a "Augment disabled!" flyover. Blind for head (eyes)
-//	Fix BIT EM Pulse visualization - at least make the Spark play finger-pointing animation and make multi target effects visualize at the same time. Ideally, make SPARK play EM Charge animation, and then have the energy zap to the BIT. Perhaps, Perk Content tether (or Volt projectile)
+//	Fix BIT EM Pulse visualization - at least make the Spark play finger-pointing animation and make multi target effects visualize at the same time. 
+//	Ideally, make SPARK play EM Charge animation, and then have the energy zap to the BIT. Perhaps, Perk Content tether (or Volt projectile)
+//	Make "weapon disabled" flyover come up sooner when using BITless.
 //	Resto Mist - improve textures and tintable
 //	BIT for Specialists? If so, include Active Camo animation for them.
 
@@ -64,6 +69,7 @@ var config(ClassData) array<name> AbilitiesToRemove;
 //	1) Make equipping a BIT autoequip a Heavy Weapon once this is merged: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/741
 //	2) Get rid of OverrideHasHeavyWeapon Event Listener when this is merged: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/881
 //	3) Make it possible to carry EM Pulse and Resto Heal by regular soldiers in the Heavy Weapon slot when this is merged: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/844
+//	Make Field Medic grant extra Restoritive Mist charges.
 
 //	EXPLOITABLE STUFF
 //	Music for release vid?
@@ -98,13 +104,60 @@ static event OnLoadedSavedGameToStrategy()
 	local X2ItemTemplateManager				ItemMgr;
 	local bool								bChange;
 	local X2StrategyElementTemplateManager	StratMgr;
+	local StateObjectReference				SparkRef;
+	local name								SquaddieLoadout;
+	local XComGameState_Unit				UnitState;
+	local InventoryLoadout					Loadout;
+	local int i;
 
 	History = `XCOMHISTORY;	
 	XComHQ = `XCOMHQ;
 	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 
+	//	Add new items into HQ inventory
 	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("WOTCMoreSparkWeapons: Add Starting Items");
 	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+
+	//	Add starting SPARK Equipment if there is a SPARK in the Barracks but their weapons aren't. Can happen when using Starting Spark mod.
+	//	Being comprehensive here. Cycle through all configured character templates.
+	foreach default.SparkCharacterTemplates(TemplateName)
+	{
+		//	If there's a unit of such template in HQ barracks
+		SparkRef = XComHQ.GetSoldierRefOfTemplate(TemplateName);
+		if (SparkRef.ObjectID > 0)
+		{
+			UnitState = XComGameState_Unit(History.GetGameStateForObjectID(SparkRef.ObjectID));
+			if (UnitState != none)
+			{
+				//	then find its squaddie loadout
+				SquaddieLoadout = UnitState.GetSoldierClassTemplate().SquaddieLoadout;
+				foreach ItemMgr.Loadouts(Loadout)
+				{
+					if (Loadout.LoadoutName == SquaddieLoadout)
+					{
+						//	Cycle through all items in the loadout
+						for (i = 0; i < Loadout.Items.Length; i++)
+						{
+							ItemTemplate = ItemMgr.FindItemTemplate(Loadout.Items[i].Item);
+							
+							//	If there's no particular item in HQ Inventory
+							if (ItemTemplate != none && !XComHQ.HasItem(ItemTemplate))
+							{
+								//	Add it.
+								//	On a side note, not enjoying fixing other people's shit within the context of my mods.
+								ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+								NewGameState.AddStateObject(ItemState);
+								XComHQ.AddItemToHQInventory(ItemState);	
+							}
+						}
+						//	Exit "cycle through loadouts" cycle.
+						break;
+					}
+				}
+			}
+		}
+	}
+	
 
 	//	Add an instance of the specified item template into HQ inventory
 	foreach default.StartingItemsToAddOnSaveLoad(TemplateName)
@@ -130,6 +183,7 @@ static event OnLoadedSavedGameToStrategy()
 		History.CleanupPendingGameState(NewGameState);
 	}
 
+	//	Add Tech Templates
 	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
 	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ArmCannon_Tech');
 }
