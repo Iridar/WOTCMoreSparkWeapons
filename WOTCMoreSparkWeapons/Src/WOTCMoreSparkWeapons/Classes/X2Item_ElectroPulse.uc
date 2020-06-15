@@ -1,5 +1,7 @@
 class X2Item_ElectroPulse extends X2Item config(AuxiliaryWeapons);
 
+var config bool REQUIRE_SPARK;
+
 var config float PULSE_RANGE;
 var config float PULSE_RADIUS;
 var config int  CHARGES;
@@ -56,6 +58,7 @@ static function X2DataTemplate Create_Item()
 {
 	local X2WeaponTemplate Template;
 	local ArtifactCost Resources;
+	local StrategyRequirement	AltReq;
 	local int i;
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_ElectroPulse_CV');
@@ -149,6 +152,52 @@ static function X2DataTemplate Create_Item()
 	Template.PointsToComplete = 0;
 	Template.CreatorTemplateName = default.CREATOR_TEMPLATE_NAME; // The schematic which creates this item
 	Template.BaseItem = default.BASE_ITEM; // Which item this will be upgraded from
+
+	if (default.REQUIRE_SPARK)
+	{
+		Template.Requirements.RequiredTechs.AddItem('MechanizedWarfare');
+		AltReq.RequiredTechs = default.REQUIRED_TECHS;
+		AltReq.SpecialRequirementsFn = IsLostTowersNarrativeContentComplete;
+		Template.AlternateRequirements.AddItem(AltReq);
+	}
 	
 	return Template;
+}
+
+//	Copied from RM's MEC Troopers. Ey, no reason to reinvent the wheel, okay?
+//---------------------------------------------------------------------------------------
+// Only returns true if narrative content is enabled AND completed, OR if XPack DLC Integration is turned on. Also accounts for Unintegrated DLC
+private static function bool IsLostTowersNarrativeContentComplete()
+{
+	local XComGameState_CampaignSettings CampaignSettings;
+	
+	CampaignSettings = XComGameState_CampaignSettings(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_CampaignSettings'));
+
+	if (CampaignSettings.HasIntegratedDLCEnabled())
+	{
+		if (CampaignSettings.HasOptionalNarrativeDLCEnabled(name(class'X2DownloadableContentInfo_DLC_Day90'.default.DLCIdentifier))) //unintegrated DLC may turn this back on
+		{
+			if (class'XComGameState_HeadquartersXCom'.static.IsObjectiveCompleted('DLC_LostTowersMissionComplete'))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return true; // When DLC is integrated, count this as narrative content being completed
+		}
+	}
+	else if (CampaignSettings.HasOptionalNarrativeDLCEnabled(name(class'X2DownloadableContentInfo_DLC_Day90'.default.DLCIdentifier)))
+	{
+		if (class'XComGameState_HeadquartersXCom'.static.IsObjectiveCompleted('DLC_LostTowersMissionComplete'))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }

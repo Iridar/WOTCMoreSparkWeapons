@@ -135,6 +135,8 @@ static event OnLoadedSavedGameToStrategy()
 				{
 					if (Loadout.LoadoutName == SquaddieLoadout)
 					{
+						`LOG("Found loadout.",, 'WOTCMoreSparkWeapons');
+
 						//	Cycle through all items in the loadout
 						for (i = 0; i < Loadout.Items.Length; i++)
 						{
@@ -148,6 +150,8 @@ static event OnLoadedSavedGameToStrategy()
 								ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
 								NewGameState.AddStateObject(ItemState);
 								XComHQ.AddItemToHQInventory(ItemState);	
+
+								bChange = true;
 							}
 						}
 						//	Exit "cycle through loadouts" cycle.
@@ -729,10 +733,16 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 				//	=======	Bombard =======
 				case 'Bombard':
 				case 'Bombardment':	//	mechatronic warfare
-					if (!bChangeGrenadesAndRockets) break;
-					SetupData[Index].TemplateName = 'IRI_Bombard';
-					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Bombard');
-					SetupData[Index].SourceWeaponRef = OrdLauncherRef;
+					if (bChangeGrenadesAndRockets)	//	If Ordnance Launhcer is equipped, replace Bombard with custom version
+					{
+						SetupData[Index].TemplateName = 'IRI_Bombard';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Bombard');
+						SetupData[Index].SourceWeaponRef = OrdLauncherRef;
+					}
+					else if (BITRef.ObjectID <= 0)	//	Otherwise remove it if there's no BIT
+					{
+						SetupData.Remove(Index, 1);
+					}
 					break;
 				//	=======	Rocket Launchers =======	
 				case 'IRI_FireRocket':	

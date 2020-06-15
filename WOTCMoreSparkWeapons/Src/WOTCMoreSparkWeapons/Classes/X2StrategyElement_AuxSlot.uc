@@ -3,6 +3,8 @@ class X2StrategyElement_AuxSlot extends CHItemSlotSet config(AuxiliaryWeapons);
 var localized string strSlotFirstLetter;
 var localized string strSlotLocName;
 
+var config EInventorySlot AuxiliaryWeaponSlot;
+
 var config array<name> AuxSlotAllowedWeaponCategories;
 var config array<name> AuxSlotAllowedItems;
 var config name		   TechRequiredForItems;
@@ -22,7 +24,7 @@ static function X2DataTemplate CreateSlotTemplate()
 
 	`CREATE_X2TEMPLATE(class'CHItemSlot', Template, 'IRI_SparkSlot_Aux');
 
-	Template.InvSlot = eInvSlot_AuxiliaryWeapon;
+	Template.InvSlot = default.AuxiliaryWeaponSlot;
 	Template.SlotCatMask = Template.SLOT_WEAPON | Template.SLOT_ITEM;
 
 	Template.IsUserEquipSlot = true;
