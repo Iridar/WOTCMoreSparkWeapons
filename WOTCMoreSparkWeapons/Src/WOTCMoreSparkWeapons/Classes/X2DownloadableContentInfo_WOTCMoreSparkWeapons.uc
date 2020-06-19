@@ -90,6 +90,16 @@ var config(ClassData) array<name> AbilitiesToRemove;
 	Ordnance Projector
 */
 
+static event OnLoadedSavedGame()
+{
+	OnLoadedSavedGameToStrategy();
+}
+
+static event InstallNewCampaign(XComGameState StartState)
+{
+	AddSparkSquaddieWeapons();
+}
+
 /// <summary>
 /// This method is run when the player loads a saved game directly into Strategy while this DLC is installed
 /// </summary>
@@ -104,6 +114,56 @@ static event OnLoadedSavedGameToStrategy()
 	local X2ItemTemplateManager				ItemMgr;
 	local bool								bChange;
 	local X2StrategyElementTemplateManager	StratMgr;
+
+
+	History = `XCOMHISTORY;	
+	XComHQ = `XCOMHQ;
+	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();	
+
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("WOTCMoreSparkWeapons: Add Starting Items");
+	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+
+	//	Add an instance of the specified item template into HQ inventory
+	foreach default.StartingItemsToAddOnSaveLoad(TemplateName)
+	{
+		ItemTemplate = ItemMgr.FindItemTemplate(TemplateName);
+
+		if (ItemTemplate != none && ItemTemplate.StartingItem && !XComHQ.HasItem(ItemTemplate))
+		{	
+			ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+			NewGameState.AddStateObject(ItemState);
+			XComHQ.AddItemToHQInventory(ItemState);	
+
+			bChange = true;
+		}
+	}
+
+	if (bChange)
+	{
+		History.AddGameStateToHistory(NewGameState);
+	}
+	else
+	{
+		History.CleanupPendingGameState(NewGameState);
+	}
+
+	//	Add Tech Templates
+	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
+	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ArmCannon_Tech');
+
+	AddSparkSquaddieWeapons();
+}
+
+static private function AddSparkSquaddieWeapons()
+{
+	local XComGameStateHistory				History;
+	local XComGameState						NewGameState;
+	local XComGameState_HeadquartersXCom	XComHQ;
+	local XComGameState_Item				ItemState;
+	local X2ItemTemplate					ItemTemplate;
+	local name								TemplateName;
+	local X2ItemTemplateManager				ItemMgr;
+	local bool								bChange;
 	local StateObjectReference				SparkRef;
 	local name								SquaddieLoadout;
 	local XComGameState_Unit				UnitState;
@@ -115,7 +175,7 @@ static event OnLoadedSavedGameToStrategy()
 	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 
 	//	Add new items into HQ inventory
-	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("WOTCMoreSparkWeapons: Add Starting Items");
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("WOTCMoreSparkWeapons: Add SPARK Squaddie Items");
 	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
 
 	//	Add starting SPARK Equipment if there is a SPARK in the Barracks but their weapons aren't. Can happen when using Starting Spark mod.
@@ -161,22 +221,6 @@ static event OnLoadedSavedGameToStrategy()
 			}
 		}
 	}
-	
-
-	//	Add an instance of the specified item template into HQ inventory
-	foreach default.StartingItemsToAddOnSaveLoad(TemplateName)
-	{
-		ItemTemplate = ItemMgr.FindItemTemplate(TemplateName);
-
-		if (ItemTemplate != none && ItemTemplate.StartingItem && !XComHQ.HasItem(ItemTemplate))
-		{	
-			ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
-			NewGameState.AddStateObject(ItemState);
-			XComHQ.AddItemToHQInventory(ItemState);	
-
-			bChange = true;
-		}
-	}
 
 	if (bChange)
 	{
@@ -186,12 +230,7 @@ static event OnLoadedSavedGameToStrategy()
 	{
 		History.CleanupPendingGameState(NewGameState);
 	}
-
-	//	Add Tech Templates
-	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
-	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ArmCannon_Tech');
 }
-
 
 static function AddProvingGroundsProjectIfItsNotPresent(X2StrategyElementTemplateManager StratMgr, name ProjectName)
 {

@@ -58,7 +58,7 @@ static function bool HasSlot(CHItemSlot Slot, XComGameState_Unit UnitState, out 
 
 static function bool ShowItemInLockerList(CHItemSlot Slot, XComGameState_Unit Unit, XComGameState_Item ItemState, X2ItemTemplate ItemTemplate, XComGameState CheckGameState)
 {
-	return IsTemplateValidForSlot(ItemTemplate, Unit, CheckGameState);
+	return IsTemplateValidForSlot(Slot.InvSlot, ItemTemplate, Unit, CheckGameState);
 }
 
 static function bool CanAddItemToSlot(CHItemSlot Slot, XComGameState_Unit UnitState, X2ItemTemplate ItemTemplate, optional XComGameState CheckGameState, optional int Quantity = 1, optional XComGameState_Item ItemState)
@@ -66,14 +66,14 @@ static function bool CanAddItemToSlot(CHItemSlot Slot, XComGameState_Unit UnitSt
 	//	If there is no item in the slot
 	if(UnitState.GetItemInSlot(Slot.InvSlot, CheckGameState) == none)
 	{
-		return IsTemplateValidForSlot(ItemTemplate, UnitState, CheckGameState);
+		return IsTemplateValidForSlot(Slot.InvSlot, ItemTemplate, UnitState, CheckGameState);
 	}
 
 	//	Slot is already occupied, cannot add any more items to it.
 	return false;
 }
 
-private static function bool IsTemplateValidForSlot(X2ItemTemplate ItemTemplate, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+private static function bool IsTemplateValidForSlot(EInventorySlot InvSlot, X2ItemTemplate ItemTemplate, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
 	local XComGameState_Item				OrdLauncherState;
 	local X2WeaponTemplate					WeaponTemplate;
@@ -97,7 +97,7 @@ private static function bool IsTemplateValidForSlot(X2ItemTemplate ItemTemplate,
 
 	//	Whitelist items by inventory slot - in case an item was made or patched to be here.
 	EqTemplate = X2EquipmentTemplate(ItemTemplate);
-	if (EqTemplate != none && EqTemplate.InventorySlot == eInvSlot_AuxiliaryWeapon)
+	if (EqTemplate != none && EqTemplate.InventorySlot == InvSlot)
 	{
 		return true;
 	}
@@ -140,7 +140,8 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 	ItemState = Unit.GetItemInSlot(Slot.InvSlot, NewGameState);
 	HasSlot = Slot.UnitHasSlot(Unit, strDummy, NewGameState);
 
-	if(ItemState != none && !HasSlot)
+	//	If there's an item equipped in the slot, but the unit is not supposed to have the slot, or the item is not supposed to be in the slot, then unequip it and put it into HQ Inventory.
+	if (ItemState != none && (!HasSlot || !IsTemplateValidForSlot(Slot.InvSlot, ItemState.GetMyTemplate(), Unit, NewGameState)))
 	{
 		//`LOG("WARNING Unit:" @ Unit.GetFullName() @ "soldier class:" @ Unit.GetSoldierClassTemplateName() @ "has an item equipped in the Slot:" @ Slot.InvSlot @ ", but they are not supposed to have the Slot. Attempting to unequip the item.",, 'WOTCMoreSparkWeapons');
 
@@ -149,8 +150,8 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 		{
 			//`LOG("Successfully unequipped the item. Putting it into HQ Inventory.",, 'WOTCMoreSparkWeapons');
 			XComHQ.PutItemInInventory(NewGameState, ItemState);
-		}
-		else //`LOG("WARNING, failed to unequip the item!",, 'WOTCMoreSparkWeapons');
+		}	
+		//else //`LOG("WARNING, failed to unequip the item!",, 'WOTCMoreSparkWeapons');
 	}
 }
 

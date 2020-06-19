@@ -57,6 +57,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Compatibility\XComWeaponSkinReplacer.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\XComArtilleryCannon.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\XComAutogunHeavyWeapon.ini">
       <SubType>Content</SubType>
     </Content>
@@ -97,6 +100,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIActiveCamoPerk.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\IRIArtilleryCannon.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIElectroPulse.upk">
@@ -179,6 +185,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2EventListener_HasHeavyWeapon.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_ArtilleryCannon_CV.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_ElectroPulse.uc">
