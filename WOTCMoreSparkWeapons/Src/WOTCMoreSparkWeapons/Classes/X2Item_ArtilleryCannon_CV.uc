@@ -36,7 +36,7 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
-	Templates.AddItem(Create_Item());
+	//Templates.AddItem(Create_Item());
 
 	return Templates;
 }

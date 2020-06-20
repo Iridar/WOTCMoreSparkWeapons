@@ -17,8 +17,11 @@ var config(ClassData) array<name> AbilitiesToRemove;
 
 //	Immedaite goals:
 
-//	Compatibility config for grenade scatter mod and grenade rebalance mod
-//	release video
+//	Art Cannon: default HEAT ammo with a small arc and a small amount of AOE damage. Equipped as a weapon upgrade when Art Cannon is acquired. Also added into HQ inventory in infinite supply. Can't be replaced by non-ammo Weapon Upgrades. Can't be removed.
+//	Additional ammo types: 
+//	SABOT - high AP, high damage, single shot, squadsight-capable, damage degrades with distance. 
+//	HE - high AOE damage, arched, area-targeted
+//	Shrapnel - cone targeted, aoe damage. Shred?
 
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	## ADVENT grunts -> stratosphere
@@ -44,6 +47,8 @@ var config(ClassData) array<name> AbilitiesToRemove;
 //	Rocket Pods as Aux Weapon?
 
 //	Use SPARK Redirect from Sacrifce to make a system that would shoot enemy projectiles out of the air?
+
+//	Befriend Mitzruti's canisters with Claus' flamethrowers: https://discordapp.com/channels/287872325070880770/520730736630824980/723925790240145468
 
 //	LOW PRIORITY
 //	Textures are too dark in Photobooth.
@@ -97,7 +102,7 @@ static event OnLoadedSavedGame()
 
 static event InstallNewCampaign(XComGameState StartState)
 {
-	AddSparkSquaddieWeapons();
+	AddSparkSquaddieWeapons(StartState);
 }
 
 /// <summary>
@@ -138,6 +143,15 @@ static event OnLoadedSavedGameToStrategy()
 		}
 	}
 
+	if (!bChange)
+	{
+		bChange = AddSparkSquaddieWeapons(NewGameState);
+	}
+	else 
+	{
+		AddSparkSquaddieWeapons(NewGameState);
+	}
+
 	if (bChange)
 	{
 		History.AddGameStateToHistory(NewGameState);
@@ -151,13 +165,12 @@ static event OnLoadedSavedGameToStrategy()
 	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
 	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ArmCannon_Tech');
 
-	AddSparkSquaddieWeapons();
+	AddSparkSquaddieWeapons(NewGameState);
 }
 
-static private function AddSparkSquaddieWeapons()
+static private function bool AddSparkSquaddieWeapons(XComGameState AddToGameState)
 {
 	local XComGameStateHistory				History;
-	local XComGameState						NewGameState;
 	local XComGameState_HeadquartersXCom	XComHQ;
 	local XComGameState_Item				ItemState;
 	local X2ItemTemplate					ItemTemplate;
@@ -171,13 +184,18 @@ static private function AddSparkSquaddieWeapons()
 	local int i;
 
 	History = `XCOMHISTORY;	
-	XComHQ = `XCOMHQ;
+	
 	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 
-	//	Add new items into HQ inventory
-	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("WOTCMoreSparkWeapons: Add SPARK Squaddie Items");
-	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
-
+	foreach AddToGameState.IterateByClassType(class'XComGameState_HeadquartersXCom', XComHQ)
+	{
+		break;
+	}
+	if (XComHQ == none)
+	{
+		XComHQ = `XCOMHQ;
+		XComHQ = XComGameState_HeadquartersXCom(AddToGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+	}
 	//	Add starting SPARK Equipment if there is a SPARK in the Barracks but their weapons aren't. Can happen when using Starting Spark mod.
 	//	Being comprehensive here. Cycle through all configured character templates.
 	foreach default.SparkCharacterTemplates(TemplateName)
@@ -207,8 +225,8 @@ static private function AddSparkSquaddieWeapons()
 							{
 								//	Add it.
 								//	On a side note, not enjoying fixing other people's shit within the context of my mods.
-								ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
-								NewGameState.AddStateObject(ItemState);
+								ItemState = ItemTemplate.CreateInstanceFromTemplate(AddToGameState);
+								AddToGameState.AddStateObject(ItemState);
 								XComHQ.AddItemToHQInventory(ItemState);	
 
 								bChange = true;
@@ -222,14 +240,7 @@ static private function AddSparkSquaddieWeapons()
 		}
 	}
 
-	if (bChange)
-	{
-		History.AddGameStateToHistory(NewGameState);
-	}
-	else
-	{
-		History.CleanupPendingGameState(NewGameState);
-	}
+	return bChange;
 }
 
 static function AddProvingGroundsProjectIfItsNotPresent(X2StrategyElementTemplateManager StratMgr, name ProjectName)
