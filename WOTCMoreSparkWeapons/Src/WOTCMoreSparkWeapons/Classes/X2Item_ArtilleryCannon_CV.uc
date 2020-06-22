@@ -36,12 +36,14 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
-	Templates.AddItem(Create_Item());
+	Templates.AddItem(Create_ArtilleryCannon_CV());
+
+	Templates.AddItem(Create_Ammo_HEAT());
 
 	return Templates;
 }
 
-static function X2DataTemplate Create_Item()
+static function X2DataTemplate Create_ArtilleryCannon_CV()
 {
 	local X2WeaponTemplate Template;
 	local ArtifactCost Resources;
@@ -129,4 +131,81 @@ static function X2DataTemplate Create_Item()
 	Template.BaseItem = default.BASE_ITEM; // Which item this will be upgraded from
 	
 	return Template;
+}
+
+
+static function X2DataTemplate Create_Ammo_HEAT()
+{
+	local X2WeaponUpgradeTemplate Template;
+
+	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'IRI_CannonAmmo_HEAT');
+
+	SetUpWeaponUpgrade(Template);
+	Template.Tier = 3;
+
+	Template.strImage = "img:///UILibrary_StrategyImages.X2InventoryIcons.ConvAssault_OpticB_inv";
+		
+	return Template;
+}
+
+
+static function SetUpWeaponUpgrade(out X2WeaponUpgradeTemplate Template)
+{
+	Template.CanApplyUpgradeToWeaponFn = CanApplyUpgradeToWeapon;
+	
+	Template.CanBeBuilt = false;
+	Template.MaxQuantity = 1;
+	Template.bInfiniteItem = true;
+
+	Template.BlackMarketTexts = class'X2Item_DefaultUpgrades'.default.UpgradeBlackMarketTexts;
+	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
+	/*
+	if (Template.DataName != 'IRI_CannonAmmo_HEAT') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_HEAT');
+	if (Template.DataName != 'IRI_CannonAmmo_SABOT') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_SABOT');
+	if (Template.DataName != 'IRI_CannonAmmo_HE') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_HE');
+	if (Template.DataName != 'IRI_CannonAmmo_Shrapnel') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_Shrapnel');*/
+}
+
+static function bool CanApplyUpgradeToWeapon(X2WeaponUpgradeTemplate UpgradeTemplate, XComGameState_Item Weapon, int SlotIndex)
+{
+	local array<X2WeaponUpgradeTemplate> AttachedUpgradeTemplates;
+	local X2WeaponUpgradeTemplate AttachedUpgrade; 
+	local int iSlot;
+
+	//	Can equip Ammo Upgrades only in the 0th slot.
+	//if (SlotIndex != 0) return false;
+
+	//	Can only apply these Ammo Upgrades to Artillery Cannons.
+	switch (Weapon.GetMyTemplateName())
+	{
+		case 'IRI_ArtilleryCannon_CV':
+		case 'IRI_ArtilleryCannon_MG':
+		case 'IRI_ArtilleryCannon_BM':
+			break;
+		default:
+			return false;
+	}
+		
+	AttachedUpgradeTemplates = Weapon.GetMyWeaponUpgradeTemplates();
+
+	foreach AttachedUpgradeTemplates(AttachedUpgrade, iSlot)
+	{
+		// Slot Index indicates the upgrade slot the player intends to replace with this new upgrade
+		if (iSlot == SlotIndex)
+		{
+			// The exact upgrade already equipped in a slot cannot be equipped again
+			// This allows different versions of the same upgrade type to be swapped into the slot
+			if (AttachedUpgrade == UpgradeTemplate)
+			{
+				return false;
+			}
+		}
+		else if (UpgradeTemplate.MutuallyExclusiveUpgrades.Find(AttachedUpgrade.DataName) != INDEX_NONE)
+		{
+			// If the new upgrade is mutually exclusive with any of the other currently equipped upgrades, it is not allowed
+			return false;
+		}
+	}
+
+	return true;
 }

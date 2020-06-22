@@ -1,0 +1,1 @@
+class X2Ability_ArtilleryCannon extends X2Ability;
