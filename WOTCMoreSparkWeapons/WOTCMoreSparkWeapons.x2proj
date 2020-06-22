@@ -54,6 +54,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Compatibility\XComSPARKUpgrades.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\Compatibility\XComUpdateSpark.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\Compatibility\XComWeaponSkinReplacer.ini">
       <SubType>Content</SubType>
     </Content>

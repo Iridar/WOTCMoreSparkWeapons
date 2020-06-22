@@ -28,6 +28,7 @@ var config int NUM_UPGRADE_SLOTS;
 var config bool STARTING_ITEM;
 var config bool INFINITE_ITEM;
 var config name CREATOR_TEMPLATE_NAME;
+var config name MECHATRONIC_WARFARE_CREATOR_TEMPLATE_NAME;
 var config name BASE_ITEM;
 var config bool CAN_BE_BUILT;
 var config array<name> REQUIRED_TECHS;
@@ -173,8 +174,33 @@ static function X2DataTemplate Create_Item()
 	}
 	
 	Template.PointsToComplete = 0;
-	Template.CreatorTemplateName = default.CREATOR_TEMPLATE_NAME; // The schematic which creates this item
 	Template.BaseItem = default.BASE_ITEM; // Which item this will be upgraded from
+
+	if (DLCLoaded('MechatronicWarfare')) 
+	{
+		Template.CreatorTemplateName = default.MECHATRONIC_WARFARE_CREATOR_TEMPLATE_NAME;
+	}
+	else
+	{	
+		Template.CreatorTemplateName = default.CREATOR_TEMPLATE_NAME; // The schematic which creates this item
+	}
 	
 	return Template;
+}
+
+static function bool DLCLoaded(name DLCName)
+{
+	local XComOnlineEventMgr	EventManager;
+	local int					Index;
+
+	EventManager = `ONLINEEVENTMGR;
+
+	for(Index = EventManager.GetNumDLC() - 1; Index >= 0; Index--)	
+	{
+		if(EventManager.GetDLCNames(Index) == DLCName)	
+		{
+			return true;
+		}
+	}
+	return false;
 }
