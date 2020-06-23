@@ -42,6 +42,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Base\XComGameData_SoldierSkills.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\Compatibility\XComDualWieldMelee.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\Compatibility\XComRocketLaunchers.ini">
       <SubType>Content</SubType>
     </Content>
