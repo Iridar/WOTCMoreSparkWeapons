@@ -1,0 +1,1 @@
+class X2UnifiedProjectile_HEAT extends X2UnifiedProjectile;

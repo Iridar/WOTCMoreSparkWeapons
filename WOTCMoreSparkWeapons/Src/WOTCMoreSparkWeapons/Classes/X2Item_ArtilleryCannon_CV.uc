@@ -103,6 +103,10 @@ static function X2DataTemplate Create_ArtilleryCannon_CV()
 	Template.AddDefaultAttachment('Suppressor', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Suppressor");
 	Template.AddDefaultAttachment('Trigger', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Trigger");
 
+	Template.WeaponPrecomputedPathData.InitialPathTime = 0.5;
+	Template.WeaponPrecomputedPathData.MaxPathTime = 1.0;
+	Template.WeaponPrecomputedPathData.MaxNumberOfBounces = 0;
+
 	Template.StartingItem = default.STARTING_ITEM;
 	Template.bInfiniteItem = default.INFINITE_ITEM;
 	Template.CanBeBuilt = default.CAN_BE_BUILT;

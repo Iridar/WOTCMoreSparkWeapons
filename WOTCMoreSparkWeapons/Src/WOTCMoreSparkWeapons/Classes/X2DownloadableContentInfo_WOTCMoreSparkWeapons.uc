@@ -25,6 +25,8 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 //	HE - high AOE damage, arched, area-targeted
 //	Shrapnel - cone targeted, aoe damage. Shred?
 
+//	Make Hunter Protocol work with the Autogun if primary cannon is equipped.
+
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	## ADVENT grunts -> stratosphere
 //	## Shieldbearers -> double down
