@@ -9,6 +9,7 @@ tags= war of the chosen, item, weapon</Description>
     <SteamPublishID>0</SteamPublishID>
     <AssemblyName>WOTCMoreSparkWeapons</AssemblyName>
     <RootNamespace>WOTCMoreSparkWeapons</RootNamespace>
+    <ProjectGuid>{bf0a16c4-77db-4b52-aa20-fd3d327573ff}</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <OutputPath>bin\Debug\</OutputPath>

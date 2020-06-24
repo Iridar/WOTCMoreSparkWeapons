@@ -15,6 +15,8 @@ var config(ClassData) array<name> AbilitiesToGrantToBITs;
 var config(ClassData) array<name> ClassesToRemoveAbilitiesFrom;
 var config(ClassData) array<name> AbilitiesToRemove;
 
+var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
+
 //	Immedaite goals:
 
 //	Art Cannon: default HEAT ammo with a small arc and a small amount of AOE damage. Equipped as a weapon upgrade when Art Cannon is acquired. Also added into HQ inventory in infinite supply. Can't be replaced by non-ammo Weapon Upgrades. Can't be removed.
@@ -104,11 +106,20 @@ var config(ClassData) array<name> AbilitiesToRemove;
 /// - e.g. Even if you have a unique weapon category now, someone else may add items to that category later.
 static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2WeaponUpgradeTemplate UpgradeTemplate)
 {
+	local name DisallowedUpgradeName;
+
 	switch (WeaponState.GetMyTemplateName())
 	{
 		case 'IRI_ArtilleryCannon_CV':
 		case 'IRI_ArtilleryCannon_MG':
 		case 'IRI_ArtilleryCannon_BM':
+			foreach default.DisallowedWeaponUpgradeNames(DisallowedUpgradeName)
+			{
+				if (InStr(UpgradeTemplate.DataName, DisallowedUpgradeName) > INDEX_NONE)
+				{
+					return false;
+				}
+			}
 			return true;
 		default:
 			return true;
@@ -187,8 +198,6 @@ static event OnLoadedSavedGameToStrategy()
 	//	Add Tech Templates
 	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
 	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ArmCannon_Tech');
-
-	AddSparkSquaddieWeapons(NewGameState);
 }
 
 static private function bool AddSparkSquaddieWeapons(XComGameState AddToGameState)
@@ -308,6 +317,7 @@ static event OnPostTemplatesCreated()
 	PatchAbilityTemplates();
 	PatchWeaponTemplates();
 	class'KSMHelper'.static.AddDeathAnimSetsToCharacterTemplates();
+	class'X2Item_ArtilleryCannon_CV'.static.UpdateMods();
 }
 
 static function PatchSoldierClassTemplates()
