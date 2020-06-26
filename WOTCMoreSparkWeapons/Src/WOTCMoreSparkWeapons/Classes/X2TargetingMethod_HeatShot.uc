@@ -6,88 +6,6 @@ class X2TargetingMethod_HeatShot extends X2TargetingMethod_Grenade;
 var private X2Camera_LookAtActor LookatCamera;
 var protected int LastTarget;
 
-function Canceled()
-{
-	super.Canceled();
-	`CAMERASTACK.RemoveCamera(LookatCamera);
-	ClearTargetedActors();
-}
-
-function Committed()
-{
-	Canceled();
-}
-
-/*
-function Update(float DeltaTime)
-{
-	//local array<Actor> CurrentlyMarkedTargets;
-	//local vector NewTargetLocation;
-	//local array<TTile> Tiles;
-
-	//NewTargetLocation = GetSplashRadiusCenter();
-
-	//super.Update(DeltaTime);
-
-	GrenadePath.LastTargetLocation = TargetLocation;
-}
-*/
-function Update(float DeltaTime)
-{
-	GrenadePath.Tick(DeltaTime);
-}
-/*
-private function AdjustGrenadePath(vector TargetLocation)
-{
-	local vector vDif;
-	local int iKeyframes;
-	local int i;
-	local float Alpha;
-	local XComWeapon				WeaponEntity;
-	local PrecomputedPathData		WeaponPrecomputedPathData;
-
-	iKeyframes = GrenadePath.iNumKeyframes;
-	vDif = TargetLocation - GrenadePath.akKeyframes[iKeyframes - 1].vLoc;
-
-	GetGrenadeWeaponInfo(WeaponEntity, WeaponPrecomputedPathData);
-	GrenadePath.SetWeaponAndTargetLocation(WeaponEntity, FiringUnit.GetTeam(), TargetLocation, WeaponPrecomputedPathData);
-
-	GrenadePath.bUseOverrideSourceLocation = true;
-	GrenadePath.OverrideSourceLocation = GrenadePath.akKeyframes[0].vLoc;
-	GrenadePath.SetFiringFromSocketPosition('gun_fire');
-
-	//GrenadePath.LastTargetLocation = TargetLocation;
-
-	for (i = 0; i < iKeyframes; i++)
-	{	
-		Alpha = float(i) / float(iKeyframes);
-		`LOG("Old frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');			
-		GrenadePath.akKeyframes[i].vLoc += vDif * Alpha;
-		`LOG("New frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');		
-	}	
-
-	//GrenadePath.ForceRebuildGrenadePath();
-	
-	//GrenadePath.UpdateTrajectory();
-	GrenadePath.bSplineDirty = true;
-	
-}*/
-
-function NextTarget()
-{
-	DirectSetTarget(LastTarget + 1);
-}
-
-function PrevTarget()
-{
-	DirectSetTarget(LastTarget - 1);
-}
-
-function int GetTargetIndex()
-{
-	return LastTarget;
-}
-
 function DirectSetTarget(int TargetIndex)
 {
 	local XComPresentationLayer Pres;
@@ -175,20 +93,24 @@ private function AdjustGrenadePath(vector TargetLocation)
 	local int iKeyframes;
 	local int i;
 	local float Alpha;
-	local XComWeapon				WeaponEntity;
-	local PrecomputedPathData		WeaponPrecomputedPathData;
+	local float PathLength;
+	//local InterpCurvePointVector	CurvePoint;
 
 	iKeyframes = GrenadePath.iNumKeyframes;
 	vDif = TargetLocation - GrenadePath.akKeyframes[iKeyframes - 1].vLoc;
 
-	GetGrenadeWeaponInfo(WeaponEntity, WeaponPrecomputedPathData);
-	GrenadePath.SetWeaponAndTargetLocation(WeaponEntity, FiringUnit.GetTeam(), TargetLocation, WeaponPrecomputedPathData);
+	GrenadePath.bUseOverrideTargetLocation = true;
+	GrenadePath.OverrideTargetLocation = TargetLocation;
 
 	GrenadePath.bUseOverrideSourceLocation = true;
 	GrenadePath.OverrideSourceLocation = GrenadePath.akKeyframes[0].vLoc;
-	GrenadePath.SetFiringFromSocketPosition('gun_fire');
 
-	//GrenadePath.LastTargetLocation = TargetLocation;
+	`LOG("============== BEGIN SPLINE PRINT ===================",, 'SmartRounds');
+	for (i = 0; i < GrenadePath.kSplineInfo.Points.Length; i++)
+	{
+		`LOG("Spline:" @ i @":" @ GrenadePath.kSplineInfo.Points[i].InVal @ GrenadePath.kSplineInfo.Points[i].OutVal,, 'SmartRounds');
+	}
+	`LOG("============== END SPLINE PRINT ===================",, 'SmartRounds');
 
 	for (i = 0; i < iKeyframes; i++)
 	{	
@@ -196,13 +118,11 @@ private function AdjustGrenadePath(vector TargetLocation)
 		`LOG("Old frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');			
 		GrenadePath.akKeyframes[i].vLoc += vDif * Alpha;
 		`LOG("New frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');		
-	}	
 
-	GrenadePath.ForceRebuildGrenadePath();
-	
-	//GrenadePath.UpdateTrajectory();
-	//GrenadePath.bSplineDirty = true;
-	//GrenadePath.Tick(0);
+		GrenadePath.kSplineInfo.Points[i].OutVal = GrenadePath.akKeyframes[i].vLoc;
+	}	
+	PathLength = GrenadePath.akKeyframes[GrenadePath.iNumKeyframes - 1].fTime - GrenadePath.akKeyframes[0].fTime;
+	GrenadePath.kRenderablePath.UpdatePathRenderData(GrenadePath.kSplineInfo, PathLength, none, `CAMERASTACK.GetCameraLocationAndOrientation().Location);
 }
 
 function bool GetCurrentTargetFocus(out Vector Focus)
@@ -223,46 +143,23 @@ function bool GetCurrentTargetFocus(out Vector Focus)
 		{
 			Focus = TargetedActor.Location;
 		}
-		
+
 		return true;
 	}
-	
 	return false;
 }
 
 
-//	======================================================================
-//	X2TargetingMethod_Grenade.uc
-//	======================================================================
 function Init(AvailableAction InAction, int NewTargetIndex)
 {
-	local XComGameStateHistory History;
-	local XComWeapon WeaponEntity;
-	local PrecomputedPathData WeaponPrecomputedPathData;
-	//local float TargetingRange;
-	//local X2AbilityTarget_Cursor CursorTarget;
-	local X2AbilityTemplate AbilityTemplate;
+	local XComWeapon			WeaponEntity;
+	local PrecomputedPathData	WeaponPrecomputedPathData;
+	local X2AbilityTemplate		AbilityTemplate;
 
 	super(X2TargetingMethod).Init(InAction, NewTargetIndex);
 
-	History = `XCOMHISTORY;
-
-	AssociatedPlayerState = XComGameState_Player(History.GetGameStateForObjectID(UnitState.ControllingPlayer.ObjectID));
-
-	// determine our targeting range
+	AssociatedPlayerState = XComGameState_Player(`XCOMHISTORY.GetGameStateForObjectID(UnitState.ControllingPlayer.ObjectID));
 	AbilityTemplate = Ability.GetMyTemplate();
-	//TargetingRange = Ability.GetAbilityCursorRangeMeters();
-
-	// lock the cursor to that range
-	//Cursor = `Cursor;
-	//Cursor.m_fMaxChainedDistance = `METERSTOUNITS(TargetingRange);
-
-	// set the cursor location to itself to make sure the chain distance updates
-	//Cursor.CursorSetLocation(Cursor.GetCursorFeetLocation(), false, true); 
-
-	//CursorTarget = X2AbilityTarget_Cursor(Ability.GetMyTemplate().AbilityTargetStyle);
-	//if (CursorTarget != none)
-	//	bRestrictToSquadsightRange = CursorTarget.bRestrictToSquadsightRange;
 
 	GetGrenadeWeaponInfo(WeaponEntity, WeaponPrecomputedPathData);
 	// Tutorial Band-aid #2 - Should look at a proper fix for this
@@ -274,6 +171,7 @@ function Init(AvailableAction InAction, int NewTargetIndex)
 	GrenadePath = `PRECOMPUTEDPATH;
 	GrenadePath.ClearOverrideTargetLocation(); // Clear this flag in case the grenade target location was locked.
 	GrenadePath.ActivatePath(WeaponEntity, FiringUnit.GetTeam(), WeaponPrecomputedPathData);
+	GrenadePath.SetFiringFromSocketPosition('gun_fire');
 
 	if (!AbilityTemplate.SkipRenderOfTargetingTemplate)
 	{
@@ -312,3 +210,93 @@ simulated protected function Vector GetSplashRadiusCenter( bool SkipTileSnap = f
 	
 	return Center;
 }
+
+function Canceled()
+{
+	super.Canceled();
+	`CAMERASTACK.RemoveCamera(LookatCamera);
+	ClearTargetedActors();
+}
+
+function Committed()
+{
+	Canceled();
+}
+
+function Update(float DeltaTime)
+{
+	local vector TargetedLocation;
+
+	super(X2TargetingMethod).Update(DeltaTime);
+	
+	GetCurrentTargetFocus(TargetedLocation);
+	AdjustGrenadePath(TargetedLocation);	
+}
+
+function NextTarget()
+{
+	DirectSetTarget(LastTarget + 1);
+}
+
+function PrevTarget()
+{
+	DirectSetTarget(LastTarget - 1);
+}
+
+function int GetTargetIndex()
+{
+	return LastTarget;
+}
+
+//	================================================
+
+/*
+function Update(float DeltaTime)
+{
+	//local array<Actor> CurrentlyMarkedTargets;
+	//local vector NewTargetLocation;
+	//local array<TTile> Tiles;
+
+	//NewTargetLocation = GetSplashRadiusCenter();
+
+	//super.Update(DeltaTime);
+
+	GrenadePath.LastTargetLocation = TargetLocation;
+}
+*/
+/*
+private function AdjustGrenadePath(vector TargetLocation)
+{
+	local vector vDif;
+	local int iKeyframes;
+	local int i;
+	local float Alpha;
+	local XComWeapon				WeaponEntity;
+	local PrecomputedPathData		WeaponPrecomputedPathData;
+
+	iKeyframes = GrenadePath.iNumKeyframes;
+	vDif = TargetLocation - GrenadePath.akKeyframes[iKeyframes - 1].vLoc;
+
+	GetGrenadeWeaponInfo(WeaponEntity, WeaponPrecomputedPathData);
+	GrenadePath.SetWeaponAndTargetLocation(WeaponEntity, FiringUnit.GetTeam(), TargetLocation, WeaponPrecomputedPathData);
+
+	GrenadePath.bUseOverrideSourceLocation = true;
+	GrenadePath.OverrideSourceLocation = GrenadePath.akKeyframes[0].vLoc;
+	GrenadePath.SetFiringFromSocketPosition('gun_fire');
+
+	//GrenadePath.LastTargetLocation = TargetLocation;
+
+	for (i = 0; i < iKeyframes; i++)
+	{	
+		Alpha = float(i) / float(iKeyframes);
+		`LOG("Old frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');			
+		GrenadePath.akKeyframes[i].vLoc += vDif * Alpha;
+		`LOG("New frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');		
+	}	
+
+	//GrenadePath.ForceRebuildGrenadePath();
+	
+	//GrenadePath.UpdateTrajectory();
+	GrenadePath.bSplineDirty = true;
+	
+}*/
