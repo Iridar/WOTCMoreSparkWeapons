@@ -34,7 +34,44 @@ function Update(float DeltaTime)
 */
 function Update(float DeltaTime)
 {
+	GrenadePath.Tick(DeltaTime);
 }
+/*
+private function AdjustGrenadePath(vector TargetLocation)
+{
+	local vector vDif;
+	local int iKeyframes;
+	local int i;
+	local float Alpha;
+	local XComWeapon				WeaponEntity;
+	local PrecomputedPathData		WeaponPrecomputedPathData;
+
+	iKeyframes = GrenadePath.iNumKeyframes;
+	vDif = TargetLocation - GrenadePath.akKeyframes[iKeyframes - 1].vLoc;
+
+	GetGrenadeWeaponInfo(WeaponEntity, WeaponPrecomputedPathData);
+	GrenadePath.SetWeaponAndTargetLocation(WeaponEntity, FiringUnit.GetTeam(), TargetLocation, WeaponPrecomputedPathData);
+
+	GrenadePath.bUseOverrideSourceLocation = true;
+	GrenadePath.OverrideSourceLocation = GrenadePath.akKeyframes[0].vLoc;
+	GrenadePath.SetFiringFromSocketPosition('gun_fire');
+
+	//GrenadePath.LastTargetLocation = TargetLocation;
+
+	for (i = 0; i < iKeyframes; i++)
+	{	
+		Alpha = float(i) / float(iKeyframes);
+		`LOG("Old frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');			
+		GrenadePath.akKeyframes[i].vLoc += vDif * Alpha;
+		`LOG("New frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');		
+	}	
+
+	//GrenadePath.ForceRebuildGrenadePath();
+	
+	//GrenadePath.UpdateTrajectory();
+	GrenadePath.bSplineDirty = true;
+	
+}*/
 
 function NextTarget()
 {
@@ -124,55 +161,47 @@ function DirectSetTarget(int TargetIndex)
 		GetTargetedActors(TargetedLocation, CurrentlyMarkedTargets, Tiles);
 		CheckForFriendlyUnit(CurrentlyMarkedTargets);
 		MarkTargetedActors(CurrentlyMarkedTargets, (!AbilityIsOffensive) ? FiringUnit.GetTeam() : eTeam_None);
-		AdjustGrenadePath(TargetedPawn);
 		DrawAOETiles(Tiles);
 		DrawSplashRadius();
+
+		GetCurrentTargetFocus(TargetedLocation);
+		AdjustGrenadePath(TargetedLocation);
 	}
 }
 
-private function AdjustGrenadePath(XGUnit TargetedPawn)
+private function AdjustGrenadePath(vector TargetLocation)
 {
-	//local XComGameState_Unit		TargetUnit;
+	local vector vDif;
+	local int iKeyframes;
+	local int i;
+	local float Alpha;
 	local XComWeapon				WeaponEntity;
 	local PrecomputedPathData		WeaponPrecomputedPathData;
-	local vector					TargetedLocation;
-	//local float						FinalHeightIncrement;
-	//local int i;
 
-	//	Make the arched shot hit in the random point of the upper half of the target's profile
-	//TargetUnit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(TargetedPawn.ObjectID));
-	//if (TargetUnit != none)
-	//{
-		//`LOG("Got unit successfully:" @ TargetedLocation.Z,,'WOTCMoreSparkWeapons');
-		//TargetedLocation.Z += TargetUnit.UnitHeight * class'XComWorldData'.const.WORLD_HalfFloorHeight + `SYNC_FRAND() * (TargetUnit.UnitHeight - 1) * class'XComWorldData'.const.WORLD_FloorHeight;
-		//`LOG("Adjusted Z:" @ TargetedLocation.Z,,'WOTCMoreSparkWeapons');
+	iKeyframes = GrenadePath.iNumKeyframes;
+	vDif = TargetLocation - GrenadePath.akKeyframes[iKeyframes - 1].vLoc;
 
-		TargetedLocation = GetSplashRadiusCenter();
-		//`LOG("Got unit successfully:" @ TargetedLocation.Z,,'WOTCMoreSparkWeapons');
-		//FinalHeightIncrement = TargetUnit.UnitHeight * class'XComWorldData'.const.WORLD_HalfFloorHeight + `SYNC_FRAND() * (TargetUnit.UnitHeight - 1) * class'XComWorldData'.const.WORLD_FloorHeight;
-		//TargetedLocation.Z += FinalHeightIncrement;
-		//`LOG("Adjusted Z:" @ TargetedLocation.Z,,'WOTCMoreSparkWeapons');
-	//}
-	
 	GetGrenadeWeaponInfo(WeaponEntity, WeaponPrecomputedPathData);
-	GrenadePath.SetWeaponAndTargetLocation(WeaponEntity, FiringUnit.GetTeam(), TargetedLocation, WeaponPrecomputedPathData);
+	GrenadePath.SetWeaponAndTargetLocation(WeaponEntity, FiringUnit.GetTeam(), TargetLocation, WeaponPrecomputedPathData);
+
+	GrenadePath.bUseOverrideSourceLocation = true;
+	GrenadePath.OverrideSourceLocation = GrenadePath.akKeyframes[0].vLoc;
+	GrenadePath.SetFiringFromSocketPosition('gun_fire');
+
+	//GrenadePath.LastTargetLocation = TargetLocation;
+
+	for (i = 0; i < iKeyframes; i++)
+	{	
+		Alpha = float(i) / float(iKeyframes);
+		`LOG("Old frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');			
+		GrenadePath.akKeyframes[i].vLoc += vDif * Alpha;
+		`LOG("New frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');		
+	}	
+
+	GrenadePath.ForceRebuildGrenadePath();
 	
-	//for (i = GrenadePath.iNumKeyframes - 1; i >= 0; i--)
-	//{
-	//	GrenadePath.akKeyframes[i].vLoc.Z += FinalHeightIncrement;
-	//	FinalHeightIncrement -= FinalHeightIncrement / GrenadePath.iNumKeyframes;
-
-	//	`LOG("Keyframe:" @ GrenadePath.akKeyframes[i].fTime @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].rRot @ GrenadePath.akKeyframes[i].bValid,,'WOTCMoreSparkWeapons');
-
-		//if (i > GrenadePath.iNumKeyframes / 2) 
-		//{
-		//	GrenadePath.akKeyframes[i].vLoc.Z += 100;
-		//}
-	//}
-
-	//GrenadePath.bSplineDirty = true;
 	//GrenadePath.UpdateTrajectory();
-	//GrenadePath.DrawPath();
+	//GrenadePath.bSplineDirty = true;
 	//GrenadePath.Tick(0);
 }
 
