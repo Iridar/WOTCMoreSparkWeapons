@@ -5,11 +5,17 @@ var array<int> ProjectileIndexPatched;
 function FireProjectileInstance(int Index)
 {
 	local XGUnit TargetVisualizer;
+	local Vector SourceLocation;
+	local Vector AimLocation;
+	local vector TravelDirection;
+	local XComGameState_Ability AbilityState;
+	local X2AbilityTemplate AbilityTemplate;
 	
 
 	super.FireProjectileInstance(Index);
 
-	if (ProjectileIndexPatched.Find(Index) != INDEX_NONE)
+	//	Don't do anything if this element has already been processed or the shot has missed.
+	if (ProjectileIndexPatched.Find(Index) != INDEX_NONE || !bWasHit)
 	{
 		return;
 	}
@@ -28,6 +34,19 @@ function FireProjectileInstance(int Index)
 		AdjustGrenadePath(Projectiles[Index].GrenadePath, TargetVisualizer.GetTargetingFocusLocation());
 
 		//`LOG(default.class @ GetFuncName() @ Projectiles[Index].GrenadePath.ToString(),, 'SmartRounds');
+
+		//	Align the traveling projectile
+		AbilityState = XComGameState_Ability( `XCOMHISTORY.GetGameStateForObjectID( AbilityContextAbilityRefID ) );
+		AbilityTemplate = AbilityState.GetMyTemplate( );
+
+		SetupAim( Index, AbilityState, AbilityTemplate, SourceLocation, AimLocation);
+
+		TravelDirection = AimLocation - SourceLocation;
+		Projectiles[Index].InitialTargetNormal = -TravelDirection;
+		Projectiles[Index].InitialTravelDirection = TravelDirection;	
+
+		//	Reset projectile hit clock
+		//Projectiles[Index].EndTime = Projectiles[Index].StartTime + Projectiles[Index].GrenadePath.GetEndTime() / Projectiles[Index].ProjectileElement.TravelSpeed;
 	}
 
 	`LOG("==================== END ==============================",, 'SmartRounds');
@@ -44,6 +63,9 @@ private function AdjustGrenadePath(XComPrecomputedPath GrenadePath, vector Targe
 
 	iKeyframes = GrenadePath.iNumKeyframes;
 	vDif = TargetLocation - GrenadePath.akKeyframes[iKeyframes - 1].vLoc;
+
+	GrenadePath.bNoSpinUntilBounce = true;
+	GrenadePath.SetFiringFromSocketPosition('gun_fire');
 		
 	for (i = 0; i < iKeyframes; i++)
 	{	
@@ -52,6 +74,8 @@ private function AdjustGrenadePath(XComPrecomputedPath GrenadePath, vector Targe
 		GrenadePath.akKeyframes[i].vLoc += vDif * Alpha;
 		//`LOG("New frame:" @ i @ "out of:" @ iKeyframes @ "Alpha:" @ Alpha @ "____" @ GrenadePath.akKeyframes[i].vLoc @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');		
 	}
+
+	GrenadePath.UpdateTrajectory();
 }
 
 

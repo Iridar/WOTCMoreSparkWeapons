@@ -19,11 +19,19 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 //	Immedaite goals:
 
+//	Projectile is misaligned. 
+//	Projectile sometimes ends path too early
+//	Projectile always hits under target's feet on a miss. 
+//	Is projected arc used for target validation?
+
 //	Art Cannon: default HEAT ammo with a small arc and a small amount of AOE damage. Equipped as a weapon upgrade when Art Cannon is acquired. Also added into HQ inventory in infinite supply. Can't be replaced by non-ammo Weapon Upgrades. Can't be removed.
+//	Upgraded into HEDP to deal more AOE damage. 
 //	Additional ammo types: 
 //	SABOT - high AP, high damage, single shot, squadsight-capable, damage degrades with distance. 
-//	HE - high AOE damage, arched, area-targeted
-//	Shrapnel - cone targeted, aoe damage. Shred?
+//	Upgrade that lets you fire through walls at a damage penalty.
+//	HE - high AOE damage, arched, area-targeted. Upgraded into HESH to deal more damage at the center of the impact.
+//	Shrapnel - cone targeted, aoe damage. 
+//	Upgrade into Flechettes to gain AP.
 
 //	Make Hunter Protocol work with the Autogun if primary cannon is equipped.
 
