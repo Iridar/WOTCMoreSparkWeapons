@@ -6,6 +6,31 @@ class X2TargetingMethod_HeatShot extends X2TargetingMethod_Grenade;
 var private X2Camera_LookAtActor LookatCamera;
 var protected int LastTarget;
 
+function GetTargetLocations(out array<Vector> TargetLocations)
+{
+	local Vector Focus;
+
+	TargetLocations.Length = 0;
+	GetCurrentTargetFocus(Focus);
+	TargetLocations.AddItem(Focus);
+}
+/*
+function name ValidateTargetLocations(const array<Vector> TargetLocations)
+{
+	local TTile TestLoc;
+	if (TargetLocations.Length == 1)
+	{
+		if (bRestrictToSquadsightRange)
+		{
+			TestLoc = `XWORLD.GetTileCoordinatesFromPosition(TargetLocations[0]);
+			if (!class'X2TacticalVisibilityHelpers'.static.CanSquadSeeLocation(AssociatedPlayerState.ObjectID, TestLoc))
+				return 'AA_NotVisible';
+		}
+		return 'AA_Success';
+	}
+	return 'AA_NoTargets';
+}*/
+
 //	This is where the magic happens. 
 //	Not sure how often this gets run, but it's necessary to adjust the grenade path every time,
 //	else it just defaults to target's feet.
