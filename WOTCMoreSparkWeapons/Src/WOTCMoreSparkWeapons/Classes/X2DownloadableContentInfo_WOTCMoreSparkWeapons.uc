@@ -17,17 +17,54 @@ var config(ClassData) array<name> AbilitiesToRemove;
 
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
+/*
+I'm adding three tiers of new SPARK / MEC primary weapon, Artillery Cannons. By default, they can fire HEAT Shells as direct shots against a single target, dealing high damage to it, and minor damage in a small area around the target.
+HEAT Shells are the standard ammunition, always available to Cannons, so it doesn't need any icons.
+
+Additionally, the player can perform a Proving Grounds project, Experimental Cannon Shells, which will provide them with additional shell types to choose from:
+- HE Shells - area targeted with a ballistic trajectory (similiar to MEC Micro Missiles). Explode to deal high area damage.
+- Sabot Shells - more effective at long range and against armored enemies.
+- Shrapnel Shells - cone-targeted, effective against unarmored targets. 
+
+It also unlocks Targeting Computer weapon upgrade. I'm still formulating what exactly it will do, but one thing I want to add is being able to fire Sabot Shells at enemies through walls. 
+The enemy must be visible to other soldiers (squadsight), and there will be a damage penalty for doing that.
+
+Later the player can perform another Proving Grounds project, Improved Cannon Shells, which will upgrade:
+- HEAT -> HEDP - now deals more area damage.
+- HE -> HESH - targets at the epicenter of the explosion take additional damage.
+- Sabot -> Alloy Sabot - Deals more damage, and shooting through walls with a Targeting Computer will incur less of a damage penalty.
+- Shrapnel - Flechette - deals more damage, pierces a bit of armor.
+
+I'm also Sabot Ammo into Experimental Ammo proving grounds projects pool. It can be carried by regular soldiers; Sabot Ammo reduces/removes squadsight penalties and is effective against armor.
+
+Here's the list of all the icons I need.
+
+Inventory Icons:
+-- Sabot Ammo: examples: https://topwar.ru/uploads/posts/2018-01/1516209043_2h1963-goda_small.jpg
+-- Sabot Shells: example on the left: https://netrinoimages.s3.eu-west-2.amazonaws.com/2010/02/15/23489/24303/sabot_shell_3d_model_c4d_max_obj_fbx_ma_lwo_3ds_3dm_stl_116370.jpg
+-- HE Shells: example on the right: https://netrinoimages.s3.eu-west-2.amazonaws.com/2010/02/15/23489/24303/sabot_shell_3d_model_c4d_max_obj_fbx_ma_lwo_3ds_3dm_stl_116370.jpg
+-- Shrapnel Shells: that's not how they look like in the real world, but I'm imagining just a huge shotgun buckshot round)
+-- Targeting Computer DOES NOT require an inventory icon, I'll make it myself once I actually make a model for it. Same for cannons themselves.
+
+Proving Grounds Project icons: 
+-- Experimental Cannon Shells (on the picture: Sabot Shells, HE Shells, Shrapnel Shell).
+-- Improved Cannon Shells
+
+Ability Icons:
+-- Fire Cannon (HEAT shot by default. A crosshair with an explosion in the background, perhaps?)
+-- Fire HE (large explosion? or a ballistic trajectory with a crosshair?)
+-- Fire Shrapnel (a cone explosion with a large sharp pieces of shrapnel? Or a close up on the barrel shooting lots of small pieces of shrapnel?)
+-- Fire Sabot (a sabot projectile with some "speed circles" around it, perhaps? or really just anything that gives an impression of something fast (modern sabot are fired at 1700 m/s) and piercing).
+*/
 //	Immedaite goals:
 
-//	Projectile is misaligned. 
-//	Projectile sometimes ends path too early
-//	Projectile always hits under target's feet on a miss. 
-//	Is projected arc used for target validation?
+//	Different projectile for the HE shot.
+//	Make Scatter Mod store the original ModifyContextFn and call it
 
 //	Art Cannon: default HEAT ammo with a small arc and a small amount of AOE damage. Equipped as a weapon upgrade when Art Cannon is acquired. Also added into HQ inventory in infinite supply. Can't be replaced by non-ammo Weapon Upgrades. Can't be removed.
 //	Upgraded into HEDP to deal more AOE damage. 
 //	Additional ammo types: 
-//	SABOT - high AP, high damage, single shot, squadsight-capable, damage degrades with distance. 
+//	SABOT - high AP, high damage, single shot, squadsight-capable, damage degrades with distance. Can shoot throuhg cover with no aim penalty, but with damage penalty instead
 //	Upgrade that lets you fire through walls at a damage penalty.
 //	HE - high AOE damage, arched, area-targeted. Upgraded into HESH to deal more damage at the center of the impact.
 //	Shrapnel - cone targeted, aoe damage. 
@@ -105,6 +142,15 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 	Kinetic Drive Module 
 	Kinetic Driver
 	Ordnance Projector
+
+Linear Acceleration Gauss 
+
+Artillery Cannon, Mass Driver,        Photon Cannon
+Artillery Gun,    Gauss Driver,       Phase Ballista
+Light Artillery,  Magnetic Artillery, Plasma Artillery
+Light Artillery,  Plasma Artillery,   Elerium Artillery
+Artillery Gun,    Siege Driver,       Proton Cannon
+HWZ-1 "Arbalest", HWZ-3 "Onager",     HWZ-9 "Scorpion"
 */
 
 /// Start Issue #260
@@ -1098,6 +1144,22 @@ static function bool AbilityTagExpandHandler(string InString, out string OutStri
 	case 'IRI_BEAM_LAUNCHER_GRANT_GRENADE_SLOTS':
 		OutString = SetColor(class'X2StrategyElement_InventorySlots'.default.BEAM_LAUNCHER_GRANT_GRENADE_SLOTS);
 		return true;
+	case 'IRI_SABOT_AMMO_COUNTER_DEFENSE':
+		OutString = SetColor(int(class'X2Effect_SabotAmmo'.default.CounterDefense * 100) $ "%");
+		return true;
+	case 'IRI_SABOT_AMMO_COUNTER_DODGE':
+		OutString = SetColor(int(class'X2Effect_SabotAmmo'.default.CounterDodge * 100) $ "%");
+		return true;
+	case 'IRI_SABOT_AMMO_COUNTER_SQUADSIGHT':
+		OutString = SetColor(int(class'X2Effect_SabotAmmo'.default.CounterSquadsightPenalty * 100) $ "%");
+		return true;
+	case 'IRI_SABOT_AMMO_SQUADSIGHT_AIM':
+		OutString = String(class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_DISTANCE_MOD);
+		return true;
+	case 'IRI_SABOT_AMMO_SQUADSIGHT_CRIT':
+		OutString = String(class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_CRIT_MOD);
+		return true;
+
 	//	===================================================
 	default:
             return false;

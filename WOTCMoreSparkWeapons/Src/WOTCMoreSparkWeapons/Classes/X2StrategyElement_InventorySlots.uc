@@ -70,7 +70,7 @@ static function int SlotGetMaxItemCount(CHItemSlot Slot, XComGameState_Unit Unit
 		}
 	}
 
-	return 4;
+	return 3;
 }
 
 static function bool HasSlot(CHItemSlot Slot, XComGameState_Unit UnitState, out string LockedReason, optional XComGameState CheckGameState)

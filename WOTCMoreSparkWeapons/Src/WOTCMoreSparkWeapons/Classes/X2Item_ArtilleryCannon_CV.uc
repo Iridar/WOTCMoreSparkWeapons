@@ -31,17 +31,15 @@ var config array<name> REQUIRED_TECHS;
 var config array<name> BUILD_COST_TYPE;
 var config array<int> BUILD_COST_QUANTITY;
 var config int BLACKMARKET_VALUE;
-
+/*
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
 	Templates.AddItem(Create_ArtilleryCannon_CV());
 
-	//Templates.AddItem(Create_Ammo_HEAT());
-
 	return Templates;
-}
+}*/
 
 static function X2DataTemplate Create_ArtilleryCannon_CV()
 {
@@ -103,8 +101,8 @@ static function X2DataTemplate Create_ArtilleryCannon_CV()
 	Template.AddDefaultAttachment('Suppressor', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Suppressor");
 	Template.AddDefaultAttachment('Trigger', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Trigger");
 
-	Template.WeaponPrecomputedPathData.InitialPathTime = 0.5;
-	Template.WeaponPrecomputedPathData.MaxPathTime = 1.0;
+	Template.WeaponPrecomputedPathData.InitialPathTime = 1.0;
+	Template.WeaponPrecomputedPathData.MaxPathTime = 2.5;
 	Template.WeaponPrecomputedPathData.MaxNumberOfBounces = 0;
 
 	Template.StartingItem = default.STARTING_ITEM;
@@ -137,22 +135,6 @@ static function X2DataTemplate Create_ArtilleryCannon_CV()
 	
 	return Template;
 }
-
-
-static function X2DataTemplate Create_Ammo_HEAT()
-{
-	local X2WeaponUpgradeTemplate Template;
-
-	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'IRI_CannonAmmo_HEAT');
-
-	SetUpWeaponUpgrade(Template);
-	Template.Tier = 3;
-
-	Template.strImage = "img:///UILibrary_StrategyImages.X2InventoryIcons.ConvAssault_OpticB_inv";
-		
-	return Template;
-}
-
 
 static function SetUpWeaponUpgrade(out X2WeaponUpgradeTemplate Template)
 {

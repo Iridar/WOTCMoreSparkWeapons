@@ -130,10 +130,22 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Content\IRISparkHeavyWeapons.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Localization\WOTCMoreSparkWeapons.chn">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\WOTCMoreSparkWeapons.cht">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Localization\WOTCMoreSparkWeapons.int">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\WOTCMoreSparkWeapons.rus">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\XComGame.chn">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\XComGame.cht">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\XComGame.rus">
@@ -143,6 +155,12 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="ModPreview.jpg" />
     <Content Include="Localization\XComGame.int" />
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\KSMHelper.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2AbilityToHitCalc_APShot.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_Ammo.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_ArtilleryCannon.uc">
@@ -194,10 +212,16 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_MeleeDamageBonus.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_SabotAmmo.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_StunCyberus.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2EventListener_HasHeavyWeapon.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_Ammo.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_ArtilleryCannon_CV.uc">
