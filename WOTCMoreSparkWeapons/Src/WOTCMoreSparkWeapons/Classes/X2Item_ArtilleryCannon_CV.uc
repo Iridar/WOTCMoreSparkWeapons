@@ -31,7 +31,7 @@ var config array<name> REQUIRED_TECHS;
 var config array<name> BUILD_COST_TYPE;
 var config array<int> BUILD_COST_QUANTITY;
 var config int BLACKMARKET_VALUE;
-/*
+
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
@@ -39,7 +39,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_ArtilleryCannon_CV());
 
 	return Templates;
-}*/
+}
 
 static function X2DataTemplate Create_ArtilleryCannon_CV()
 {

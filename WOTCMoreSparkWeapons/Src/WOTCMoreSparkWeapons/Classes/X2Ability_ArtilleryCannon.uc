@@ -1,19 +1,21 @@
 class X2Ability_ArtilleryCannon extends X2Ability;
-/*
+
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
 	//	Heavy Weapon: Autogun
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT());
+	Templates.AddItem(Create_FireArtilleryCannon_HEAT_Passive());
 	Templates.AddItem(Create_FireArtilleryCannon_HE());
 	Templates.AddItem(Create_FireArtilleryCannon_AP());
+	Templates.AddItem(Create_FireArtilleryCannon_AP_Passive());
 	Templates.AddItem(Create_FireArtilleryCannon_Shrapnel());
 
 	return Templates;
 }
-*/
-static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllowDisoriented, optional name DamageTag, optional bool bExplosiveDamage = true)
+
+static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllowDisoriented, optional name DamageTag, optional bool bExplosiveDamage = true, optional bool bSkipLoSCondition)
 {
 	local X2AbilityTemplate                 Template;	
 	local X2AbilityCost_Ammo                AmmoCost;
@@ -70,10 +72,13 @@ static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllow
 	if (DamageTag != 'NoPrimary')
 	{
 		// Can only shoot visible enemies
-		VisibilityCondition = new class'X2Condition_Visibility';
-		VisibilityCondition.bRequireGameplayVisible = true;
-		VisibilityCondition.bAllowSquadsight = true;
-		Template.AbilityTargetConditions.AddItem(VisibilityCondition);
+		if (!bSkipLoSCondition)
+		{
+			VisibilityCondition = new class'X2Condition_Visibility';
+			VisibilityCondition.bRequireGameplayVisible = true;
+			VisibilityCondition.bAllowSquadsight = true;
+			Template.AbilityTargetConditions.AddItem(VisibilityCondition);
+		}
 		Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);		
 
 		Template.AddTargetEffect(class'X2Ability_GrenadierAbilitySet'.static.HoloTargetEffect());
@@ -142,6 +147,30 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
 	//Template.ModifyNewContextFn = HeatShot_ModifyActivatedAbilityContext;
+
+	Template.AdditionalAbilities.AddItem('IRI_FireArtilleryCannon_HEAT_Passive');
+
+	Template.DefaultSourceItemSlot = eInvSlot_PrimaryWeapon;
+
+	return Template;
+}
+
+static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT_Passive()
+{
+	local X2AbilityTemplate		Template;
+	local X2Effect_HeatShell	HeatShell;
+	
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_FireArtilleryCannon_HEAT_Passive');
+
+	SetPassive(Template);
+	SetHidden(Template);
+	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+
+	HeatShell = new class'X2Effect_HeatShell';
+	HeatShell.BuildPersistentEffect(1, true);
+	HeatShell.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, true,, Template.AbilitySourceName);
+	Template.AddTargetEffect(HeatShell);
 
 	return Template;
 }
@@ -212,11 +241,73 @@ static simulated function HE_Shot_ModifyActivatedAbilityContext(XComGameStateCon
 static function X2AbilityTemplate Create_FireArtilleryCannon_AP()
 {
 	local X2AbilityTemplate						Template;
+	local X2Effect_ApplyDirectionalWorldDamage  WorldDamage;
 
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_AP', true, 'APDamage', false);
+	//local X2AbilityMultiTarget_Line				LineMultiTarget;
+	//local X2Condition_UnitProperty				UnitPropertyCondition;
+	//local X2Effect_ApplyWeaponDamage			AreaDamage;
+	//local X2Condition_Visibility				VisibilityCondition;
+
+	//	Allow disoriented, not explosive damage, don't skip LoS condition
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_AP', true, 'APDamage', false, false);
 
 	//	Icon Setup
 	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_snipershot";
+
+	//VisibilityCondition = new class'X2Condition_Visibility';
+	//VisibilityCondition.bVisibleToAnyAlly = true;
+	//Template.AbilityTargetConditions.AddItem(VisibilityCondition);
+
+	//	TODO: Reimplement this once custom multi target styles are a thing
+	/*
+	LineMultiTarget = new class'X2AbilityMultiTarget_Line';
+	Template.AbilityMultiTargetStyle = LineMultiTarget;
+
+	//	Make it damage only cover objects
+	UnitPropertyCondition = new class'X2Condition_UnitProperty';
+	UnitPropertyCondition.ExcludeDead = true;
+	UnitPropertyCondition.ExcludeAlive = true;
+	Template.AbilityMultiTargetConditions.AddItem(UnitPropertyCondition);
+
+	AreaDamage = new class'X2Effect_ApplyWeaponDamage';
+	AreaDamage.bIgnoreBaseDamage = true;
+	AreaDamage.EnvironmentalDamageAmount = 10;
+	Template.AddMultiTargetEffect(AreaDamage);*/
+
+	WorldDamage = new class'X2Effect_ApplyDirectionalWorldDamage';
+	WorldDamage.bUseWeaponDamageType = true;
+	WorldDamage.bUseWeaponEnvironmentalDamage = false;
+	WorldDamage.EnvironmentalDamageAmount = 30;
+	WorldDamage.bApplyOnHit = true;
+	WorldDamage.bApplyOnMiss = true;
+	WorldDamage.bApplyToWorldOnHit = true;
+	WorldDamage.bApplyToWorldOnMiss = true;
+	WorldDamage.bHitAdjacentDestructibles = true;
+	WorldDamage.PlusNumZTiles = 1;
+	WorldDamage.bHitTargetTile = true;
+	Template.AddTargetEffect(WorldDamage);
+
+	Template.AdditionalAbilities.AddItem('IRI_FireArtilleryCannon_AP_Passive');
+
+	return Template;
+}
+
+static function X2AbilityTemplate Create_FireArtilleryCannon_AP_Passive()
+{
+	local X2AbilityTemplate		Template;
+	local X2Effect_SabotShell	SabotAmmo;
+	
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_FireArtilleryCannon_AP_Passive');
+
+	SetPassive(Template);
+	SetHidden(Template);
+	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+
+	SabotAmmo = new class'X2Effect_SabotShell';
+	SabotAmmo.BuildPersistentEffect(1, true);
+	SabotAmmo.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, true,, Template.AbilitySourceName);
+	Template.AddTargetEffect(SabotAmmo);
 
 	return Template;
 }
@@ -298,3 +389,31 @@ static simulated function HeatShot_ModifyActivatedAbilityContext(XComGameStateCo
 	}
 }
 */
+
+static function SetPassive(out X2AbilityTemplate Template)
+{
+	Template.bIsPassive = true;
+
+	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
+
+	//	These are actually default for X2AbilityTemplate
+	Template.bDisplayInUITacticalText = true;
+	Template.bDisplayInUITooltip = true;
+	Template.bDontDisplayInAbilitySummary = false;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	Template.Hostility = eHostility_Neutral;
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+}
+
+static function SetHidden(out X2AbilityTemplate Template)
+{
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.bDisplayInUITacticalText = false;
+	Template.bDisplayInUITooltip = false;
+	Template.bDontDisplayInAbilitySummary = true;
+	Template.bHideOnClassUnlock = true;
+}

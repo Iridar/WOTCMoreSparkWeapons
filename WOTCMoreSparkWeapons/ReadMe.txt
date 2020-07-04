@@ -22,64 +22,7 @@ Adds new weapons and tools for SPARKs and MEC Troopers.
 
 Adds new weapons and tools for SPARKs and [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1452700934]MEC Troopers[/url][/b], a new Inventory Slot, and makes some changes to BITs.
 
-[h1]Ordnance Launchers[/h1]
-
-New Secondary Weapons, capable of launching Grenades and Rockets. Add 2 Grenade-only slots when equipped.
-
-Available from the start of the campaign for free in infinite quantities, upgraded automatically with SPARK armor. Similarly to Grenade Launchers, Ordnance Launchers provide a boost to grenades' range and radius. Additionally, beam Ordnance Launcher uses Blaster Launcher targeting to deliver grenades, much like the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1181681128][b]Beam Grenade Launcher[/b][/url].
-
-[h1]Kinetic Strike Module[/h1]
-
-New Secondary Weapon, grants [b]Kinetic Strike[/b] ability that works similarly to Enemy Within - target an adjacent tile, and everything on it gets pulverized. Its damage scales with SPARK Armor, same as for the [b]Strike[/b] ability. Having a KSM equipped also passively boosts damage of other melee abilities, such as the mentioned [b]Strike[/b].
-
-Kinetic Strike ability has unique kill/death animations for some enemies. I made it possible for third party mods to supply their own unique animations through config. If you're a modder and are interested in adding some, please [b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2442587820564621320/]read this[/url][/b].
-
-There is only one tier of KSM, it can be built in Engineering one at a time after ADVENT MEC autopsy.
-
-[h1]Kiruka Autogun[/h1]
-
-New Heavy Weapon, can be used by regular soldiers as well. Works like a regular automatic weapon with infinite ammo, meant to be a backup weapon, a "heavy sidearm" of sorts. Capable of Headshotting the Lost and benefits from special ammo.
-
-Integrated as a regular Heavy Weapon that can be acquired through the [b]Experimental Heavy Weapon[/b] and [b]Powered Heavy Weapon[/b] proving grounds projects. Regular Autogun deals 3-4 damage, Powered Autogun deals 4-5.
-
-Benefits from [b]Quickdraw[/b], [b]Salvo[/b] and [b]Marauder[/b] abilities, as well as [b]Rainmaker[/b], which adds +2 damage and makes Autogun attacks hit in a 3x3 tile square around the target.
-
-[h1]Arm Cannon[/h1]
-
-This mod adds an Arm Cannon model and animations that are used to fire Heavy Weapons carried in the [b]Auxiliary Weapon Slot[/b], or all equipped Heavy Weapons if a BIT is not equipped.
-
-Arm Cannon visuals activate automatically, you don't need to equip any additional items for them to work. 
-
-[h1]Auxiliary Weapon Slot[/h1]
-
-New Inventory Slot for SPARKs and MECs. Can be used to carry:[list]
-[*] [b]Heavy Weapon (requires Proving Grounds project)[/b] - uses Arm Cannon visuals.
-[*] [b]Restorative Mist[/b] and [b]E.M. Pulse[/b] - described below.
-[*] [b]Rockets[/b] - can always be carried in the aux slot so that SPARKs can Give them to other soldiers.
-[*] [b]Grenades[/b] - can be carried in the aux slot if an Ordnance Launcher is equipped.
-[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1161324428]SPARK Launchers Redux[/url][/b] - by RealityMachina[/list]
-
-[h1]Restorative Mist[/h1]
-
-An auxiliary "weapon". Heals +3 HP for organic units around the SPARK. If a BIT is equipped, it can be used to deploy the Restorative Mist in a target area some distance away from the SPARK. 1 Charge per mission.
-Can be built in Engineering one at a time, much like a Medkit. Upgraded by [b]Battlefield Medicine[/b] proving grounds project to heal for +5 HP.
-
-[h1]E.M. Pulse[/h1]
-
-An auxiliary "weapon". Disables weapons and Shieldbearers' [b]Energy Shields[/b] for all units around the spark. Robotic units are also shut down for a turn. SPARK itself is not affected, but other allied robotic units are, including [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1293725945]Augmented soldiers[/url][/b], so use with caution. If a BIT is equipped, it can be used to deploy the E.M. Pulse in a target area some distance away from the SPARK. 2 Charges per mission, long cooldown.
-
-Can be built in Engineering one at a time after you complete [b]Bluescreen Protocol[/b] proving grounds project.
-
-[h1]CONCEALMENT AND BIT CHANGES[/h1]
-
-SPARKs and MECs without a BIT lose their Heavy Weapon Slot, cannot hack, and their detection radius is increased significantly. They still start missions concealed along with the rest of the squad, but it's much harder for them to keep the concealment as they move around the map.
-[b]Intrusion Protocol[/b] and [b]Arsenal[/b] squaddie abilities have been moved from the SPARKs' ability tree to the BIT to relay these changes.
-
-BITs now grant an additional ability: [b]Active Camo[/b] - reduces detection radius and allows to retain concealment if the squad is revealed, much like the [b]Phantom[/b] ability.
-
-BITs' bonus to Hacking stat is increased from 0 / 10 / 20 to 40 / 60/ 80. SPARKs still can't hack as good as Specialists, especially in the late game, but now they actually have a chance to get a reward on low difficulty hacks.
-
-[b]Repair[/b] cannot be used without a BIT.
+[b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2568690416483865842/]>>> FULL LIST OF NEW WEAPONS AND ITEMS <<<[/url][/b]
 
 [h1]BALANCING[/h1]
 
@@ -87,7 +30,7 @@ This mod is a significant buff to SPARKs' and MECs' power. However, it is create
 
 [h1]REQUIREMENTS[/h1]
 [list]
-[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1796402257][b][BETA] X2WOTCCommunityHighlander[/b][/url] v1.21 or higher is required.
+[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1796402257][b][BETA] X2WOTCCommunityHighlander[/b][/url] v1.21 or higher is required ([b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2442587820564618365/]here are instructions[/url][/b] on how to configure the mod to work with older Highlander versions)
 [*] [b]Shen's Last Gift DLC[/b] is required. 
 [*] [b]Alien Hunters DLC[/b] - I used a few assets from it, so it's probably required, though the mod might still function without it.[/list]
 

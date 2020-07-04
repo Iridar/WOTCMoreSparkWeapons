@@ -34,7 +34,7 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 
 			ModInfo.ModType = eHit_Crit;
 			ModInfo.Reason = FriendlyName;
-			ModInfo.Value = -class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_CRIT_MOD;
+			ModInfo.Value = -class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_CRIT_MOD * CounterSquadsightPenalty;
 			ShotModifiers.AddItem(ModInfo);
 
 			ModInfo.ModType = eHit_Graze;

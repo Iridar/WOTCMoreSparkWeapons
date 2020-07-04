@@ -18,6 +18,19 @@ var config(ClassData) array<name> AbilitiesToRemove;
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 /*
+ wanna set up something special for the Sabot Shell shot.
+Instead of penalizing its hit chance, Cover will reduce its damage.
+Upgraded Sabot Shells will receive less of a penalty for shooting through cover
+And I want to make a Targeting Computer weapon upgrade that will allow Sabot Shell shots to engage enemies through walls, provided there is squadsight to them
+Targeting Computer will provide some other bonuses for other shell types; not sure which, though.
+Maybe I'll just make it a mix of Scope and Laser sight.
+Or give it Snapshot.
+Sabot's damage is also gonna degrade with distance, though not by much
+Perhaps I'll give Sabot both high damage and pierce, and have the Pierce get exhausted first when shooting through cover/walls
+
+Crit chance penalty for HEAT shot at long range
+Add hidden line multi targeting with environmental damage for the sabot shot
+
 I'm adding three tiers of new SPARK / MEC primary weapon, Artillery Cannons. By default, they can fire HEAT Shells as direct shots against a single target, dealing high damage to it, and minor damage in a small area around the target.
 HEAT Shells are the standard ammunition, always available to Cannons, so it doesn't need any icons.
 
