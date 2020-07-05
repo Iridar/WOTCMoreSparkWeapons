@@ -1,11 +1,11 @@
 class X2DownloadableContentInfo_WOTCMoreSparkWeapons extends X2DownloadableContentInfo;
 
-var config(SparkWeapons) array<name> SparkCharacterTemplates;
-var config(SparkWeapons) bool bRocketLaunchersModPresent;
-var config(SparkWeapons) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
+var config(SparkArsenal) array<name> SparkCharacterTemplates;
+var config(SparkArsenal) bool bRocketLaunchersModPresent;
+var config(SparkArsenal) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
 
-var config(SparkWeapons) array<name> WeaponCategoriesAddHeavyWeaponSlot;
-var config(SparkWeapons) array<name> StartingItemsToAddOnSaveLoad;
+var config(SparkArsenal) array<name> WeaponCategoriesAddHeavyWeaponSlot;
+var config(SparkArsenal) array<name> StartingItemsToAddOnSaveLoad;
 var config(OrdnanceLaunchers) bool bOrdnanceAmplifierUsesBlasterLauncherTargeting;
 
 var config(KineticStrikeModule) array<name> MeleeAbilitiesUseKSM;
@@ -267,6 +267,9 @@ static event OnLoadedSavedGameToStrategy()
 	//	Add Tech Templates
 	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
 	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ArmCannon_Tech');
+	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ImprovedShells_Tech');
+	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ExperimentalShells_Tech');
+		
 }
 
 static private function bool AddSparkSquaddieWeapons(XComGameState AddToGameState)

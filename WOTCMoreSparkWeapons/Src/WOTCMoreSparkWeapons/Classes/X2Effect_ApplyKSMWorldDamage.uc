@@ -19,7 +19,7 @@ simulated function ApplyEffectToWorld(const out EffectAppliedData ApplyEffectPar
 	//local DestructibleTileData				DestructData;
 	//local XComDestructibleActor				DestructActor;
 
-	`LOG("Applying world damage: start.",, 'WOTCMoreSparkWeapons');
+	//`LOG("Applying world damage: start.",, 'WOTCMoreSparkWeapons');
 
 	AbilityContext = XComGameStateContext_Ability(NewGameState.GetContext());
 	if( AbilityContext != none && AbilityContext.InputContext.TargetLocations.Length > 0)
@@ -42,15 +42,15 @@ simulated function ApplyEffectToWorld(const out EffectAppliedData ApplyEffectPar
 		SourceLocation = WorldData.GetPositionFromTileCoordinates(SourceTile);
 		TargetLocation = WorldData.GetPositionFromTileCoordinates(TargetTile);
 
-		`LOG("Got context. Source location:" @ SourceLocation @ "Target location:" @ AbilityContext.InputContext.TargetLocations[0],, 'WOTCMoreSparkWeapons');
+		//`LOG("Got context. Source location:" @ SourceLocation @ "Target location:" @ AbilityContext.InputContext.TargetLocations[0],, 'WOTCMoreSparkWeapons');
 
 		DamageDirection = SourceLocation - TargetLocation;
 
-		`LOG("Damage direction:" @ DamageDirection,, 'WOTCMoreSparkWeapons');
+		//`LOG("Damage direction:" @ DamageDirection,, 'WOTCMoreSparkWeapons');
 		DamageDirection.Z = 0.0f;
 		DamageDirection = Normal(DamageDirection);
 
-		`LOG("Normalized damage direction:" @ DamageDirection @ "Damage amount:" @ DamageAmount,, 'WOTCMoreSparkWeapons');
+		//`LOG("Normalized damage direction:" @ DamageDirection @ "Damage amount:" @ DamageAmount,, 'WOTCMoreSparkWeapons');
 		
 		DamageEvent = XComGameState_EnvironmentDamage(NewGameState.CreateNewStateObject(class'XComGameState_EnvironmentDamage'));
 		DamageEvent.DEBUG_SourceCodeLocation = "UC: X2Effect_ApplyDirectionalWorldDamage:ApplyEffectToWorld";

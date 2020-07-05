@@ -88,7 +88,7 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\XComOrdnanceLaunchers.ini">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Config\XComSparkWeapons.ini">
+    <Content Include="Config\XComSparkArsenal.ini">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\CIN_BasicColors.upk">
@@ -157,12 +157,6 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\KSMHelper.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2AbilityToHitCalc_APShot.uc">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_Ammo.uc">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_ArtilleryCannon.uc">
       <SubType>Content</SubType>
     </Content>
@@ -175,13 +169,10 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_OrdnanceLauncher.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Action_ApplyDamageSpacer.uc">
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_SparkArsenal.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Action_FireJavelin.uc">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Action_KSM_ApplyWeaponDamageToTerrain.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Action_KSM_Death.uc">
@@ -213,9 +204,6 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_IRI_Rainmaker.uc">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_IRI_TriggerEvent.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_MeleeDamageBonus.uc">
@@ -263,16 +251,13 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_RestorativeMist_CV.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_ArmCannonTech.uc">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_AuxSlot.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_InventorySlots.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2TargetingMethod_HeatShot.uc">
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_SparkArsenalTech.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2TargetingMethod_HeavyAutogun.uc">
@@ -282,12 +267,6 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2TargetingMethod_OrdnanceLauncher.uc">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2UnifiedProjectile_HEAT.uc">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\XComPrecomputedPathWithBlackJackAndHookers.uc">
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>

@@ -6,18 +6,22 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	//	Heavy Weapon: Autogun
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT());
-	Templates.AddItem(Create_FireArtilleryCannon_HEAT_Passive());
 	Templates.AddItem(Create_FireArtilleryCannon_HE());
-	//Templates.AddItem(Create_FireArtilleryCannon_AP());
-	Templates.AddItem(Create_FireArtilleryCannon_AP_Passive());
 	Templates.AddItem(Create_FireArtilleryCannon_Shrapnel());
 
-	//Templates.AddItem(Create_LoadSpecialShell('IRI_LoadSpecialShell_HE', 'IRI_Shell_HE'));
-	//Templates.AddItem(Create_LoadSpecialShell('IRI_LoadSpecialShell_AP', 'IRI_Shell_AP'));
-	//Templates.AddItem(Create_LoadSpecialShell('IRI_LoadSpecialShell_Shrapnel', 'IRI_Shell_Shrapnel'));
+	Templates.AddItem(Create_FireArtilleryCannon_HEDP());
+	Templates.AddItem(Create_FireArtilleryCannon_HESH());
+	Templates.AddItem(Create_FireArtilleryCannon_Flechette());
+
+	Templates.AddItem(Create_FireArtilleryCannon_HEAT_Passive());
+	Templates.AddItem(Create_FireArtilleryCannon_AP_Passive());
 
 	return Templates;
 }
+
+//	=============================================================
+//			COMMON CODE
+//	=============================================================
 
 static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllowDisoriented, optional name DamageTag, optional bool bExplosiveDamage = true, optional name RequiredItemName, optional bool bSkipLoSCondition)
 {
@@ -161,6 +165,35 @@ static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllow
 	return Template;	
 }
 
+
+//	=============================================================
+//			NORMAL FIREMODE - AP SLUG
+//	=============================================================
+
+static function X2AbilityTemplate Create_FireArtilleryCannon_AP_Passive()
+{
+	local X2AbilityTemplate		Template;
+	local X2Effect_SabotShell	SabotAmmo;
+	
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_FireArtilleryCannon_AP_Passive');
+
+	SetPassive(Template);
+	SetHidden(Template);
+	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+
+	SabotAmmo = new class'X2Effect_SabotShell';
+	SabotAmmo.BuildPersistentEffect(1, true);
+	SabotAmmo.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, true,, Template.AbilitySourceName);
+	Template.AddTargetEffect(SabotAmmo);
+
+	return Template;
+}
+
+//	=============================================================
+//			HEAT AND HEDP
+//	=============================================================
+
 static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 {
 	local X2AbilityTemplate						Template;
@@ -183,18 +216,48 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 
 	KnockbackEffect = new class'X2Effect_Knockback';
 	KnockbackEffect.KnockbackDistance = 2;
-	Template.AddMultiTargetEffKnockbackEffect;
+	Template.AddMultiTargetEffect(KnockbackEffect);
+
 	//	Targeting and triggering
-	//Template.TargetingMethod = class'X2TargetingMethod_HeatShot';
 	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
 
 	MultiTargetRadius = new class'X2AbilityMultiTarget_Radius';
 	MultiTargetRadius.fTargetRadius = 2.5f;
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
-	//Template.ModifyNewContextFn = HeatShot_ModifyActivatedAbilityContext;
+	return Template;
+}
 
-	Template.DefaultSourceItemSlot = eInvSlot_PrimaryWeapon;
+static function X2AbilityTemplate Create_FireArtilleryCannon_HEDP()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityMultiTarget_Radius           MultiTargetRadius;
+	local X2Effect_ApplyWeaponDamage			AreaDamage;
+	local X2Effect_Knockback					KnockbackEffect;
+		
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HEDP', true, 'HEDPDamage', true, 'IRI_Shell_HEDP');
+
+	//	Icon Setup
+	Template.IconImage = "img:///IRISparkHeavyWeapons.UI.Inv_HeavyAutgoun";
+
+	//	Multi Target Effects
+	AreaDamage = new class'X2Effect_Shredder';
+	AreaDamage.DamageTag = 'HEDPAreaDamage';
+	AreaDamage.bIgnoreBaseDamage = true;
+	AreaDamage.bApplyOnHit = true;
+	AreaDamage.bApplyOnMiss = true;
+	Template.AddMultiTargetEffect(AreaDamage);
+
+	KnockbackEffect = new class'X2Effect_Knockback';
+	KnockbackEffect.KnockbackDistance = 2;
+	Template.AddMultiTargetEffect(KnockbackEffect);
+
+	//	Targeting and triggering
+	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
+
+	MultiTargetRadius = new class'X2AbilityMultiTarget_Radius';
+	MultiTargetRadius.fTargetRadius = 2.5f;
+	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
 	return Template;
 }
@@ -219,6 +282,10 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT_Passive()
 	return Template;
 }
 
+//	=============================================================
+//			HE AND HESH
+//	=============================================================
+
 static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 {
 	local X2AbilityTemplate						Template;
@@ -228,7 +295,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 	local X2Effect_Knockback					KnockbackEffect;
 
 	//	Disallow disoriented, HESHDamage tag for the primary target damage, its explosive damage, requires shell item.
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HE', false, 'HESHDamage', true, 'IRI_Shell_HE');
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HE', false, 'NoPrimary', true, 'IRI_Shell_HE');
 
 	Template.AbilityToHitCalc = default.DeadEye;
 
@@ -257,12 +324,53 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 	MultiTargetRadius.fTargetRadius = 2.5f;
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
-	Template.ModifyNewContextFn = HE_Shot_ModifyActivatedAbilityContext;
+	return Template;
+}
+
+static function X2AbilityTemplate Create_FireArtilleryCannon_HESH()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityMultiTarget_Radius           MultiTargetRadius;
+	local X2Effect_ApplyWeaponDamage			AreaDamage;
+	local X2AbilityTarget_Cursor				CursorTarget;
+	local X2Effect_Knockback					KnockbackEffect;
+
+	//	Disallow disoriented, HESHDamage tag for the primary target damage, its explosive damage, requires shell item.
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HESH', false, 'HESHDamage', true, 'IRI_Shell_HESH');
+
+	Template.AbilityToHitCalc = default.DeadEye;
+
+	CursorTarget = new class'X2AbilityTarget_Cursor';
+	//CursorTarget.bRestrictToWeaponRange = true;
+	CursorTarget.FixedAbilityRange = `UNITSTOMETERS(`TILESTOUNITS(25));	// Feed range in tiles to this
+	Template.AbilityTargetStyle = CursorTarget;
+
+	//	Icon Setup
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_fanfire";
+
+	//	Multi Target Effects
+	AreaDamage = new class'X2Effect_Shredder';
+	AreaDamage.DamageTag = 'HESHAreaDamage';
+	AreaDamage.bIgnoreBaseDamage = true;
+	Template.AddMultiTargetEffect(AreaDamage);
+
+	KnockbackEffect = new class'X2Effect_Knockback';
+	KnockbackEffect.KnockbackDistance = 2;
+	Template.AddMultiTargetEffect(KnockbackEffect);
+	
+	//	Targeting and triggering
+	Template.TargetingMethod = class'X2TargetingMethod_Grenade';
+
+	MultiTargetRadius = new class'X2AbilityMultiTarget_Radius';
+	MultiTargetRadius.fTargetRadius = 2.5f;
+	Template.AbilityMultiTargetStyle = MultiTargetRadius;
+
+	Template.ModifyNewContextFn = HESH_Shot_ModifyActivatedAbilityContext;
 
 	return Template;
 }
 
-static simulated function HE_Shot_ModifyActivatedAbilityContext(XComGameStateContext Context)
+static simulated function HESH_Shot_ModifyActivatedAbilityContext(XComGameStateContext Context)
 {
 	local XComWorldData					World;
 	local array<StateObjectReference>	UnitsOnTile;
@@ -282,6 +390,93 @@ static simulated function HE_Shot_ModifyActivatedAbilityContext(XComGameStateCon
 		AbilityContext.InputContext.PrimaryTarget = UnitsOnTile[0];
 	}	
 }
+
+//	=============================================================
+//			SHRAPNEL AND FLECHETTE
+//	=============================================================
+
+static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
+{
+	local X2AbilityTemplate                 Template;	
+	local X2AbilityTarget_Cursor            CursorTarget;
+	local X2AbilityMultiTarget_Cone         ConeMultiTarget;
+	local X2Effect_ApplyWeaponDamage		AreaDamage;
+	local X2Effect_Knockback				KnockbackEffect;
+
+	//	Allow disoriented, skip primary target damage, reqires Shrapnel Shells
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Shrapnel', true, 'NoPrimary',, 'IRI_Shell_Shrapnel');
+	
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_shreddergun";
+	
+	Template.AbilityToHitCalc = default.DeadEye;
+	
+	CursorTarget = new class'X2AbilityTarget_Cursor';
+	CursorTarget.bRestrictToWeaponRange = true;
+	Template.AbilityTargetStyle = CursorTarget;
+
+	ConeMultiTarget = new class'X2AbilityMultiTarget_Cone';
+	ConeMultiTarget.bUseWeaponRadius = true;
+	ConeMultiTarget.ConeEndDiameter = 5 * class'XComWorldData'.const.WORLD_StepSize;
+	ConeMultiTarget.ConeLength = 15 * class'XComWorldData'.const.WORLD_StepSize;
+	Template.AbilityMultiTargetStyle = ConeMultiTarget;
+
+	Template.TargetingMethod = class'X2TargetingMethod_Cone';
+
+	AreaDamage = new class'X2Effect_Shredder';
+	AreaDamage.DamageTag = 'ShrapnelAreaDamage';
+	AreaDamage.bIgnoreBaseDamage = true;
+	Template.AddMultiTargetEffect(AreaDamage);
+
+	KnockbackEffect = new class'X2Effect_Knockback';
+	KnockbackEffect.KnockbackDistance = 2;
+	Template.AddMultiTargetEffect(KnockbackEffect);
+
+	return Template;	
+}
+
+static function X2AbilityTemplate Create_FireArtilleryCannon_Flechette()
+{
+	local X2AbilityTemplate                 Template;	
+	local X2AbilityTarget_Cursor            CursorTarget;
+	local X2AbilityMultiTarget_Cone         ConeMultiTarget;
+	local X2Effect_ApplyWeaponDamage		AreaDamage;
+	local X2Effect_Knockback				KnockbackEffect;
+
+	//	Allow disoriented, skip primary target damage, reqires Shrapnel Shells
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Flechette', true, 'NoPrimary',, 'IRI_Shell_Flechette');
+	
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_shreddergun";
+	
+	Template.AbilityToHitCalc = default.DeadEye;
+	
+	CursorTarget = new class'X2AbilityTarget_Cursor';
+	CursorTarget.bRestrictToWeaponRange = true;
+	Template.AbilityTargetStyle = CursorTarget;
+
+	ConeMultiTarget = new class'X2AbilityMultiTarget_Cone';
+	ConeMultiTarget.bUseWeaponRadius = true;
+	ConeMultiTarget.ConeEndDiameter = 5 * class'XComWorldData'.const.WORLD_StepSize;
+	ConeMultiTarget.ConeLength = 15 * class'XComWorldData'.const.WORLD_StepSize;
+	Template.AbilityMultiTargetStyle = ConeMultiTarget;
+
+	Template.TargetingMethod = class'X2TargetingMethod_Cone';
+
+	AreaDamage = new class'X2Effect_Shredder';
+	AreaDamage.DamageTag = 'FlechetteAreaDamage';
+	AreaDamage.bIgnoreBaseDamage = true;
+	Template.AddMultiTargetEffect(AreaDamage);
+
+	KnockbackEffect = new class'X2Effect_Knockback';
+	KnockbackEffect.KnockbackDistance = 2;
+	Template.AddMultiTargetEffect(KnockbackEffect);
+
+	return Template;	
+}
+
+//	=============================================================
+//			UNUSED
+//	=============================================================
+//	Unused
 /*
 static function X2AbilityTemplate Create_FireArtilleryCannon_AP()
 {
@@ -333,66 +528,6 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_AP()
 
 	return Template;
 }*/
-
-static function X2AbilityTemplate Create_FireArtilleryCannon_AP_Passive()
-{
-	local X2AbilityTemplate		Template;
-	local X2Effect_SabotShell	SabotAmmo;
-	
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_FireArtilleryCannon_AP_Passive');
-
-	SetPassive(Template);
-	SetHidden(Template);
-	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
-	Template.AbilitySourceName = 'eAbilitySource_Item';
-
-	SabotAmmo = new class'X2Effect_SabotShell';
-	SabotAmmo.BuildPersistentEffect(1, true);
-	SabotAmmo.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, true,, Template.AbilitySourceName);
-	Template.AddTargetEffect(SabotAmmo);
-
-	return Template;
-}
-
-static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
-{
-	local X2AbilityTemplate                 Template;	
-	local X2AbilityTarget_Cursor            CursorTarget;
-	local X2AbilityMultiTarget_Cone         ConeMultiTarget;
-	local X2Effect_ApplyWeaponDamage		AreaDamage;
-	local X2Effect_Knockback				KnockbackEffect;
-
-	//	Allow disoriented, skip primary target damage, reqires Shrapnel Shells
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Shrapnel', true, 'NoPrimary',, 'IRI_Shell_Shrapnel');
-	
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_shreddergun";
-	
-	Template.AbilityToHitCalc = default.DeadEye;
-	
-	CursorTarget = new class'X2AbilityTarget_Cursor';
-	CursorTarget.bRestrictToWeaponRange = true;
-	Template.AbilityTargetStyle = CursorTarget;
-
-	ConeMultiTarget = new class'X2AbilityMultiTarget_Cone';
-	ConeMultiTarget.bUseWeaponRadius = true;
-	ConeMultiTarget.ConeEndDiameter = 5 * class'XComWorldData'.const.WORLD_StepSize;
-	ConeMultiTarget.ConeLength = 15 * class'XComWorldData'.const.WORLD_StepSize;
-	Template.AbilityMultiTargetStyle = ConeMultiTarget;
-
-	Template.TargetingMethod = class'X2TargetingMethod_Cone';
-
-	AreaDamage = new class'X2Effect_Shredder';
-	AreaDamage.DamageTag = 'ShrapnelAreaDamage';
-	AreaDamage.bIgnoreBaseDamage = true;
-	Template.AddMultiTargetEffect(AreaDamage);
-
-	KnockbackEffect = new class'X2Effect_Knockback';
-	KnockbackEffect.KnockbackDistance = 2;
-	Template.AddMultiTargetEffect(KnockbackEffect);
-
-	return Template;	
-}
-//	Unused
 /*
 static function X2AbilityTemplate Create_LoadSpecialShell(name TemplateName, name ShellType)
 {

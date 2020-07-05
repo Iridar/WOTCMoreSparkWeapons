@@ -1,4 +1,4 @@
-class X2StrategyElement_ArmCannonTech extends X2StrategyElement config(AuxiliaryWeapons);
+class X2StrategyElement_SparkArsenalTech extends X2StrategyElement config(AuxiliaryWeapons);
 
 var config int ARM_CANNON_TECH_DAYS;
 var config array<name> ARM_CANNON_TECH_RESOURCE_TYPE;
@@ -9,6 +9,8 @@ static function array<X2DataTemplate> CreateTemplates()
 	local array<X2DataTemplate> Techs;
 
 	Techs.AddItem(Create_ArmCannonTech());
+	Techs.AddItem(Create_ExperimentalShells_Tech());
+	Techs.AddItem(Create_ImprovedShells_Tech());
 
 	return Techs;
 }
@@ -35,6 +37,79 @@ static function X2DataTemplate Create_ArmCannonTech()
 	AltReq.SpecialRequirementsFn = IsLostTowersNarrativeContentComplete;
 	Template.AlternateRequirements.AddItem(AltReq);
 
+	Template.Requirements.bVisibleIfPersonnelGatesNotMet = true;
+
+	// Cost
+	for (i = 0; i < default.ARM_CANNON_TECH_RESOURCE_TYPE.Length; i++)
+	{
+		if (default.ARM_CANNON_TECH_RESOURCE_QUANTITY[i] > 0)
+		{
+			Resources.ItemTemplateName = default.ARM_CANNON_TECH_RESOURCE_TYPE[i];
+			Resources.Quantity = default.ARM_CANNON_TECH_RESOURCE_QUANTITY[i];
+			Template.Cost.ResourceCosts.AddItem(Resources);
+		}
+	}
+
+	Template.bProvingGround = true;
+	Template.bRepeatable = false;
+
+	return Template;
+}
+
+static function X2DataTemplate Create_ExperimentalShells_Tech()
+{
+	local X2TechTemplate		Template;
+	local ArtifactCost			Resources;
+	local int i;
+
+	`CREATE_X2TEMPLATE(class'X2TechTemplate', Template, 'IRI_ExperimentalShells_Tech');
+
+	Template.PointsToComplete = class'X2StrategyElement_DefaultTechs'.static.StafferXDays(1, default.ARM_CANNON_TECH_DAYS);
+	Template.strImage = "img:///IRISparkHeavyWeapons.UI.UI_ArmCannon_ProvingGrounds";
+	Template.SortingTier = 3;
+	
+	Template.ResearchCompletedFn = class'X2StrategyElement_DefaultTechs'.static.GiveItems;
+
+	//Template.ItemRewards.AddItem('IRI_Shell_HE');
+	//Template.ItemRewards.AddItem('IRI_Shell_HEAT');
+	//Template.ItemRewards.AddItem('IRI_Shell_Shrapnel');
+
+	//	Requirements
+	Template.Requirements.bVisibleIfPersonnelGatesNotMet = true;
+
+	// Cost
+	for (i = 0; i < default.ARM_CANNON_TECH_RESOURCE_TYPE.Length; i++)
+	{
+		if (default.ARM_CANNON_TECH_RESOURCE_QUANTITY[i] > 0)
+		{
+			Resources.ItemTemplateName = default.ARM_CANNON_TECH_RESOURCE_TYPE[i];
+			Resources.Quantity = default.ARM_CANNON_TECH_RESOURCE_QUANTITY[i];
+			Template.Cost.ResourceCosts.AddItem(Resources);
+		}
+	}
+
+	Template.bProvingGround = true;
+	Template.bRepeatable = false;
+
+	return Template;
+}
+
+static function X2DataTemplate Create_ImprovedShells_Tech()
+{
+	local X2TechTemplate		Template;
+	local ArtifactCost			Resources;
+	local int i;
+
+	`CREATE_X2TEMPLATE(class'X2TechTemplate', Template, 'IRI_ImprovedShells_Tech');
+
+	Template.PointsToComplete = class'X2StrategyElement_DefaultTechs'.static.StafferXDays(1, default.ARM_CANNON_TECH_DAYS);
+	Template.strImage = "img:///IRISparkHeavyWeapons.UI.UI_ArmCannon_ProvingGrounds";
+	Template.SortingTier = 3;
+	
+	Template.ResearchCompletedFn = class'X2StrategyElement_DefaultTechs'.static.UpgradeItems;
+
+	//	Requirements
+	Template.Requirements.RequiredTechs.AddItem('IRI_ExperimentalShells_Tech');
 	Template.Requirements.bVisibleIfPersonnelGatesNotMet = true;
 
 	// Cost

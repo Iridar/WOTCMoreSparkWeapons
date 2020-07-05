@@ -1,4 +1,4 @@
-class X2Ability_OrdnanceLauncher extends X2Ability config(SparkWeapons);
+class X2Ability_OrdnanceLauncher extends X2Ability config(SparkArsenal);
 
 var config float ACTIVE_CAMO_DETECTION_RADIUS_MODIFIER;
 var config float SPARK_BASELINE_DETECTION_RADIUS_MODIFIER;

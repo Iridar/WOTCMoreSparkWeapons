@@ -1,4 +1,4 @@
-class X2Effect_SabotAmmo extends X2Effect_Persistent config(SparkWeapons);
+class X2Effect_SabotAmmo extends X2Effect_Persistent config(SparkArsenal);
 
 var config float CounterSquadsightPenalty;
 var config float CounterDodge;

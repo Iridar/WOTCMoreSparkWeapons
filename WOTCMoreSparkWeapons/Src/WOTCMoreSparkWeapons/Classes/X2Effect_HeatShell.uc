@@ -8,7 +8,14 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 	local ShotModifierInfo				ModInfo;
 	local int							TileDistance;
 
-	if (AbilityState.GetMyTemplateName() != 'IRI_FireArtilleryCannon_HEAT') return;
+	switch (AbilityState.GetMyTemplateName())
+	{
+		case 'IRI_FireArtilleryCannon_HEAT':
+		case 'IRI_FireArtilleryCannon_HEDP':
+			break;
+		default:
+			return;
+	}
 
 	//	Compensate Squadsight Aim and Crit penalties
 	TileDistance = Attacker.TileDistanceBetween(Target);
