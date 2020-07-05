@@ -8,14 +8,18 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT());
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT_Passive());
 	Templates.AddItem(Create_FireArtilleryCannon_HE());
-	Templates.AddItem(Create_FireArtilleryCannon_AP());
+	//Templates.AddItem(Create_FireArtilleryCannon_AP());
 	Templates.AddItem(Create_FireArtilleryCannon_AP_Passive());
 	Templates.AddItem(Create_FireArtilleryCannon_Shrapnel());
+
+	//Templates.AddItem(Create_LoadSpecialShell('IRI_LoadSpecialShell_HE', 'IRI_Shell_HE'));
+	//Templates.AddItem(Create_LoadSpecialShell('IRI_LoadSpecialShell_AP', 'IRI_Shell_AP'));
+	//Templates.AddItem(Create_LoadSpecialShell('IRI_LoadSpecialShell_Shrapnel', 'IRI_Shell_Shrapnel'));
 
 	return Templates;
 }
 
-static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllowDisoriented, optional name DamageTag, optional bool bExplosiveDamage = true, optional bool bSkipLoSCondition)
+static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllowDisoriented, optional name DamageTag, optional bool bExplosiveDamage = true, optional name RequiredItemName, optional bool bSkipLoSCondition)
 {
 	local X2AbilityTemplate                 Template;	
 	local X2AbilityCost_Ammo                AmmoCost;
@@ -24,13 +28,22 @@ static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllow
 	local X2Effect_Knockback				KnockbackEffect;
 	local X2Condition_Visibility            VisibilityCondition;
 	local X2Effect_Shredder					DamageEffect;
+	local X2Condition_RequiredItem			RequiredItem;
+	//local X2Condition_UnitValue				UnitValueCondition;
+	//local X2Effect_SetUnitValue				UnitValueEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
 
 	// Icon Properties
 	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_standard";
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.STANDARD_SHOT_PRIORITY;
-	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_HideSpecificErrors;
+	Template.HideErrors.AddItem('AA_WeaponIncompatible');
+	Template.HideErrors.AddItem('AA_CannotAfford_AmmoCost');
+	Template.HideErrors.AddItem('AA_CannotAfford_ActionPoints');
+	Template.HideErrors.AddItem('AA_AbilityUnavailable');
+
 	Template.DisplayTargetHitChance = true;
 	Template.AbilitySourceName = 'eAbilitySource_Standard';
 	Template.bDontDisplayInAbilitySummary = true;
@@ -46,6 +59,33 @@ static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllow
 	Template.AbilityToHitOwnerOnMissCalc = default.SimpleStandardAim;
 
 	//	Shooter Conditions
+
+	//	If this shot requires a special shell to be loaded
+	if (RequiredItemName != '')
+	{
+		RequiredItem = new class'X2Condition_RequiredItem';
+		RequiredItem.ItemName = RequiredItemName;
+		Template.AbilityShooterConditions.AddItem(RequiredItem);
+
+		//UnitValueCondition = new class'X2Condition_UnitValue';
+		//UnitValueCondition.AddCheckValue(RequiredItemName, 1,,,, 'AA_WeaponIncompatible');
+		//Template.AbilityShooterConditions.AddItem(UnitValueCondition);
+
+		//UnitValueEffect = new class'X2Effect_SetUnitValue';
+		//UnitValueEffect.UnitName = RequiredItemName;
+		//UnitValueEffect.CleanupType = eCleanup_BeginTurn;
+		//UnitValueEffect.NewValueToSet = 0;
+		//Template.AddShooterEffect(UnitValueEffect);
+	}
+	//else //	If not, then add a condition that this shot can't be used unless the special shell is loaded.
+	//{
+	//	UnitValueCondition = new class'X2Condition_UnitValue';
+	//	UnitValueCondition.AddCheckValue('IRI_Shell_HE', 1,,,, 'AA_WeaponIncompatible');
+	//	UnitValueCondition.AddCheckValue('IRI_Shell_AP', 1,,,, 'AA_WeaponIncompatible');
+	//	UnitValueCondition.AddCheckValue('IRI_Shell_Shrapnel', 1,,,, 'AA_WeaponIncompatible');
+	//	Template.AbilityShooterConditions.AddItem(UnitValueCondition);
+	//}
+
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
 	if (bAllowDisoriented)
 	{
@@ -64,7 +104,9 @@ static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllow
 	AmmoCost.iAmmo = 1;
 	Template.AbilityCosts.AddItem(AmmoCost);
 	
-	Template.bAllowAmmoEffects = true;
+	//	Special cannon shots do not benefit from ammo bonuses
+	Template.bAllowAmmoEffects = false;
+
 	Template.bAllowBonusWeaponEffects = true;
 	Template.bAllowFreeFireWeaponUpgrade = true; // Hair Trigger
 
@@ -124,8 +166,9 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	local X2AbilityTemplate						Template;
 	local X2AbilityMultiTarget_Radius           MultiTargetRadius;
 	local X2Effect_ApplyWeaponDamage			AreaDamage;
-
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HEAT', true);
+	local X2Effect_Knockback					KnockbackEffect;
+		
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HEAT', true, 'HEATDamage', true, 'IRI_Shell_HEAT');
 
 	//	Icon Setup
 	Template.IconImage = "img:///IRISparkHeavyWeapons.UI.Inv_HeavyAutgoun";
@@ -137,7 +180,10 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	AreaDamage.bApplyOnHit = true;
 	AreaDamage.bApplyOnMiss = true;
 	Template.AddMultiTargetEffect(AreaDamage);
-	
+
+	KnockbackEffect = new class'X2Effect_Knockback';
+	KnockbackEffect.KnockbackDistance = 2;
+	Template.AddMultiTargetEffKnockbackEffect;
 	//	Targeting and triggering
 	//Template.TargetingMethod = class'X2TargetingMethod_HeatShot';
 	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
@@ -147,8 +193,6 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
 	//Template.ModifyNewContextFn = HeatShot_ModifyActivatedAbilityContext;
-
-	Template.AdditionalAbilities.AddItem('IRI_FireArtilleryCannon_HEAT_Passive');
 
 	Template.DefaultSourceItemSlot = eInvSlot_PrimaryWeapon;
 
@@ -183,7 +227,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 	local X2AbilityTarget_Cursor				CursorTarget;
 	local X2Effect_Knockback					KnockbackEffect;
 
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HE', false, 'HESHDamage');
+	//	Disallow disoriented, HESHDamage tag for the primary target damage, its explosive damage, requires shell item.
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HE', false, 'HESHDamage', true, 'IRI_Shell_HE');
 
 	Template.AbilityToHitCalc = default.DeadEye;
 
@@ -237,7 +282,7 @@ static simulated function HE_Shot_ModifyActivatedAbilityContext(XComGameStateCon
 		AbilityContext.InputContext.PrimaryTarget = UnitsOnTile[0];
 	}	
 }
-
+/*
 static function X2AbilityTemplate Create_FireArtilleryCannon_AP()
 {
 	local X2AbilityTemplate						Template;
@@ -248,8 +293,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_AP()
 	//local X2Effect_ApplyWeaponDamage			AreaDamage;
 	//local X2Condition_Visibility				VisibilityCondition;
 
-	//	Allow disoriented, not explosive damage, don't skip LoS condition
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_AP', true, 'APDamage', false, false);
+	//	Allow disoriented, deal APDamage to primary target, not explosive damage, requires AP Shells
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_AP', true, 'APDamage', false, 'IRI_Shell_AP');
 
 	//	Icon Setup
 	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_snipershot";
@@ -258,21 +303,20 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_AP()
 	//VisibilityCondition.bVisibleToAnyAlly = true;
 	//Template.AbilityTargetConditions.AddItem(VisibilityCondition);
 
-	//	TODO: Reimplement this once custom multi target styles are a thing
-	/*
-	LineMultiTarget = new class'X2AbilityMultiTarget_Line';
-	Template.AbilityMultiTargetStyle = LineMultiTarget;
+		//	TODO: Reimplement this once custom multi target styles are a thing
+		//LineMultiTarget = new class'X2AbilityMultiTarget_Line';
+		//Template.AbilityMultiTargetStyle = LineMultiTarget;
 
-	//	Make it damage only cover objects
-	UnitPropertyCondition = new class'X2Condition_UnitProperty';
-	UnitPropertyCondition.ExcludeDead = true;
-	UnitPropertyCondition.ExcludeAlive = true;
-	Template.AbilityMultiTargetConditions.AddItem(UnitPropertyCondition);
+		//	Make it damage only cover objects
+		//UnitPropertyCondition = new class'X2Condition_UnitProperty';
+		//UnitPropertyCondition.ExcludeDead = true;
+		//UnitPropertyCondition.ExcludeAlive = true;
+		//Template.AbilityMultiTargetConditions.AddItem(UnitPropertyCondition);
 
-	AreaDamage = new class'X2Effect_ApplyWeaponDamage';
-	AreaDamage.bIgnoreBaseDamage = true;
-	AreaDamage.EnvironmentalDamageAmount = 10;
-	Template.AddMultiTargetEffect(AreaDamage);*/
+		//AreaDamage = new class'X2Effect_ApplyWeaponDamage';
+		//AreaDamage.bIgnoreBaseDamage = true;
+		//AreaDamage.EnvironmentalDamageAmount = 10;
+		//Template.AddMultiTargetEffect(AreaDamage);
 
 	WorldDamage = new class'X2Effect_ApplyDirectionalWorldDamage';
 	WorldDamage.bUseWeaponDamageType = true;
@@ -287,10 +331,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_AP()
 	WorldDamage.bHitTargetTile = true;
 	Template.AddTargetEffect(WorldDamage);
 
-	Template.AdditionalAbilities.AddItem('IRI_FireArtilleryCannon_AP_Passive');
-
 	return Template;
-}
+}*/
 
 static function X2AbilityTemplate Create_FireArtilleryCannon_AP_Passive()
 {
@@ -320,7 +362,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
 	local X2Effect_ApplyWeaponDamage		AreaDamage;
 	local X2Effect_Knockback				KnockbackEffect;
 
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Shrapnel', true, 'NoPrimary', false);
+	//	Allow disoriented, skip primary target damage, reqires Shrapnel Shells
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Shrapnel', true, 'NoPrimary',, 'IRI_Shell_Shrapnel');
 	
 	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_shreddergun";
 	
@@ -349,6 +392,25 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
 
 	return Template;	
 }
+//	Unused
+/*
+static function X2AbilityTemplate Create_LoadSpecialShell(name TemplateName, name ShellType)
+{
+	local X2AbilityTemplate		Template;
+	local X2Effect_SetUnitValue	UnitValueEffect;
+
+	Template = class'X2Ability_DefaultAbilitySet'.static.AddReloadAbility(TemplateName);
+
+	UnitValueEffect = new class'X2Effect_SetUnitValue';
+	UnitValueEffect.UnitName = ShellType;
+	UnitValueEffect.CleanupType = eCleanup_BeginTactical;
+	UnitValueEffect.NewValueToSet = 1;
+	Template.AddShooterEffect(UnitValueEffect);
+
+	Template.DefaultKeyBinding = -1;
+
+	return Template;
+}*/
 
 /*
 static simulated function HeatShot_ModifyActivatedAbilityContext(XComGameStateContext Context)

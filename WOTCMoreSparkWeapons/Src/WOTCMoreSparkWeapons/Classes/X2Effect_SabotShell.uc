@@ -1,5 +1,7 @@
 class X2Effect_SabotShell extends X2Effect_Persistent config(ArtilleryCannon);
 
+var config array<name> BlacklistedAbilities;
+
 //	Compensates for defense bonus when shooting through cover, removes squadsight penalties.
 //	Reduces damage at long range and when shooting through cover.
 var config float CounterSquadsightPenalty;
@@ -29,7 +31,8 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 	local GameRulesCache_VisibilityInfo VisInfo;
 	local int							TileDistance;
 
-	if (AbilityState.GetMyTemplateName() != 'IRI_FireArtilleryCannon_AP') return;
+	if (default.BlacklistedAbilities.Find(AbilityState.GetMyTemplateName()) != INDEX_NONE) return;
+	if (EffectState.ApplyEffectParameters.ItemStateObjectRef != AbilityState.SourceWeapon) return;
 
 	//	Compensate aim penalty for shooting through cover
 	//	This method of getting target cover seems to be most reliable
@@ -140,7 +143,8 @@ function int GetAttackingDamageModifier(XComGameState_Effect EffectState, XComGa
 	local float							DamageMod;
 	local XComGameState_Unit			TargetUnit;
 
-	if (AbilityState.GetMyTemplateName() != 'IRI_FireArtilleryCannon_AP') return 0;
+	if (default.BlacklistedAbilities.Find(AbilityState.GetMyTemplateName()) != INDEX_NONE) return 0;
+	if (EffectState.ApplyEffectParameters.ItemStateObjectRef != AbilityState.SourceWeapon) return 0;
 
 	TargetUnit = XComGameState_Unit(TargetDamageable);
 	if (TargetUnit != none)
@@ -475,8 +479,6 @@ function WeaponDamageValue GetBonusEffectDamageValue(XComGameState_Ability Abili
 */
 defaultproperties
 {
-	CounterSquadsightPenalty = 1.0f
-	Pierce = 3.0f
 	DuplicateResponse = eDupe_Ignore
 	EffectName = "X2Effect_SabotShell_Effect"
 }

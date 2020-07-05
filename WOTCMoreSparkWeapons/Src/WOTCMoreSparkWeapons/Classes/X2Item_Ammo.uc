@@ -10,7 +10,9 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	Templates.AddItem(Create_Ammo_Sabot());
 
+	Templates.AddItem(Create_Shell_HEAT());
 	Templates.AddItem(Create_Shell_HE());
+	Templates.AddItem(Create_Shell_Shrapnel());
 
 	return Templates;
 }
@@ -48,7 +50,6 @@ static function X2DataTemplate Create_Ammo_Sabot()
 static function X2DataTemplate Create_Shell_HE()
 {
 	local X2WeaponTemplate Template;
-	local ArtifactCost Resources;
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_Shell_HE');
 	
@@ -72,6 +73,73 @@ static function X2DataTemplate Create_Shell_HE()
 	Template.CanBeBuilt = false;
 	
 	Template.PointsToComplete = 0;
+
+	//Template.Abilities.AddItem('IRI_LoadSpecialShell_HE');
+
+	return Template;
+}
+
+static function X2DataTemplate Create_Shell_HEAT()
+{
+	local X2WeaponTemplate Template;
+	
+	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_Shell_HEAT');
+	
+	Template.WeaponPanelImage = "_ConventionalRifle";
+	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_AssaultRifle';
+	Template.EquipSound = "StrategyUI_Ammo_Equip";
+
+	Template.ItemCat = 'utility';
+	Template.WeaponCat = 'iri_auxiliary_weapon';
+	Template.InventorySlot = eInvSlot_AuxiliaryWeapon;
+	Template.StowedLocation = eSlot_LeftBack;
+	Template.NumUpgradeSlots = 0;
+	
+	Template.Tier = 1;
+	
+	Template.strImage = "img:///IRIRestorativeMist.UI.UI_SabotAmmo";
+	//Template.GameArchetype = default.GAME_ARCHETYPE;
+
+	Template.StartingItem = true;
+	Template.bInfiniteItem = true;
+	Template.CanBeBuilt = false;
+	
+	Template.PointsToComplete = 0;
+
+	//Template.Abilities.AddItem('IRI_LoadSpecialShell_AP');
+	Template.Abilities.AddItem('IRI_FireArtilleryCannon_HEAT_Passive');
+
+	return Template;
+}
+
+static function X2DataTemplate Create_Shell_Shrapnel()
+{
+	local X2WeaponTemplate Template;
+	
+	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_Shell_Shrapnel');
+	
+	Template.WeaponPanelImage = "_ConventionalRifle";
+	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_AssaultRifle';
+	Template.EquipSound = "StrategyUI_Ammo_Equip";
+
+	Template.ItemCat = 'utility';
+	Template.WeaponCat = 'iri_auxiliary_weapon';
+	Template.InventorySlot = eInvSlot_AuxiliaryWeapon;
+	Template.StowedLocation = eSlot_LeftBack;
+	Template.NumUpgradeSlots = 0;
+	
+	Template.Tier = 1;
+	
+	Template.strImage = "img:///IRIRestorativeMist.UI.UI_SabotAmmo";
+	//Template.GameArchetype = default.GAME_ARCHETYPE;
+
+	Template.StartingItem = true;
+	Template.bInfiniteItem = true;
+	Template.CanBeBuilt = false;
+	
+	Template.PointsToComplete = 0;
+
+	//Template.Abilities.AddItem('IRI_LoadSpecialShell_Shrapnel');
 
 	return Template;
 }

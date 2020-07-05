@@ -196,6 +196,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_HasWeaponOfCategory.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_RequiredItem.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_SourceWeaponCat.uc">
       <SubType>Content</SubType>
     </Content>
@@ -210,6 +213,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_IRI_Rainmaker.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_IRI_TriggerEvent.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_MeleeDamageBonus.uc">

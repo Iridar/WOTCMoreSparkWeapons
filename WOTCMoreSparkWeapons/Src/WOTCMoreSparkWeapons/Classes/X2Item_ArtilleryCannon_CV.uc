@@ -43,8 +43,10 @@ static function array<X2DataTemplate> CreateTemplates()
 
 static function X2DataTemplate Create_ArtilleryCannon_CV()
 {
-	local X2WeaponTemplate Template;
-	local ArtifactCost Resources;
+	local X2WeaponTemplate						Template;
+	local ArtifactCost							Resources;
+	local X2Effect_ApplyDirectionalWorldDamage	WorldDamage;
+	//local X2Effect_IRI_TriggerEvent	TriggerEvent;
 	local int i;
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_ArtilleryCannon_CV');
@@ -52,6 +54,28 @@ static function X2DataTemplate Create_ArtilleryCannon_CV()
 	Template.WeaponPanelImage = "_ConventionalCannon";
 	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_Cannon';
 	Template.bIsLargeWeapon = true;
+
+	WorldDamage = new class'X2Effect_ApplyDirectionalWorldDamage';
+	WorldDamage.bUseWeaponDamageType = true;
+	WorldDamage.bUseWeaponEnvironmentalDamage = false;
+	WorldDamage.EnvironmentalDamageAmount = 30;
+	WorldDamage.bApplyOnHit = true;
+	WorldDamage.bApplyOnMiss = true;
+	WorldDamage.bApplyToWorldOnHit = true;
+	WorldDamage.bApplyToWorldOnMiss = true;
+	WorldDamage.bHitAdjacentDestructibles = true;
+	WorldDamage.PlusNumZTiles = 1;
+	WorldDamage.bHitTargetTile = true;
+	Template.BonusWeaponEffects.AddItem(WorldDamage);
+
+	//TriggerEvent = new class'X2Effect_IRI_TriggerEvent';
+	//TriggerEvent.TriggerEventName = 'IRI_FireCannonShot_Event';
+	//TriggerEvent.ApplyChance = 100;
+	//TriggerEvent.bApplyOnHit = true;
+	//TriggerEvent.bApplyOnMiss = false;
+	//TriggerEvent.AllowedAbilities.AddItem('StandardShot');
+	//TriggerEvent.AllowedAbilities.AddItem('OverwatchShot');	
+	//Template.BonusWeaponEffects.AddItem(TriggerEvent);
 
 	switch (default.WEAPON_TECH)
 	{
