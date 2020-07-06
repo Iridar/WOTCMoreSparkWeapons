@@ -31,8 +31,6 @@ static function X2DataTemplate Create_Ammo_Sabot()
 
 	Template.EquipSound = "StrategyUI_Ammo_Equip";
 	Template.CanBeBuilt = false;
-	Template.TradingPostValue = 30;
-	Template.PointsToComplete = 0;
 	Template.Tier = 1;
 	Template.RewardDecks.AddItem('ExperimentalAmmoRewards');
 
@@ -44,8 +42,9 @@ static function X2DataTemplate Create_Ammo_Sabot()
 	Template.SetUIStatMarkup(default.strDefenseReduction,, int(class'X2Effect_SabotAmmo'.default.CounterDefense * 100),, "%");
 	if (class'X2Effect_SabotAmmo'.default.CounterDodge > 0)
 	Template.SetUIStatMarkup(default.strDodgeReduction,, int(class'X2Effect_SabotAmmo'.default.CounterDodge * 100),,  "%");
+
+	Template.TradingPostValue = 30;
 		
-	//FX Reference
 	Template.GameArchetype = "IRIRestorativeMist.Projectiles.PJ_Sabot";
 	
 	return Template;
@@ -75,11 +74,10 @@ static function X2DataTemplate Create_Shell_HEAT()
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
 	Template.CanBeBuilt = false;
-	
-	Template.PointsToComplete = 0;
 
-	//Template.Abilities.AddItem('IRI_LoadSpecialShell_AP');
 	Template.Abilities.AddItem('IRI_FireArtilleryCannon_HEAT_Passive');
+
+	Template.HideIfResearched = 'IRI_ImprovedShells_Tech';
 
 	return Template;
 }
@@ -108,8 +106,8 @@ static function X2DataTemplate Create_Shell_HE()
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
 	Template.CanBeBuilt = false;
-	
-	Template.PointsToComplete = 0;
+
+	Template.HideIfResearched = 'IRI_ImprovedShells_Tech';
 
 	return Template;
 }
@@ -138,10 +136,8 @@ static function X2DataTemplate Create_Shell_Shrapnel()
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
 	Template.CanBeBuilt = false;
-	
-	Template.PointsToComplete = 0;
 
-	//Template.Abilities.AddItem('IRI_LoadSpecialShell_Shrapnel');
+	Template.HideIfResearched = 'IRI_ImprovedShells_Tech';
 
 	return Template;
 }
@@ -170,12 +166,10 @@ static function X2DataTemplate Create_Shell_HEDP()
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
 	Template.CanBeBuilt = false;
-	
-	Template.PointsToComplete = 0;
+
 	Template.BaseItem = 'IRI_Shell_HEAT';
 	Template.CreatorTemplateName = 'IRI_ImprovedShells_Tech';
 
-	//Template.Abilities.AddItem('IRI_LoadSpecialShell_AP');
 	Template.Abilities.AddItem('IRI_FireArtilleryCannon_HEAT_Passive');
 
 	return Template;
@@ -206,7 +200,6 @@ static function X2DataTemplate Create_Shell_HESH()
 	Template.bInfiniteItem = true;
 	Template.CanBeBuilt = false;
 	
-	Template.PointsToComplete = 0;
 	Template.BaseItem = 'IRI_Shell_HE';
 	Template.CreatorTemplateName = 'IRI_ImprovedShells_Tech';
 
@@ -240,7 +233,6 @@ static function X2DataTemplate Create_Shell_Flechette()
 	Template.bInfiniteItem = true;
 	Template.CanBeBuilt = false;
 	
-	Template.PointsToComplete = 0;
 	Template.BaseItem = 'IRI_Shell_Shrapnel';
 	Template.CreatorTemplateName = 'IRI_ImprovedShells_Tech';
 

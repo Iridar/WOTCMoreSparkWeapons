@@ -68,7 +68,8 @@ static function X2DataTemplate Create_ExperimentalShells_Tech()
 	Template.strImage = "img:///IRISparkHeavyWeapons.UI.UI_ArmCannon_ProvingGrounds";
 	Template.SortingTier = 3;
 	
-	Template.ResearchCompletedFn = class'X2StrategyElement_DefaultTechs'.static.GiveItems;
+	//Template.ResearchCompletedFn = class'X2StrategyElement_DefaultTechs'.static.GiveItems;
+	Template.ResearchCompletedFn = GiveShells;
 
 	//Template.ItemRewards.AddItem('IRI_Shell_HE');
 	//Template.ItemRewards.AddItem('IRI_Shell_HEAT');
@@ -93,6 +94,55 @@ static function X2DataTemplate Create_ExperimentalShells_Tech()
 
 	return Template;
 }
+
+static function GiveShells(XComGameState NewGameState, XComGameState_Tech TechState)
+{
+	local XComGameStateHistory History;
+	local X2ItemTemplateManager ItemMgr;
+	local XComGameState_Item ItemState;
+	local X2ItemTemplate ItemTemplate;
+	local XComGameState_HeadquartersXCom XComHQ;
+
+	History = `XCOMHISTORY;
+
+	foreach NewGameState.IterateByClassType(class'XComGameState_HeadquartersXCom', XComHQ)
+	{
+		break;
+	}
+
+	if (XComHQ == none)
+	{
+		XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
+		XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+	}
+
+	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	
+	// Iterate through the Spark Equipment, find their templates, and build and activate the Item State Object for each
+
+	ItemTemplate = ItemMgr.FindItemTemplate('IRI_Shell_HE');
+	if (ItemTemplate != none)
+	{
+		TechState.ItemRewards.AddItem(ItemTemplate);
+		ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+		XComHQ.AddItemToHQInventory(ItemState);
+	}
+	ItemTemplate = ItemMgr.FindItemTemplate('IRI_Shell_HEAT');
+	if (ItemTemplate != none)
+	{
+		TechState.ItemRewards.AddItem(ItemTemplate);
+		ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+		XComHQ.AddItemToHQInventory(ItemState);
+	}
+	ItemTemplate = ItemMgr.FindItemTemplate('IRI_Shell_Shrapnel');
+	if (ItemTemplate != none)
+	{
+		TechState.ItemRewards.AddItem(ItemTemplate);
+		ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+		XComHQ.AddItemToHQInventory(ItemState);
+	}	
+}
+
 
 static function X2DataTemplate Create_ImprovedShells_Tech()
 {
