@@ -225,6 +225,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	MultiTargetRadius.fTargetRadius = 2.5f;
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
+	SetFireAnim(Template, 'FF_FireHEAT_Shell');
+
 	return Template;
 }
 
@@ -258,6 +260,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEDP()
 	MultiTargetRadius = new class'X2AbilityMultiTarget_Radius';
 	MultiTargetRadius.fTargetRadius = 2.5f;
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
+
+	SetFireAnim(Template, 'FF_FireHEAT_Shell');
 
 	return Template;
 }
@@ -301,7 +305,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 
 	CursorTarget = new class'X2AbilityTarget_Cursor';
 	//CursorTarget.bRestrictToWeaponRange = true;
-	CursorTarget.FixedAbilityRange = `UNITSTOMETERS(`TILESTOUNITS(25));	// Feed range in tiles to this
+	CursorTarget.FixedAbilityRange = `UNITSTOMETERS(`TILESTOUNITS(14));	// Feed range in tiles to this
 	Template.AbilityTargetStyle = CursorTarget;
 
 	//	Icon Setup
@@ -324,6 +328,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 	MultiTargetRadius.fTargetRadius = 2.5f;
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
+	SetFireAnim(Template, 'FF_FireHE_Shell');
+
 	return Template;
 }
 
@@ -342,7 +348,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HESH()
 
 	CursorTarget = new class'X2AbilityTarget_Cursor';
 	//CursorTarget.bRestrictToWeaponRange = true;
-	CursorTarget.FixedAbilityRange = `UNITSTOMETERS(`TILESTOUNITS(25));	// Feed range in tiles to this
+	CursorTarget.FixedAbilityRange = `UNITSTOMETERS(`TILESTOUNITS(18));	// Feed range in tiles to this
 	Template.AbilityTargetStyle = CursorTarget;
 
 	//	Icon Setup
@@ -366,6 +372,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HESH()
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
 	Template.ModifyNewContextFn = HESH_Shot_ModifyActivatedAbilityContext;
+
+	SetFireAnim(Template, 'FF_FireHE_Shell');
 
 	return Template;
 }
@@ -402,13 +410,16 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
 	local X2AbilityMultiTarget_Cone         ConeMultiTarget;
 	local X2Effect_ApplyWeaponDamage		AreaDamage;
 	local X2Effect_Knockback				KnockbackEffect;
+	local X2AbilityToHitCalc_StandardAim    StandardAim;
 
 	//	Allow disoriented, skip primary target damage, reqires Shrapnel Shells
 	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Shrapnel', true, 'NoPrimary',, 'IRI_Shell_Shrapnel');
 	
 	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_shreddergun";
 	
-	Template.AbilityToHitCalc = default.DeadEye;
+	StandardAim = new class'X2AbilityToHitCalc_StandardAim';
+	StandardAim.bGuaranteedHit = true;
+	Template.AbilityToHitCalc = StandardAim;
 	
 	CursorTarget = new class'X2AbilityTarget_Cursor';
 	CursorTarget.bRestrictToWeaponRange = true;
@@ -430,6 +441,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
 	KnockbackEffect = new class'X2Effect_Knockback';
 	KnockbackEffect.KnockbackDistance = 2;
 	Template.AddMultiTargetEffect(KnockbackEffect);
+
+	SetFireAnim(Template, 'FF_FireShrapnel_Shell');
 
 	return Template;	
 }
@@ -469,6 +482,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Flechette()
 	KnockbackEffect = new class'X2Effect_Knockback';
 	KnockbackEffect.KnockbackDistance = 2;
 	Template.AddMultiTargetEffect(KnockbackEffect);
+
+	SetFireAnim(Template, 'FF_FireShrapnel_Shell');
 
 	return Template;	
 }
@@ -613,4 +628,16 @@ static function SetHidden(out X2AbilityTemplate Template)
 	Template.bDisplayInUITooltip = false;
 	Template.bDontDisplayInAbilitySummary = true;
 	Template.bHideOnClassUnlock = true;
+}
+
+static function SetFireAnim(out X2AbilityTemplate Template, name Anim)
+{
+	Template.CustomFireAnim = Anim;
+	Template.CustomFireKillAnim = Anim;
+	Template.CustomMovingFireAnim = Anim;
+	Template.CustomMovingFireKillAnim = Anim;
+	Template.CustomMovingTurnLeftFireAnim = Anim;
+	Template.CustomMovingTurnLeftFireKillAnim = Anim;
+	Template.CustomMovingTurnRightFireAnim = Anim;
+	Template.CustomMovingTurnRightFireKillAnim = Anim;
 }

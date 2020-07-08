@@ -2,9 +2,9 @@ class X2Effect_SabotShell extends X2Effect_Persistent config(ArtilleryCannon);
 
 var config array<name> BlacklistedAbilities;
 
-//	Compensates for defense bonus when shooting through cover, removes squadsight penalties.
+//	Compensates for defense bonus when shooting through cover
 //	Reduces damage at long range and when shooting through cover.
-var config float CounterSquadsightPenalty;
+var config float CounterCoverDefenseBonus;
 
 var config float ReduceDamageLowCover;
 var config float ReduceDamageHighCover;
@@ -29,7 +29,7 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 {	
 	local ShotModifierInfo				ModInfo;
 	local GameRulesCache_VisibilityInfo VisInfo;
-	local int							TileDistance;
+	//local int							TileDistance;
 
 	if (default.BlacklistedAbilities.Find(AbilityState.GetMyTemplateName()) != INDEX_NONE) return;
 	if (EffectState.ApplyEffectParameters.ItemStateObjectRef != AbilityState.SourceWeapon) return;
@@ -44,41 +44,19 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 			case CT_MidLevel:
 				ModInfo.ModType = eHit_Success;
 				ModInfo.Reason = FriendlyName;
-				ModInfo.Value = class'X2AbilityToHitCalc_StandardAim'.default.LOW_COVER_BONUS;
+				ModInfo.Value = class'X2AbilityToHitCalc_StandardAim'.default.LOW_COVER_BONUS * default.CounterCoverDefenseBonus;
 				ShotModifiers.AddItem(ModInfo);
 				break;
 			case CT_Standing:
 				ModInfo.ModType = eHit_Success;
 				ModInfo.Reason = FriendlyName;
-				ModInfo.Value = class'X2AbilityToHitCalc_StandardAim'.default.HIGH_COVER_BONUS;
+				ModInfo.Value = class'X2AbilityToHitCalc_StandardAim'.default.HIGH_COVER_BONUS * default.CounterCoverDefenseBonus;
 				ShotModifiers.AddItem(ModInfo);
 				break;
 			default:
 				break;
 		}
 	}
-
-	//	Compensate Squadsight Aim and Crit penalties
-	TileDistance = Attacker.TileDistanceBetween(Target);
-
-	//  Calculate how far into Squadsight range are we.
-	TileDistance -= Attacker.GetVisibilityRadius() * class'XComWorldData'.const.WORLD_METERS_TO_UNITS_MULTIPLIER / class'XComWorldData'.const.WORLD_StepSize;
-
-	//	right at the boundary, but squadsight IS being used so treat it like one tile
-	if (TileDistance == 0) TileDistance = 1;
-
-	if (TileDistance > 0)
-	{	
-		ModInfo.ModType = eHit_Success;
-		ModInfo.Reason = FriendlyName;
-		ModInfo.Value = -class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_DISTANCE_MOD * TileDistance * CounterSquadsightPenalty;
-		ShotModifiers.AddItem(ModInfo);
-
-		ModInfo.ModType = eHit_Crit;
-		ModInfo.Reason = FriendlyName;
-		ModInfo.Value = -class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_CRIT_MOD * CounterSquadsightPenalty;
-		ShotModifiers.AddItem(ModInfo);
-	}	
 }
 /*
 static private function int GetPierceAmount(const XComGameState_Ability AbilityState)
@@ -166,12 +144,12 @@ function int GetAttackingDamageModifier(XComGameState_Effect EffectState, XComGa
 		//`LOG("GetAttackingDamageModifier after exhausting Pierce:" @ DamageMod,, 'WOTCMoreSparkWeapons');
 
 		//	Damage was fully comepnsated, the attack will deal no damage.
-		if (CurrentDamage + DamageMod < 0)
+		if (DamageMod < -1)
 		{
 			return -CurrentDamage;
 		}
 	}
-	return DamageMod; 
+	return CurrentDamage * DamageMod; 
 }
 /*
 function int GetExtraArmorPiercing(XComGameState_Effect EffectState, XComGameState_Unit Attacker, Damageable TargetDamageable, XComGameState_Ability AbilityState, const out EffectAppliedData AppliedData) 

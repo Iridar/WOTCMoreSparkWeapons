@@ -18,8 +18,7 @@ var config(ClassData) array<name> AbilitiesToRemove;
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 /*
- wanna set up something special for the Sabot Shell shot.
-Instead of penalizing its hit chance, Cover will reduce its damage.
+
 Upgraded Sabot Shells will receive less of a penalty for shooting through cover
 And I want to make a Targeting Computer weapon upgrade that will allow Sabot Shell shots to engage enemies through walls, provided there is squadsight to them
 Targeting Computer will provide some other bonuses for other shell types; not sure which, though.

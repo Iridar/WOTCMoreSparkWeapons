@@ -62,7 +62,7 @@ static function X2DataTemplate Create_Shell_HEAT()
 
 	Template.ItemCat = 'utility';
 	Template.WeaponCat = 'iri_auxiliary_weapon';
-	Template.InventorySlot = eInvSlot_AuxiliaryWeapon;
+	Template.InventorySlot = class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot;
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.NumUpgradeSlots = 0;
 	
@@ -94,7 +94,7 @@ static function X2DataTemplate Create_Shell_HE()
 
 	Template.ItemCat = 'utility';
 	Template.WeaponCat = 'iri_auxiliary_weapon';
-	Template.InventorySlot = eInvSlot_AuxiliaryWeapon;
+	Template.InventorySlot = class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot;
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.NumUpgradeSlots = 0;
 	
@@ -124,7 +124,7 @@ static function X2DataTemplate Create_Shell_Shrapnel()
 
 	Template.ItemCat = 'utility';
 	Template.WeaponCat = 'iri_auxiliary_weapon';
-	Template.InventorySlot = eInvSlot_AuxiliaryWeapon;
+	Template.InventorySlot = class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot;
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.NumUpgradeSlots = 0;
 	
@@ -154,7 +154,7 @@ static function X2DataTemplate Create_Shell_HEDP()
 
 	Template.ItemCat = 'utility';
 	Template.WeaponCat = 'iri_auxiliary_weapon';
-	Template.InventorySlot = eInvSlot_AuxiliaryWeapon;
+	Template.InventorySlot = class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot;
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.NumUpgradeSlots = 0;
 	
@@ -187,7 +187,7 @@ static function X2DataTemplate Create_Shell_HESH()
 
 	Template.ItemCat = 'utility';
 	Template.WeaponCat = 'iri_auxiliary_weapon';
-	Template.InventorySlot = eInvSlot_AuxiliaryWeapon;
+	Template.InventorySlot = class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot;
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.NumUpgradeSlots = 0;
 	
@@ -220,7 +220,7 @@ static function X2DataTemplate Create_Shell_Flechette()
 
 	Template.ItemCat = 'utility';
 	Template.WeaponCat = 'iri_auxiliary_weapon';
-	Template.InventorySlot = eInvSlot_AuxiliaryWeapon;
+	Template.InventorySlot = class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot;
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.NumUpgradeSlots = 0;
 	

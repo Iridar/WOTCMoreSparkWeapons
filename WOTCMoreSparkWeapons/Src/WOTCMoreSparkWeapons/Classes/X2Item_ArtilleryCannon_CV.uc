@@ -58,7 +58,7 @@ static function X2DataTemplate Create_ArtilleryCannon_CV()
 	WorldDamage = new class'X2Effect_ApplyDirectionalWorldDamage';
 	WorldDamage.bUseWeaponDamageType = true;
 	WorldDamage.bUseWeaponEnvironmentalDamage = false;
-	WorldDamage.EnvironmentalDamageAmount = 30;
+	WorldDamage.EnvironmentalDamageAmount = default.IENVIRONMENTDAMAGE;
 	WorldDamage.bApplyOnHit = true;
 	WorldDamage.bApplyOnMiss = true;
 	WorldDamage.bApplyToWorldOnHit = true;
@@ -125,7 +125,7 @@ static function X2DataTemplate Create_ArtilleryCannon_CV()
 	Template.AddDefaultAttachment('Suppressor', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Suppressor");
 	Template.AddDefaultAttachment('Trigger', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Trigger");
 
-	Template.WeaponPrecomputedPathData.InitialPathTime = 1.0;
+	Template.WeaponPrecomputedPathData.InitialPathTime = 1.5;
 	Template.WeaponPrecomputedPathData.MaxPathTime = 2.5;
 	Template.WeaponPrecomputedPathData.MaxNumberOfBounces = 0;
 
