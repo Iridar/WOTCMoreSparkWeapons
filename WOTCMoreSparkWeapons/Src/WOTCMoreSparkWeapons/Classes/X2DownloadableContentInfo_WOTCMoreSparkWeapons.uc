@@ -1,5 +1,7 @@
 class X2DownloadableContentInfo_WOTCMoreSparkWeapons extends X2DownloadableContentInfo;
 
+var config(SparkArsenal) array<name> AbilitiesToAddProperKnockback;
+
 var config(SparkArsenal) array<name> SparkCharacterTemplates;
 var config(SparkArsenal) bool bRocketLaunchersModPresent;
 var config(SparkArsenal) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
@@ -480,6 +482,7 @@ static function PatchAbilityTemplates()
 	local X2Effect						Effect;
 	local X2Condition_SourceWeaponCat	WeaponCondition;
 	local name							AbilityName;
+	local X2Effect_Knockback			KnockbackEffect;
 
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 
@@ -539,7 +542,71 @@ static function PatchAbilityTemplates()
 			Template.AbilityShooterConditions.AddItem(WeaponCondition);
 		}
 	}
+
+	//	Add proper knockback to cone- and line-targeted abilities. 
+	//	Normally knockback doesn't work properly for them, because the X2Effect_Knockback works relative 
+	//	the target location specified in the input context, and targeting methods used by these abilities 
+	//	will have the very end of the cone/line as the target location.
+	//	This ModifyContextFn will replace that target location.
+	KnockbackEffect = new class'X2Effect_Knockback';
+	KnockbackEffect.KnockbackDistance = 2;
+	foreach default.AbilitiesToAddProperKnockback(AbilityName)
+	{
+		Template = AbilityTemplateManager.FindAbilityTemplate(AbilityName);
+		if (Template != none && Template.ModifyNewContextFn == none)
+		{
+			Template.AddMultiTargetEffect(KnockbackEffect);
+
+			Template.ModifyNewContextFn = ProperKnockback_ModifyActivatedAbilityContext;
+		}
+	}
 }	
+
+static simulated function ProperKnockback_ModifyActivatedAbilityContext(XComGameStateContext Context)
+{
+	local XComWorldData					World;
+	local XComGameStateContext_Ability	AbilityContext;
+	local XComGameState_Unit			UnitState;
+	local TTile							ShooterTileLocation, TargetTileLocation;
+	local vector						ShooterLocation;
+	local XComGameStateHistory			History;
+	local vector						ClosestLocation, TestLocation;
+	local float							ClosestDistance, TestDistance;
+	local int i;
+
+	History = `XCOMHISTORY;
+	World = `XWORLD;
+	AbilityContext = XComGameStateContext_Ability(Context);
+
+	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+	ShooterTileLocation = UnitState.TileLocation;
+	ShooterTileLocation.Z += UnitState.UnitHeight - 1;
+	ShooterLocation = World.GetPositionFromTileCoordinates(ShooterTileLocation);
+	
+	ClosestLocation = AbilityContext.InputContext.TargetLocations[0];
+	ClosestDistance = VSize(ClosestLocation - ShooterLocation);
+
+	for (i = 0; i < AbilityContext.InputContext.MultiTargets.Length; i++)
+	{
+		if (AbilityContext.IsResultContextMultiHit(i))
+		{
+			UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID));
+
+			TargetTileLocation = UnitState.TileLocation;
+			TargetTileLocation.Z += UnitState.UnitHeight - 1;
+			TestLocation = World.GetPositionFromTileCoordinates(TargetTileLocation);
+
+			TestDistance = VSize(TestLocation - ShooterLocation);
+			if (TestDistance < ClosestDistance)
+			{
+				ClosestDistance = TestDistance;
+				ClosestLocation = TestLocation;
+			}
+		}
+	}
+
+	AbilityContext.InputContext.TargetLocations[0] = ClosestLocation;
+}
 
 
 static function PatchWeaponTemplates()

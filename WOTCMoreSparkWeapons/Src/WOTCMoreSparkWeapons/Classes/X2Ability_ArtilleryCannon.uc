@@ -5,6 +5,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	local array<X2DataTemplate> Templates;
 
 	//	Heavy Weapon: Autogun
+	/*
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT());
 	Templates.AddItem(Create_FireArtilleryCannon_HE());
 	Templates.AddItem(Create_FireArtilleryCannon_Shrapnel());
@@ -14,7 +15,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_FireArtilleryCannon_Flechette());
 
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT_Passive());
-	Templates.AddItem(Create_FireArtilleryCannon_AP_Passive());
+	Templates.AddItem(Create_FireArtilleryCannon_AP_Passive());*/
 
 	return Templates;
 }
@@ -444,7 +445,55 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
 
 	SetFireAnim(Template, 'FF_FireShrapnel_Shell');
 
+	Template.ModifyNewContextFn = Shrapnel_Shot_ModifyActivatedAbilityContext;
+
 	return Template;	
+}
+
+static simulated function Shrapnel_Shot_ModifyActivatedAbilityContext(XComGameStateContext Context)
+{
+	local XComWorldData					World;
+	local XComGameStateContext_Ability	AbilityContext;
+	local XComGameState_Unit			UnitState;
+	local TTile							ShooterTileLocation, TargetTileLocation;
+	local vector						ShooterLocation;
+	local XComGameStateHistory			History;
+	local vector						ClosestLocation, TestLocation;
+	local float							ClosestDistance, TestDistance;
+	local int i;
+
+	History = `XCOMHISTORY;
+	World = `XWORLD;
+	AbilityContext = XComGameStateContext_Ability(Context);
+
+	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+	ShooterTileLocation = UnitState.TileLocation;
+	ShooterTileLocation.Z += UnitState.UnitHeight - 1;
+	ShooterLocation = World.GetPositionFromTileCoordinates(ShooterTileLocation);
+	
+	ClosestLocation = AbilityContext.InputContext.TargetLocations[0];
+	ClosestDistance = VSize(ClosestLocation - ShooterLocation);
+
+	for (i = 0; i < AbilityContext.InputContext.MultiTargets.Length; i++)
+	{
+		if (AbilityContext.IsResultContextMultiHit(i))
+		{
+			UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID));
+
+			TargetTileLocation = UnitState.TileLocation;
+			TargetTileLocation.Z += UnitState.UnitHeight - 1;
+			TestLocation = World.GetPositionFromTileCoordinates(TargetTileLocation);
+
+			TestDistance = VSize(TestLocation - ShooterLocation);
+			if (TestDistance < ClosestDistance)
+			{
+				ClosestDistance = TestDistance;
+				ClosestLocation = TestLocation;
+			}
+		}
+	}
+
+	AbilityContext.InputContext.TargetLocations[0] = ClosestLocation;
 }
 
 static function X2AbilityTemplate Create_FireArtilleryCannon_Flechette()
