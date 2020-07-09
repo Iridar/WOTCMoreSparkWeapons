@@ -552,10 +552,13 @@ private function AdjustGrenadePath(XComPrecomputedPath GrenadePath, float TimeTo
 	for (i = 0; i < iKeyframes; i++)
 	{	
 		Alpha = float(i) / float(iKeyframes);
+		//`LOG("New frame:" @ i @ "out of:" @ iKeyframes @ "old Time:" @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');	
 		GrenadePath.akKeyframes[i].fTime = TimeToTravel * Alpha;
 
-		//`LOG("New frame:" @ i @ "out of:" @ iKeyframes @ GrenadePath.akKeyframes[i].rRot,, 'SmartRounds');		
+		//`LOG("New frame:" @ i @ "out of:" @ iKeyframes @ "new Time:" @ GrenadePath.akKeyframes[i].fTime,, 'SmartRounds');	
 	}
+
+	GrenadePath.m_fTime = TimeToTravel;
 
 	GrenadePath.UpdateTrajectory();
 }
