@@ -4,8 +4,6 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
-	//	Heavy Weapon: Autogun
-	/*
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT());
 	Templates.AddItem(Create_FireArtilleryCannon_HE());
 	Templates.AddItem(Create_FireArtilleryCannon_Shrapnel());
@@ -15,7 +13,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_FireArtilleryCannon_Flechette());
 
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT_Passive());
-	Templates.AddItem(Create_FireArtilleryCannon_AP_Passive());*/
+	Templates.AddItem(Create_FireArtilleryCannon_AP_Passive());
 
 	return Templates;
 }
