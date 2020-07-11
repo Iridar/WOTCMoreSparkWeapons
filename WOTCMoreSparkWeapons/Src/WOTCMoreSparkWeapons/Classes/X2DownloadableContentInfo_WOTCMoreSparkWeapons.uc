@@ -20,9 +20,8 @@ var config(ClassData) array<name> AbilitiesToRemove;
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 /*
-
-Make HEAT able to miss with a ModifyContextFn
 Shrapnel shouldn't hit enemies in high cover? Probably cover should reduce its damage
+Deployment Shield?
 
 Upgraded Sabot Shells will receive less of a penalty for shooting through cover
 And I want to make a Targeting Computer weapon upgrade that will allow Sabot Shell shots to engage enemies through walls, provided there is squadsight to them

@@ -14,6 +14,7 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT_Passive());
 	Templates.AddItem(Create_FireArtilleryCannon_AP_Passive());
+	Templates.AddItem(Create_FireArtilleryCannon_Shrapnel_Passive());
 
 	return Templates;
 }
@@ -211,6 +212,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	AreaDamage.bIgnoreBaseDamage = true;
 	AreaDamage.bApplyOnHit = true;
 	AreaDamage.bApplyOnMiss = true;
+	AreaDamage.EnvironmentalDamageAmount = 15;
 	Template.AddMultiTargetEffect(AreaDamage);
 
 	KnockbackEffect = new class'X2Effect_Knockback';
@@ -226,7 +228,44 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 
 	SetFireAnim(Template, 'FF_FireHEAT_Shell');
 
+	Template.ModifyNewContextFn = HeatShot_ModifyActivatedAbilityContext;
+
 	return Template;
+}
+
+static simulated function HeatShot_ModifyActivatedAbilityContext(XComGameStateContext Context)
+{
+	local XComGameStateHistory			History;
+	local vector						NewLocation;
+	local XComGameState_Ability			AbilityState;
+	local AvailableTarget				Target;
+	local XComGameStateContext_Ability	AbilityContext;
+
+	History = `XCOMHISTORY;
+	
+	AbilityContext = XComGameStateContext_Ability(Context);
+
+	//`LOG("Running Modify Context FN: " @ AbilityContext.IsResultContextMiss() @ AbilityContext.ResultContext.HitResult,, 'WOTCMoreSparkWeapons');
+
+	if (AbilityContext.IsResultContextMiss())
+	{
+		//World = `XWORLD;
+		//UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+		AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityContext.InputContext.AbilityRef.ObjectID));
+
+		NewLocation = class'X2Ability'.static.FindOptimalMissLocation(AbilityContext, false);
+
+		//`LOG("This is a miss. Original location:" @ AbilityContext.InputContext.TargetLocations[0] @ AbilityContext.ResultContext.ProjectileHitLocations[0] @ ", new location:" @ NewLocation,, 'WOTCMoreSparkWeapons');
+
+		AbilityState.GatherAdditionalAbilityTargetsForLocation(NewLocation, Target);
+		AbilityContext.InputContext.MultiTargets = Target.AdditionalTargets;
+
+		AbilityContext.InputContext.TargetLocations.Length = 0;
+		AbilityContext.InputContext.TargetLocations.AddItem(NewLocation);
+
+		AbilityContext.ResultContext.ProjectileHitLocations.Length = 0;
+		AbilityContext.ResultContext.ProjectileHitLocations.AddItem(NewLocation);
+	}
 }
 
 static function X2AbilityTemplate Create_FireArtilleryCannon_HEDP()
@@ -247,6 +286,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEDP()
 	AreaDamage.bIgnoreBaseDamage = true;
 	AreaDamage.bApplyOnHit = true;
 	AreaDamage.bApplyOnMiss = true;
+	AreaDamage.EnvironmentalDamageAmount = 15;
 	Template.AddMultiTargetEffect(AreaDamage);
 
 	KnockbackEffect = new class'X2Effect_Knockback';
@@ -261,6 +301,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEDP()
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
 	SetFireAnim(Template, 'FF_FireHEAT_Shell');
+
+	Template.ModifyNewContextFn = HeatShot_ModifyActivatedAbilityContext;
 
 	return Template;
 }
@@ -448,6 +490,26 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
 	return Template;	
 }
 
+static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel_Passive()
+{
+	local X2AbilityTemplate			Template;
+	local X2Effect_ShrapnelShell	HeatShell;
+	
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_FireArtilleryCannon_Shrapnel_Passive');
+
+	SetPassive(Template);
+	SetHidden(Template);
+	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+
+	HeatShell = new class'X2Effect_ShrapnelShell';
+	HeatShell.BuildPersistentEffect(1, true);
+	HeatShell.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, true,, Template.AbilitySourceName);
+	Template.AddTargetEffect(HeatShell);
+
+	return Template;
+}
+
 static simulated function Shrapnel_Shot_ModifyActivatedAbilityContext(XComGameStateContext Context)
 {
 	local XComWorldData					World;
@@ -514,6 +576,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Flechette()
 	Template.AbilityTargetStyle = CursorTarget;
 
 	ConeMultiTarget = new class'X2AbilityMultiTarget_Cone';
+	ConeMultiTarget.bIgnoreBlockingCover = false;
 	ConeMultiTarget.bUseWeaponRadius = true;
 	ConeMultiTarget.ConeEndDiameter = 5 * class'XComWorldData'.const.WORLD_StepSize;
 	ConeMultiTarget.ConeLength = 15 * class'XComWorldData'.const.WORLD_StepSize;
@@ -608,46 +671,6 @@ static function X2AbilityTemplate Create_LoadSpecialShell(name TemplateName, nam
 
 	return Template;
 }*/
-
-/*
-static simulated function HeatShot_ModifyActivatedAbilityContext(XComGameStateContext Context)
-{
-	//local XComGameState_Unit			UnitState;
-	//local XComWorldData					World;
-	//local int							bHit;
-	local XComGameStateHistory			History;
-	local vector						NewLocation;
-	local XComGameState_Ability			AbilityState;
-	local AvailableTarget				Target;
-	local XComGameStateContext_Ability	AbilityContext;
-
-	History = `XCOMHISTORY;
-	
-	AbilityContext = XComGameStateContext_Ability(Context);
-
-	`LOG("Running Modify Context FN: " @ AbilityContext.IsResultContextMiss() @ AbilityContext.ResultContext.HitResult,, 'WOTCMoreSparkWeapons');
-
-	if (AbilityContext.IsResultContextMiss())
-	{
-		//World = `XWORLD;
-		//UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
-		AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityContext.InputContext.AbilityRef.ObjectID));
-
-		NewLocation = class'X2Ability'.static.FindOptimalMissLocation(AbilityContext, false);
-
-		`LOG("This is a miss. Original location:" @ AbilityContext.InputContext.TargetLocations[0] @ AbilityContext.ResultContext.ProjectileHitLocations[0] @ ", new location:" @ NewLocation,, 'WOTCMoreSparkWeapons');
-
-		AbilityState.GatherAdditionalAbilityTargetsForLocation(NewLocation, Target);
-		AbilityContext.InputContext.MultiTargets = Target.AdditionalTargets;
-
-		AbilityContext.InputContext.TargetLocations.Length = 0;
-		AbilityContext.InputContext.TargetLocations.AddItem(NewLocation);
-
-		AbilityContext.ResultContext.ProjectileHitLocations.Length = 0;
-		AbilityContext.ResultContext.ProjectileHitLocations.AddItem(NewLocation);
-	}
-}
-*/
 
 static function SetPassive(out X2AbilityTemplate Template)
 {

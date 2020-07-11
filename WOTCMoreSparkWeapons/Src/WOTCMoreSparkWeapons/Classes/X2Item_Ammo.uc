@@ -139,6 +139,8 @@ static function X2DataTemplate Create_Shell_Shrapnel()
 
 	Template.HideIfResearched = 'IRI_ImprovedShells_Tech';
 
+	Template.Abilities.AddItem('IRI_FireArtilleryCannon_Shrapnel_Passive');
+
 	return Template;
 }
 
@@ -236,7 +238,7 @@ static function X2DataTemplate Create_Shell_Flechette()
 	Template.BaseItem = 'IRI_Shell_Shrapnel';
 	Template.CreatorTemplateName = 'IRI_ImprovedShells_Tech';
 
-	//Template.Abilities.AddItem('IRI_LoadSpecialShell_Shrapnel');
+	Template.Abilities.AddItem('IRI_FireArtilleryCannon_Shrapnel_Passive');
 
 	return Template;
 }
