@@ -410,6 +410,7 @@ static function SetUpElectroPulse(X2AbilityTemplate Template)
 	local X2Condition_UnitProperty				UnitCondition;
 	local X2Condition_Augmented					AugmentedCondition;
 	local X2AbilityCost_ActionPoints			ActionPointCost;
+	local X2Effect_ApplyWeaponDamage			DamageEffect;
 
 	//	Icon Setup
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
@@ -438,7 +439,11 @@ static function SetUpElectroPulse(X2AbilityTemplate Template)
 	//	Deal damage
 	if (class'X2Item_ElectroPulse'.default.DEAL_DAMAGE)
 	{
-		Template.AddMultiTargetEffect(new class'X2Effect_ApplyWeaponDamage');
+		DamageEffect = new class'X2Effect_ApplyWeaponDamage';
+		DamageEffect.bIgnoreBaseDamage = true;
+		DamageEffect.EffectDamageValue = class'X2Item_ElectroPulse'.default.DAMAGE;
+
+		Template.AddMultiTargetEffect(DamageEffect);
 	}
 	//	Remove Energy Shields from all units in AOE
 	RemoveEffects = new class'X2Effect_RemoveEffects';

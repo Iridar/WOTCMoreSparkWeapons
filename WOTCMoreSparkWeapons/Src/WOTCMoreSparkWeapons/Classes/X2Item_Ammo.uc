@@ -9,7 +9,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	local array<X2DataTemplate> Templates;
 
 	Templates.AddItem(Create_Ammo_Sabot());
-
+	
 	Templates.AddItem(Create_Shell_HEAT());
 	Templates.AddItem(Create_Shell_HE());
 	Templates.AddItem(Create_Shell_Shrapnel());
