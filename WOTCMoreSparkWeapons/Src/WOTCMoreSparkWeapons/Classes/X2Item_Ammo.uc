@@ -242,3 +242,65 @@ static function X2DataTemplate Create_Shell_Flechette()
 
 	return Template;
 }
+
+
+static function SetUpWeaponUpgrade(out X2WeaponUpgradeTemplate Template)
+{
+	Template.CanApplyUpgradeToWeaponFn = CanApplyUpgradeToWeapon;
+	
+	Template.CanBeBuilt = false;
+	Template.MaxQuantity = 1;
+	Template.bInfiniteItem = true;
+
+	Template.BlackMarketTexts = class'X2Item_DefaultUpgrades'.default.UpgradeBlackMarketTexts;
+	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
+	/*
+	if (Template.DataName != 'IRI_CannonAmmo_HEAT') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_HEAT');
+	if (Template.DataName != 'IRI_CannonAmmo_SABOT') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_SABOT');
+	if (Template.DataName != 'IRI_CannonAmmo_HE') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_HE');
+	if (Template.DataName != 'IRI_CannonAmmo_Shrapnel') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_Shrapnel');*/
+}
+
+static function bool CanApplyUpgradeToWeapon(X2WeaponUpgradeTemplate UpgradeTemplate, XComGameState_Item Weapon, int SlotIndex)
+{
+	local array<X2WeaponUpgradeTemplate> AttachedUpgradeTemplates;
+	local X2WeaponUpgradeTemplate AttachedUpgrade; 
+	local int iSlot;
+
+	//	Can equip Ammo Upgrades only in the 0th slot.
+	//if (SlotIndex != 0) return false;
+
+	//	Can only apply these Ammo Upgrades to Artillery Cannons.
+	switch (Weapon.GetMyTemplateName())
+	{
+		case 'IRI_ArtilleryCannon_CV':
+		case 'IRI_ArtilleryCannon_MG':
+		case 'IRI_ArtilleryCannon_BM':
+			break;
+		default:
+			return false;
+	}
+		
+	AttachedUpgradeTemplates = Weapon.GetMyWeaponUpgradeTemplates();
+
+	foreach AttachedUpgradeTemplates(AttachedUpgrade, iSlot)
+	{
+		// Slot Index indicates the upgrade slot the player intends to replace with this new upgrade
+		if (iSlot == SlotIndex)
+		{
+			// The exact upgrade already equipped in a slot cannot be equipped again
+			// This allows different versions of the same upgrade type to be swapped into the slot
+			if (AttachedUpgrade == UpgradeTemplate)
+			{
+				return false;
+			}
+		}
+		else if (UpgradeTemplate.MutuallyExclusiveUpgrades.Find(AttachedUpgrade.DataName) != INDEX_NONE)
+		{
+			// If the new upgrade is mutually exclusive with any of the other currently equipped upgrades, it is not allowed
+			return false;
+		}
+	}
+
+	return true;
+}

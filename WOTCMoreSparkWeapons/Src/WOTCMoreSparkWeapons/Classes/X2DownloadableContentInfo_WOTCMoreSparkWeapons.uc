@@ -20,6 +20,8 @@ var config(ClassData) array<name> AbilitiesToRemove;
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 /*
+Compatibility with normal ammo for cannons?
+
 Shrapnel shouldn't hit enemies in high cover? Probably cover should reduce its damage
 Deployment Shield?
 
@@ -393,6 +395,7 @@ static event OnPostTemplatesCreated()
 	PatchWeaponTemplates();
 	class'KSMHelper'.static.AddDeathAnimSetsToCharacterTemplates();
 	class'X2Item_ArtilleryCannon_CV'.static.UpdateMods();
+	class'X2Item_ArtilleryCannon_MG'.static.UpdateMods();
 }
 
 static function PatchSoldierClassTemplates()

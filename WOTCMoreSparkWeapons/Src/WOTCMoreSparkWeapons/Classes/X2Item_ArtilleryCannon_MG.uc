@@ -50,6 +50,8 @@ static function X2DataTemplate Create_ArtilleryCannon_MG()
 	local int i;
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_ArtilleryCannon_MG');
+
+	Template.AddAbilityIconOverride('StandardShot', "img:///UILibrary_PerkIcons.UIPerk_snipershot");
 	
 	Template.WeaponPanelImage = "_ConventionalCannon";
 	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_Cannon';
@@ -120,9 +122,9 @@ static function X2DataTemplate Create_ArtilleryCannon_MG()
 	Template.strImage = default.IMAGE;
 
 	Template.AddDefaultAttachment('Handle', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_BoltHandle");
-	Template.AddDefaultAttachment('Optic', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Scope");
+	Template.AddDefaultAttachment('Optic', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_RearSight");
+	Template.AddDefaultAttachment('FrontSight', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_FrontSight");
 	Template.AddDefaultAttachment('Stock', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Stock");
-	//Template.AddDefaultAttachment('Suppressor', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Suppressor");
 	Template.AddDefaultAttachment('Trigger', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Trigger");
 
 	Template.WeaponPrecomputedPathData.InitialPathTime = 1.5;
@@ -160,69 +162,6 @@ static function X2DataTemplate Create_ArtilleryCannon_MG()
 	return Template;
 }
 
-static function SetUpWeaponUpgrade(out X2WeaponUpgradeTemplate Template)
-{
-	Template.CanApplyUpgradeToWeaponFn = CanApplyUpgradeToWeapon;
-	
-	Template.CanBeBuilt = false;
-	Template.MaxQuantity = 1;
-	Template.bInfiniteItem = true;
-
-	Template.BlackMarketTexts = class'X2Item_DefaultUpgrades'.default.UpgradeBlackMarketTexts;
-	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
-	/*
-	if (Template.DataName != 'IRI_CannonAmmo_HEAT') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_HEAT');
-	if (Template.DataName != 'IRI_CannonAmmo_SABOT') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_SABOT');
-	if (Template.DataName != 'IRI_CannonAmmo_HE') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_HE');
-	if (Template.DataName != 'IRI_CannonAmmo_Shrapnel') Template.MutuallyExclusiveUpgrades.AddItem('IRI_CannonAmmo_Shrapnel');*/
-}
-
-static function bool CanApplyUpgradeToWeapon(X2WeaponUpgradeTemplate UpgradeTemplate, XComGameState_Item Weapon, int SlotIndex)
-{
-	local array<X2WeaponUpgradeTemplate> AttachedUpgradeTemplates;
-	local X2WeaponUpgradeTemplate AttachedUpgrade; 
-	local int iSlot;
-
-	//	Can equip Ammo Upgrades only in the 0th slot.
-	//if (SlotIndex != 0) return false;
-
-	//	Can only apply these Ammo Upgrades to Artillery Cannons.
-	switch (Weapon.GetMyTemplateName())
-	{
-		case 'IRI_ArtilleryCannon_CV':
-		case 'IRI_ArtilleryCannon_MG':
-		case 'IRI_ArtilleryCannon_BM':
-			break;
-		default:
-			return false;
-	}
-		
-	AttachedUpgradeTemplates = Weapon.GetMyWeaponUpgradeTemplates();
-
-	foreach AttachedUpgradeTemplates(AttachedUpgrade, iSlot)
-	{
-		// Slot Index indicates the upgrade slot the player intends to replace with this new upgrade
-		if (iSlot == SlotIndex)
-		{
-			// The exact upgrade already equipped in a slot cannot be equipped again
-			// This allows different versions of the same upgrade type to be swapped into the slot
-			if (AttachedUpgrade == UpgradeTemplate)
-			{
-				return false;
-			}
-		}
-		else if (UpgradeTemplate.MutuallyExclusiveUpgrades.Find(AttachedUpgrade.DataName) != INDEX_NONE)
-		{
-			// If the new upgrade is mutually exclusive with any of the other currently equipped upgrades, it is not allowed
-			return false;
-		}
-	}
-
-	return true;
-}
-
-
-
 static function UpdateMods() {
 	local X2ItemTemplateManager ItemTemplateManager;
 
@@ -244,13 +183,13 @@ static function UpdateMods() {
 	AddFreeFireBonusUpgrade(ItemTemplateManager, 'FreeFireUpgrade_Adv');
 	AddFreeFireBonusUpgrade(ItemTemplateManager, 'FreeFireUpgrade_Sup');
 
-	AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Bsc');
-	AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Adv');
-	AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Sup');
+	//AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Bsc');
+	//AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Adv');
+	//AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Sup');
 
-	AddMissDamageUpgrade_T1(ItemTemplateManager, 'MissDamageUpgrade_Bsc');
-	AddMissDamageUpgrade_T2(ItemTemplateManager, 'MissDamageUpgrade_Adv');
-	AddMissDamageUpgrade_T3(ItemTemplateManager, 'MissDamageUpgrade_Sup');
+	AddMissDamageUpgrade(ItemTemplateManager, 'MissDamageUpgrade_Bsc');
+	AddMissDamageUpgrade(ItemTemplateManager, 'MissDamageUpgrade_Adv');
+	AddMissDamageUpgrade(ItemTemplateManager, 'MissDamageUpgrade_Sup');
 
 	AddFreeKillUpgrade_T1(ItemTemplateManager, 'FreeKillUpgrade_Bsc');
 	AddFreeKillUpgrade_T2(ItemTemplateManager, 'FreeKillUpgrade_Adv');
@@ -265,8 +204,8 @@ static function AddCritUpgrade_T1(X2ItemTemplateManager ItemTemplateManager, Nam
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_LaserSight_T1", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.LaserSight_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");
-	Template.AddUpgradeAttachment('RearSight', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_RearSight", "", 'IRI_ArtilleryCannon_CV', , "", "", "");
+	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_LaserSight_T1", "", 'IRI_ArtilleryCannon_MG', , "", "img:///IRIArtilleryCannon.UI.LaserSight_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");
+	Template.AddUpgradeAttachment('FrontSight', '', "IRIArtilleryCannon.Meshes_MG.InVisibleMesh", "", 'IRI_ArtilleryCannon_MG', , "", "", "");
 }
 static function AddCritUpgrade_T2(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
 {
@@ -274,7 +213,8 @@ static function AddCritUpgrade_T2(X2ItemTemplateManager ItemTemplateManager, Nam
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_LaserSight_T2", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.LaserSight_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");
+	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_LaserSight_T2", "", 'IRI_ArtilleryCannon_MG', , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.ConvCannon_OpticB_inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");
+	Template.AddUpgradeAttachment('FrontSight', '', "IRIArtilleryCannon.Meshes_MG.InVisibleMesh", "", 'IRI_ArtilleryCannon_MG', , "", "", "");
 }
 static function AddCritUpgrade_T3(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
 {
@@ -282,7 +222,8 @@ static function AddCritUpgrade_T3(X2ItemTemplateManager ItemTemplateManager, Nam
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_LaserSight_T3", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.LaserSight_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");
+	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_LaserSight_T3", "", 'IRI_ArtilleryCannon_MG', , "", "img:///IRIArtilleryCannon.UI.Laser_MG_T3_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");
+	Template.AddUpgradeAttachment('FrontSight', '', "IRIArtilleryCannon.Meshes_MG.InVisibleMesh", "", 'IRI_ArtilleryCannon_MG', , "", "", "");
 }
 
 //	SCOPE
@@ -292,8 +233,9 @@ static function AddAimBonusUpgrade_T1(X2ItemTemplateManager ItemTemplateManager,
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Scope_T1", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.Scope_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");	
-	Template.AddUpgradeAttachment('FrontSight', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_FrontSight", "", 'IRI_ArtilleryCannon_CV', , "", "", "");
+	Template.AddUpgradeAttachment('OpticT1', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "MagReaperRifle.Meshes.SM_HOR_Mag_ReaperRifle_OpticC", "", 'IRI_ArtilleryCannon_MG', , "", "img:///UILibrary_XPACK_StrategyImages.ConvVektor_OpticC_inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");	
+	Template.AddUpgradeAttachment('Optic', '', "IRIArtilleryCannon.Meshes_MG.InVisibleMesh", "", 'IRI_ArtilleryCannon_MG', , "", "", "");
+	Template.AddUpgradeAttachment('FrontSight', '', "IRIArtilleryCannon.Meshes_MG.InVisibleMesh", "", 'IRI_ArtilleryCannon_MG', , "", "", "");
 }
 static function AddAimBonusUpgrade_T2(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
 {
@@ -301,8 +243,8 @@ static function AddAimBonusUpgrade_T2(X2ItemTemplateManager ItemTemplateManager,
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Scope_T2", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.Scope_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");	
-	Template.AddUpgradeAttachment('FrontSight', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_FrontSight", "", 'IRI_ArtilleryCannon_CV', , "", "", "");
+	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Scope_T2", "", 'IRI_ArtilleryCannon_MG', , "", "img:///IRIArtilleryCannon.UI.Scope_MG_T2_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");	
+	Template.AddUpgradeAttachment('FrontSight', '', "IRIArtilleryCannon.Meshes_MG.InVisibleMesh", "", 'IRI_ArtilleryCannon_MG', , "", "", "");
 }
 static function AddAimBonusUpgrade_T3(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
 {
@@ -310,7 +252,8 @@ static function AddAimBonusUpgrade_T3(X2ItemTemplateManager ItemTemplateManager,
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Scope_T3", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.Scope_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");	
+	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Scope_T3", "", 'IRI_ArtilleryCannon_MG', , "", "img:///IRIArtilleryCannon.UI.Scope_MG_T3_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");	
+	Template.AddUpgradeAttachment('FrontSight', '', "IRIArtilleryCannon.Meshes_MG.InVisibleMesh", "", 'IRI_ArtilleryCannon_MG', , "", "", "");
 }
 
 
@@ -321,9 +264,9 @@ static function AddFreeFireBonusUpgrade(X2ItemTemplateManager ItemTemplateManage
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Trigger', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Mag', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_HairTrigger", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.HairTrigger_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_trigger");
+	Template.AddUpgradeAttachment('Trigger', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Mag', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_HairTrigger", "", 'IRI_ArtilleryCannon_MG', , "", "img:///IRIArtilleryCannon.UI.HairTrigger_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_trigger");
 
-	//Template.AddUpgradeAttachment('Trigger', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Mag', "MagAttachments.Meshes.SM_MagTriggerB", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.HairTrigger_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_trigger");
+	//Template.AddUpgradeAttachment('Trigger', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Mag', "MagAttachments.Meshes.SM_MagTriggerB", "", 'IRI_ArtilleryCannon_MG', , "", "img:///AdventPistol_MG.UI.HairTrigger_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_trigger");
 }
 
 //	EX MAG
@@ -334,8 +277,8 @@ static function AddClipSizeBonusUpgrade(X2ItemTemplateManager ItemTemplateManage
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	//Template.AddUpgradeAttachment('Mag', 'UIPawnLocation_WeaponUpgrade_Shotgun_Mag', "MagSMG.Meshes.SM_HOR_Mag_SMG_MagA", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.ExMag_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_clip");	
-}*/
+	//Template.AddUpgradeAttachment('Mag', 'UIPawnLocation_WeaponUpgrade_Shotgun_Mag', "MagSMG.Meshes.SM_HOR_Mag_SMG_MagA", "", 'IRI_ArtilleryCannon_MG', , "", "img:///AdventPistol_MG.UI.ExMag_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_clip");	
+}
 
 //	AUTO LOADER
 static function AddReloadUpgrade(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
@@ -344,33 +287,17 @@ static function AddReloadUpgrade(X2ItemTemplateManager ItemTemplateManager, Name
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Handle', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Mag', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_AutoLoader", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.AutoLoader_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_clip");
+	Template.AddUpgradeAttachment('Handle', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Mag', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_AutoLoader", "", 'IRI_ArtilleryCannon_MG', , "", "img:///AdventPistol_MG.UI.AutoLoader_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_clip");
 }
-
+*/
 //	STOCK
-static function AddMissDamageUpgrade_T1(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
+static function AddMissDamageUpgrade(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
 {
 	local X2WeaponUpgradeTemplate Template;
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Stock', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Stock', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Stock_T1", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.Stock_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_stock");
-}
-static function AddMissDamageUpgrade_T2(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
-{
-	local X2WeaponUpgradeTemplate Template;
-
-	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
-
-	Template.AddUpgradeAttachment('Stock', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Stock', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Stock_T2", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.Stock_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_stock");
-}
-static function AddMissDamageUpgrade_T3(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
-{
-	local X2WeaponUpgradeTemplate Template;
-
-	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
-
-	Template.AddUpgradeAttachment('Stock', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Stock', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Stock_T3", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.Stock_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_stock");
+	Template.AddUpgradeAttachment('Stock', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Stock', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Stock_T1", "", 'IRI_ArtilleryCannon_MG', , "", "img:///IRIArtilleryCannon.UI.Stock_MG_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_stock");
 }
 
 //	SUPPRESSOR
@@ -380,7 +307,7 @@ static function AddFreeKillUpgrade_T1(X2ItemTemplateManager ItemTemplateManager,
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Suppressor', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Suppressor', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Suppressor_T1", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.Suppressor_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_barrel");	
+	Template.AddUpgradeAttachment('SuppressorMid', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Suppressor', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Suppressor_T1", "", 'IRI_ArtilleryCannon_MG', , "", "img:///IRIArtilleryCannon.UI.Suppressor_MG_T1_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_barrel");	
 }
 
 static function AddFreeKillUpgrade_T2(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
@@ -389,7 +316,8 @@ static function AddFreeKillUpgrade_T2(X2ItemTemplateManager ItemTemplateManager,
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Suppressor', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Suppressor', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Suppressor_T2", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.Suppressor_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_barrel");	
+	Template.AddUpgradeAttachment('SuppressorMid', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Suppressor', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Suppressor_T1", "", 'IRI_ArtilleryCannon_MG', , "", "img:///IRIArtilleryCannon.UI.Suppressor_MG_T2_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_barrel");	
+	Template.AddUpgradeAttachment('SuppressorBarrels', '', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Suppressor_T2", "", 'IRI_ArtilleryCannon_MG', , "", "", "");	
 }
 
 static function AddFreeKillUpgrade_T3(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
@@ -398,5 +326,6 @@ static function AddFreeKillUpgrade_T3(X2ItemTemplateManager ItemTemplateManager,
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Suppressor', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Suppressor', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_Suppressor_T3", "", 'IRI_ArtilleryCannon_CV', , "", "img:///AdventPistol_MG.UI.Suppressor_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_barrel");	
+	Template.AddUpgradeAttachment('SuppressorMid', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Suppressor', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Suppressor_T1", "", 'IRI_ArtilleryCannon_MG', , "", "img:///IRIArtilleryCannon.UI.Suppressor_MG_T3_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_barrel");	
+	Template.AddUpgradeAttachment('SuppressorBarrels', '', "IRIArtilleryCannon.Meshes_MG.SM_ArtilleryCannon_MG_Suppressor_T3", "", 'IRI_ArtilleryCannon_MG', , "", "", "");	
 }
