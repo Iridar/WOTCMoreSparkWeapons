@@ -121,11 +121,12 @@ static function X2DataTemplate Create_ArtilleryCannon_BM()
 	Template.GameArchetype = default.GAME_ARCHETYPE;
 	Template.strImage = default.IMAGE;
 
-	Template.AddDefaultAttachment('Handle', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_BM_BoltHandle");
-	Template.AddDefaultAttachment('Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_BM_IrongSights");
-	Template.AddDefaultAttachment('Stock', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_BM_Stock");
-	Template.AddDefaultAttachment('Suppressor', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_BM_Suppressor");
-	Template.AddDefaultAttachment('Trigger', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_BM_Trigger");
+	//Template.AddDefaultAttachment('Handle', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_BM_BoltHandle");
+	Template.AddDefaultAttachment('Optic', "IRIArtilleryCannon.Meshes_BM.SM_ArtilleryCannon_BM_Sight");
+	Template.AddDefaultAttachment('Stock', "IRIArtilleryCannon.Meshes_BM.SM_ArtilleryCannon_BM_Stock");
+	Template.AddDefaultAttachment('Suppressor', "IRIArtilleryCannon.Meshes_BM.SM_ArtilleryCannon_BM_Suppressor");
+	Template.AddDefaultAttachment('Trigger', "IRIArtilleryCannon.Meshes_BM.SM_ArtilleryCannon_BM_Trigger");
+	Template.AddDefaultAttachment('Core', "IRIArtilleryCannon.Meshes_BM.SM_ArtilleryCannon_BM_Core");
 
 	Template.WeaponPrecomputedPathData.InitialPathTime = 1.5;
 	Template.WeaponPrecomputedPathData.MaxPathTime = 2.5;
