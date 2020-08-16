@@ -51,7 +51,7 @@ static function X2DataTemplate Create_ArtilleryCannon_CV()
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_ArtilleryCannon_CV');
 
-	Template.AddAbilityIconOverride('StandardShot', "img:///UILibrary_PerkIcons.UIPerk_snipershot");
+	Template.AddAbilityIconOverride('SniperStandardFire', "img:///IRIArtilleryCannon.UI.UIPerk_FireCannon");
 	
 	Template.WeaponPanelImage = "_ConventionalCannon";
 	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_Cannon';
@@ -204,7 +204,7 @@ static function AddCritUpgrade_T1(X2ItemTemplateManager ItemTemplateManager, Nam
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_LaserSight_T1", "", 'IRI_ArtilleryCannon_CV', , "", "img:///IRIArtilleryCannon.UI.HairTrigger_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");
+	Template.AddUpgradeAttachment('Optic', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_LaserSight_T1", "", 'IRI_ArtilleryCannon_CV', , "", "img:///IRIArtilleryCannon.UI.LaserSight_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_scope");
 	Template.AddUpgradeAttachment('RearSight', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Optic', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_RearSight", "", 'IRI_ArtilleryCannon_CV', , "", "", "");
 }
 static function AddCritUpgrade_T2(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)

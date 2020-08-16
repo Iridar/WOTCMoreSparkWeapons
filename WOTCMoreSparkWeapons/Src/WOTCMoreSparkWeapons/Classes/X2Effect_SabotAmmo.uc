@@ -14,7 +14,7 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 	 SourceWeapon = AbilityState.GetSourceWeapon();
 
 	//  make sure the ammo that created this effect is loaded into the weapon
-	if (SourceWeapon != none && SourceWeapon.LoadedAmmo.ObjectID == EffectState.ApplyEffectParameters.ItemStateObjectRef.ObjectID)
+	if (SourceWeapon != none && SourceWeapon.LoadedAmmo.ObjectID == EffectState.ApplyEffectParameters.ItemStateObjectRef.ObjectID && AbilityState.GetMyTemplate().bAllowAmmoEffects)
 	{
 		Tiles = Attacker.TileDistanceBetween(Target);
 

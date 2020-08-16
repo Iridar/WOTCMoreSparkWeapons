@@ -4,6 +4,16 @@ var config int ARM_CANNON_TECH_DAYS;
 var config array<name> ARM_CANNON_TECH_RESOURCE_TYPE;
 var config array<int> ARM_CANNON_TECH_RESOURCE_QUANTITY;
 
+var config(ArtilleryCannon) int EXPERIMENTAL_SHELLS_TECH_DAYS;
+var config(ArtilleryCannon) array<name> EXPERIMENTAL_SHELLS_TECH_RESOURCE_TYPE;
+var config(ArtilleryCannon) array<int> EXPERIMENTAL_SHELLS_TECH_RESOURCE_QUANTITY;
+
+var config(ArtilleryCannon) int IMPROVED_SHELLS_TECH_DAYS;
+var config(ArtilleryCannon) array<name> IMPROVED_SHELLS_TECH_RESOURCE_TYPE;
+var config(ArtilleryCannon) array<int> IMPROVED_SHELLS_TECH_RESOURCE_QUANTITY;
+
+var config(ArtilleryCannon) StrategyRequirement IMPROVED_SHELLS_TECH_REQUIREMENTS;
+
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Techs;
@@ -60,6 +70,7 @@ static function X2DataTemplate Create_ExperimentalShells_Tech()
 {
 	local X2TechTemplate		Template;
 	local ArtifactCost			Resources;
+	local StrategyRequirement	AltReq;
 	local int i;
 
 	`CREATE_X2TEMPLATE(class'X2TechTemplate', Template, 'IRI_ExperimentalShells_Tech');
@@ -68,23 +79,24 @@ static function X2DataTemplate Create_ExperimentalShells_Tech()
 	Template.strImage = "img:///IRISparkHeavyWeapons.UI.UI_ArmCannon_ProvingGrounds";
 	Template.SortingTier = 3;
 	
-	//Template.ResearchCompletedFn = class'X2StrategyElement_DefaultTechs'.static.GiveItems;
 	Template.ResearchCompletedFn = GiveShells;
 
-	//Template.ItemRewards.AddItem('IRI_Shell_HE');
-	//Template.ItemRewards.AddItem('IRI_Shell_HEAT');
-	//Template.ItemRewards.AddItem('IRI_Shell_Shrapnel');
-
 	//	Requirements
+	Template.Requirements.RequiredTechs.AddItem('MechanizedWarfare');
+
+	AltReq.SpecialRequirementsFn = IsLostTowersNarrativeContentComplete;
+	Template.AlternateRequirements.AddItem(AltReq);
+
+	Template.Requirements.RequiredEngineeringScore = 10;
 	Template.Requirements.bVisibleIfPersonnelGatesNotMet = true;
 
 	// Cost
-	for (i = 0; i < default.ARM_CANNON_TECH_RESOURCE_TYPE.Length; i++)
+	for (i = 0; i < default.EXPERIMENTAL_SHELLS_TECH_RESOURCE_TYPE.Length; i++)
 	{
-		if (default.ARM_CANNON_TECH_RESOURCE_QUANTITY[i] > 0)
+		if (default.EXPERIMENTAL_SHELLS_TECH_RESOURCE_QUANTITY[i] > 0)
 		{
-			Resources.ItemTemplateName = default.ARM_CANNON_TECH_RESOURCE_TYPE[i];
-			Resources.Quantity = default.ARM_CANNON_TECH_RESOURCE_QUANTITY[i];
+			Resources.ItemTemplateName = default.EXPERIMENTAL_SHELLS_TECH_RESOURCE_TYPE[i];
+			Resources.Quantity = default.EXPERIMENTAL_SHELLS_TECH_RESOURCE_QUANTITY[i];
 			Template.Cost.ResourceCosts.AddItem(Resources);
 		}
 	}
@@ -159,16 +171,15 @@ static function X2DataTemplate Create_ImprovedShells_Tech()
 	Template.ResearchCompletedFn = class'X2StrategyElement_DefaultTechs'.static.UpgradeItems;
 
 	//	Requirements
-	Template.Requirements.RequiredTechs.AddItem('IRI_ExperimentalShells_Tech');
-	Template.Requirements.bVisibleIfPersonnelGatesNotMet = true;
+	Template.Requirements = default.IMPROVED_SHELLS_TECH_REQUIREMENTS;
 
 	// Cost
-	for (i = 0; i < default.ARM_CANNON_TECH_RESOURCE_TYPE.Length; i++)
+	for (i = 0; i < default.IMPROVED_SHELLS_TECH_RESOURCE_TYPE.Length; i++)
 	{
-		if (default.ARM_CANNON_TECH_RESOURCE_QUANTITY[i] > 0)
+		if (default.IMPROVED_SHELLS_TECH_RESOURCE_QUANTITY[i] > 0)
 		{
-			Resources.ItemTemplateName = default.ARM_CANNON_TECH_RESOURCE_TYPE[i];
-			Resources.Quantity = default.ARM_CANNON_TECH_RESOURCE_QUANTITY[i];
+			Resources.ItemTemplateName = default.IMPROVED_SHELLS_TECH_RESOURCE_TYPE[i];
+			Resources.Quantity = default.IMPROVED_SHELLS_TECH_RESOURCE_QUANTITY[i];
 			Template.Cost.ResourceCosts.AddItem(Resources);
 		}
 	}

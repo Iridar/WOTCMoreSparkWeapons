@@ -20,75 +20,23 @@ var config(ClassData) array<name> AbilitiesToRemove;
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 /*
-Compatibility with normal ammo for cannons?
-
-Shrapnel shouldn't hit enemies in high cover? Probably cover should reduce its damage
-Deployment Shield?
-
-Upgraded Sabot Shells will receive less of a penalty for shooting through cover
-And I want to make a Targeting Computer weapon upgrade that will allow Sabot Shell shots to engage enemies through walls, provided there is squadsight to them
-Targeting Computer will provide some other bonuses for other shell types; not sure which, though.
-Maybe I'll just make it a mix of Scope and Laser sight.
-Or give it Snapshot.
-Sabot's damage is also gonna degrade with distance, though not by much
-Perhaps I'll give Sabot both high damage and pierce, and have the Pierce get exhausted first when shooting through cover/walls
-
-Crit chance penalty for HEAT shot at long range
-Add hidden line multi targeting with environmental damage for the sabot shot
-
-I'm adding three tiers of new SPARK / MEC primary weapon, Artillery Cannons. By default, they can fire HEAT Shells as direct shots against a single target, dealing high damage to it, and minor damage in a small area around the target.
-HEAT Shells are the standard ammunition, always available to Cannons, so it doesn't need any icons.
-
-Additionally, the player can perform a Proving Grounds project, Experimental Cannon Shells, which will provide them with additional shell types to choose from:
-- HE Shells - area targeted with a ballistic trajectory (similiar to MEC Micro Missiles). Explode to deal high area damage.
-- Sabot Shells - more effective at long range and against armored enemies.
-- Shrapnel Shells - cone-targeted, effective against unarmored targets. 
-
-It also unlocks Targeting Computer weapon upgrade. I'm still formulating what exactly it will do, but one thing I want to add is being able to fire Sabot Shells at enemies through walls. 
-The enemy must be visible to other soldiers (squadsight), and there will be a damage penalty for doing that.
-
-Later the player can perform another Proving Grounds project, Improved Cannon Shells, which will upgrade:
-- HEAT -> HEDP - now deals more area damage.
-- HE -> HESH - targets at the epicenter of the explosion take additional damage.
-- Sabot -> Alloy Sabot - Deals more damage, and shooting through walls with a Targeting Computer will incur less of a damage penalty.
-- Shrapnel - Flechette - deals more damage, pierces a bit of armor.
-
-I'm also Sabot Ammo into Experimental Ammo proving grounds projects pool. It can be carried by regular soldiers; Sabot Ammo reduces/removes squadsight penalties and is effective against armor.
-
-Here's the list of all the icons I need.
-
-Inventory Icons:
--- Sabot Ammo: examples: https://topwar.ru/uploads/posts/2018-01/1516209043_2h1963-goda_small.jpg
--- Sabot Shells: example on the left: https://netrinoimages.s3.eu-west-2.amazonaws.com/2010/02/15/23489/24303/sabot_shell_3d_model_c4d_max_obj_fbx_ma_lwo_3ds_3dm_stl_116370.jpg
--- HE Shells: example on the right: https://netrinoimages.s3.eu-west-2.amazonaws.com/2010/02/15/23489/24303/sabot_shell_3d_model_c4d_max_obj_fbx_ma_lwo_3ds_3dm_stl_116370.jpg
--- Shrapnel Shells: that's not how they look like in the real world, but I'm imagining just a huge shotgun buckshot round)
--- Targeting Computer DOES NOT require an inventory icon, I'll make it myself once I actually make a model for it. Same for cannons themselves.
-
-Proving Grounds Project icons: 
--- Experimental Cannon Shells (on the picture: Sabot Shells, HE Shells, Shrapnel Shell).
--- Improved Cannon Shells
-
-Ability Icons:
--- Fire Cannon (HEAT shot by default. A crosshair with an explosion in the background, perhaps?)
--- Fire HE (large explosion? or a ballistic trajectory with a crosshair?)
--- Fire Shrapnel (a cone explosion with a large sharp pieces of shrapnel? Or a close up on the barrel shooting lots of small pieces of shrapnel?)
--- Fire Sabot (a sabot projectile with some "speed circles" around it, perhaps? or really just anything that gives an impression of something fast (modern sabot are fired at 1700 m/s) and piercing).
+experimental and improved cannon shells icons in Proving Grounds
+set 99 ammo to 1
+check HE/HESH radius
+check logging
+check localization
+playtest a mission
 */
 //	Immedaite goals:
 
-//	Different projectile for the HE shot.
-//	Make Scatter Mod store the original ModifyContextFn and call it
-
-//	Art Cannon: default HEAT ammo with a small arc and a small amount of AOE damage. Equipped as a weapon upgrade when Art Cannon is acquired. Also added into HQ inventory in infinite supply. Can't be replaced by non-ammo Weapon Upgrades. Can't be removed.
-//	Upgraded into HEDP to deal more AOE damage. 
-//	Additional ammo types: 
-//	SABOT - high AP, high damage, single shot, squadsight-capable, damage degrades with distance. Can shoot throuhg cover with no aim penalty, but with damage penalty instead
-//	Upgrade that lets you fire through walls at a damage penalty.
-//	HE - high AOE damage, arched, area-targeted. Upgraded into HESH to deal more damage at the center of the impact.
-//	Shrapnel - cone targeted, aoe damage. 
-//	Upgrade into Flechettes to gain AP.
-
-//	Make Hunter Protocol work with the Autogun if primary cannon is equipped.
+//	Deployment Shield -> Firing or reloading a Heavy Cannon generates a shield that grants High Cover defense bonus.
+//	Targeting Computer -> Snapshot? Shoot through walls? increase HE shot range? 
+//	Visible meshes for shells on the spark
+//	Fire Sniper Rifle - fix localization
+//	Artillery Cannons - support for Demolition? -> is this even necessary? direct cannon shots are already basically demolition.
+//	Passive Icons for carrying special shells
+//	Special shells as weapon upgrades?
+//	Make Hunter Protocol work with the Autogun if primary heavy cannon is equipped.
 
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	## ADVENT grunts -> stratosphere
@@ -109,8 +57,6 @@ Ability Icons:
 //	BIT - AOE holotarget?
 //	BIT - make Active Camo scale with BIT tier?
 
-//	Artillery Cannons
-//	support for Demolition
 //	Rocket Pods as Aux Weapon?
 
 //	Use SPARK Redirect from Sacrifce to make a system that would shoot enemy projectiles out of the air?
@@ -170,6 +116,9 @@ Light Artillery,  Plasma Artillery,   Elerium Artillery
 Artillery Gun,    Siege Driver,       Proton Cannon
 HWZ-1 "Arbalest", HWZ-3 "Onager",     HWZ-9 "Scorpion"
 */
+
+//	REJECTED
+//	shells equippable into ammo slot? -> cannot do that,  would have compatibility issues with regular ammo, wouldn't be able to carry them with special ammo and HotLoadAmmo would try to grab special shells.
 
 /// Start Issue #260
 /// Called from XComGameState_Item:CanWeaponApplyUpgrade.
@@ -396,6 +345,7 @@ static event OnPostTemplatesCreated()
 	class'KSMHelper'.static.AddDeathAnimSetsToCharacterTemplates();
 	class'X2Item_ArtilleryCannon_CV'.static.UpdateMods();
 	class'X2Item_ArtilleryCannon_MG'.static.UpdateMods();
+	class'X2Item_ArtilleryCannon_BM'.static.UpdateMods();
 }
 
 static function PatchSoldierClassTemplates()

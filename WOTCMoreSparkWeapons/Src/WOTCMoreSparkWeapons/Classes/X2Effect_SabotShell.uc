@@ -25,6 +25,24 @@ PierceMagnetic = 4
 PierceBeam = 5
 */
 
+//	This will modify environmental damage dealt by special shell shots.
+//	It is not necessary for the regular firemode.
+function RegisterForEvents(XComGameState_Effect EffectGameState)
+{
+	local X2EventManager		EventMgr;
+	local Object				EffectObj;
+	//local XComGameState_Unit	UnitState;
+
+	EventMgr = `XEVENTMGR;
+	EffectObj = EffectGameState;
+	//UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(EffectGameState.ApplyEffectParameters.TargetStateObjectRef.ObjectID));
+	
+	//	Stting high priority so this listener gets executed first
+	EventMgr.RegisterForEvent(EffectObj, 'ModifyEnvironmentDamage', class'X2Ability_ArtilleryCannon'.static.ModifyEnvironmenDamage_Listener, ELD_Immediate, 75, /*UnitState*/,, /*EffectObj*/);	
+
+	super.RegisterForEvents(EffectGameState);
+}
+
 function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit Attacker, XComGameState_Unit Target, XComGameState_Ability AbilityState, class<X2AbilityToHitCalc> ToHitType, bool bMelee, bool bFlanking, bool bIndirectFire, out array<ShotModifierInfo> ShotModifiers)
 {	
 	local ShotModifierInfo				ModInfo;

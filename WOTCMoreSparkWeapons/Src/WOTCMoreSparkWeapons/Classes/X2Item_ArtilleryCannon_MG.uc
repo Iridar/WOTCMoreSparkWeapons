@@ -51,7 +51,7 @@ static function X2DataTemplate Create_ArtilleryCannon_MG()
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_ArtilleryCannon_MG');
 
-	Template.AddAbilityIconOverride('StandardShot', "img:///UILibrary_PerkIcons.UIPerk_snipershot");
+	Template.AddAbilityIconOverride('SniperStandardFire', "img:///IRIArtilleryCannon.UI.UIPerk_FireCannon");
 	
 	Template.WeaponPanelImage = "_ConventionalCannon";
 	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_Cannon';

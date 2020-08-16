@@ -68,7 +68,7 @@ static function X2DataTemplate Create_Shell_HEAT()
 	
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIRestorativeMist.UI.UI_SabotAmmo";
+	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HEAT";
 	//Template.GameArchetype = default.GAME_ARCHETYPE;
 
 	Template.StartingItem = false;
@@ -76,6 +76,7 @@ static function X2DataTemplate Create_Shell_HEAT()
 	Template.CanBeBuilt = false;
 
 	Template.Abilities.AddItem('IRI_FireArtilleryCannon_HEAT_Passive');
+	Template.Abilities.AddItem('IRI_Shell_HEAT_Passive');
 
 	Template.HideIfResearched = 'IRI_ImprovedShells_Tech';
 
@@ -87,7 +88,7 @@ static function X2DataTemplate Create_Shell_HE()
 	local X2WeaponTemplate Template;
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_Shell_HE');
-	
+
 	Template.WeaponPanelImage = "_ConventionalRifle";
 	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_AssaultRifle';
 	Template.EquipSound = "StrategyUI_Ammo_Equip";
@@ -100,7 +101,7 @@ static function X2DataTemplate Create_Shell_HE()
 	
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIRestorativeMist.UI.UI_SabotAmmo";
+	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HE";
 	//Template.GameArchetype = default.GAME_ARCHETYPE;
 
 	Template.StartingItem = false;
@@ -108,6 +109,9 @@ static function X2DataTemplate Create_Shell_HE()
 	Template.CanBeBuilt = false;
 
 	Template.HideIfResearched = 'IRI_ImprovedShells_Tech';
+
+	Template.Abilities.AddItem('IRI_FireArtilleryCannon_HE_Passive');
+	Template.Abilities.AddItem('IRI_Shell_HE_Passive');
 
 	return Template;
 }
@@ -130,7 +134,7 @@ static function X2DataTemplate Create_Shell_Shrapnel()
 	
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIRestorativeMist.UI.UI_SabotAmmo";
+	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_Shrapnel";
 	//Template.GameArchetype = default.GAME_ARCHETYPE;
 
 	Template.StartingItem = false;
@@ -140,6 +144,7 @@ static function X2DataTemplate Create_Shell_Shrapnel()
 	Template.HideIfResearched = 'IRI_ImprovedShells_Tech';
 
 	Template.Abilities.AddItem('IRI_FireArtilleryCannon_Shrapnel_Passive');
+	Template.Abilities.AddItem('IRI_Shell_Shrapnel_Passive');
 
 	return Template;
 }
@@ -159,10 +164,10 @@ static function X2DataTemplate Create_Shell_HEDP()
 	Template.InventorySlot = class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot;
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.NumUpgradeSlots = 0;
-	
+
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIRestorativeMist.UI.UI_SabotAmmo";
+	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HEDP";
 	//Template.GameArchetype = default.GAME_ARCHETYPE;
 
 	Template.StartingItem = false;
@@ -173,6 +178,7 @@ static function X2DataTemplate Create_Shell_HEDP()
 	Template.CreatorTemplateName = 'IRI_ImprovedShells_Tech';
 
 	Template.Abilities.AddItem('IRI_FireArtilleryCannon_HEAT_Passive');
+	Template.Abilities.AddItem('IRI_Shell_HEDP_Passive');
 
 	return Template;
 }
@@ -192,10 +198,10 @@ static function X2DataTemplate Create_Shell_HESH()
 	Template.InventorySlot = class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot;
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.NumUpgradeSlots = 0;
-	
+
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIRestorativeMist.UI.UI_SabotAmmo";
+	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HESH";
 	//Template.GameArchetype = default.GAME_ARCHETYPE;
 
 	Template.StartingItem = false;
@@ -205,7 +211,8 @@ static function X2DataTemplate Create_Shell_HESH()
 	Template.BaseItem = 'IRI_Shell_HE';
 	Template.CreatorTemplateName = 'IRI_ImprovedShells_Tech';
 
-	//Template.Abilities.AddItem('IRI_LoadSpecialShell_HE');
+	Template.Abilities.AddItem('IRI_FireArtilleryCannon_HE_Passive');
+	Template.Abilities.AddItem('IRI_Shell_HESH_Passive');
 
 	return Template;
 }
@@ -227,8 +234,8 @@ static function X2DataTemplate Create_Shell_Flechette()
 	Template.NumUpgradeSlots = 0;
 	
 	Template.Tier = 1;
-	
-	Template.strImage = "img:///IRIRestorativeMist.UI.UI_SabotAmmo";
+
+	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_Flechette";
 	//Template.GameArchetype = default.GAME_ARCHETYPE;
 
 	Template.StartingItem = false;
@@ -239,11 +246,13 @@ static function X2DataTemplate Create_Shell_Flechette()
 	Template.CreatorTemplateName = 'IRI_ImprovedShells_Tech';
 
 	Template.Abilities.AddItem('IRI_FireArtilleryCannon_Shrapnel_Passive');
+	Template.Abilities.AddItem('IRI_Shell_Flechette_Passive');
 
 	return Template;
 }
 
-
+//	=====================
+//	Unused for now
 static function SetUpWeaponUpgrade(out X2WeaponUpgradeTemplate Template)
 {
 	Template.CanApplyUpgradeToWeaponFn = CanApplyUpgradeToWeapon;

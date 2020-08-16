@@ -3,6 +3,8 @@ class X2Effect_ShrapnelShell extends X2Effect_Persistent config(ArtilleryCannon)
 var config float HighCoverDamageModifier;
 var config float LowCoverDamageModifier;
 
+var config int FlechetteArmorPierceVersusOrganic;
+
 function int GetAttackingDamageModifier(XComGameState_Effect EffectState, XComGameState_Unit Attacker, Damageable TargetDamageable, XComGameState_Ability AbilityState, const out EffectAppliedData AppliedData, const int CurrentDamage, optional XComGameState NewGameState) 
 { 
 	local GameRulesCache_VisibilityInfo VisInfo;
@@ -35,7 +37,21 @@ function int GetAttackingDamageModifier(XComGameState_Effect EffectState, XComGa
 	return 0; 
 }
 
+function int GetExtraArmorPiercing(XComGameState_Effect EffectState, XComGameState_Unit Attacker, Damageable TargetDamageable, XComGameState_Ability AbilityState, const out EffectAppliedData AppliedData)
+{ 
+	local XComGameState_Unit TargetUnit;
 
+	if (AbilityState.GetMyTemplateName() != 'IRI_FireArtilleryCannon_Flechette')
+		return 0;
+
+	TargetUnit = XComGameState_Unit(TargetDamageable);
+
+	if (TargetUnit != none && !TargetUnit.IsRobotic())
+	{	
+		return default.FlechetteArmorPierceVersusOrganic;
+	}
+	return 0; 
+}
 
 
 defaultproperties

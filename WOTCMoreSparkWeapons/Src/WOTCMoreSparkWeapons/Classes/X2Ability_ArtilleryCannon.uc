@@ -1,8 +1,26 @@
-class X2Ability_ArtilleryCannon extends X2Ability;
+class X2Ability_ArtilleryCannon extends X2Ability config (ArtilleryCannon);
+
+`define SWITCHACTIONS(NEWACTION, OLDACTION) VisualizationMgr.ConnectAction(`NEWACTION, VisualizationMgr.BuildVisTree, true, `OLDACTION); VisualizationMgr.DisconnectAction(`NEWACTION); VisualizationMgr.ConnectAction(`NEWACTION, VisualizationMgr.BuildVisTree,,, `OLDACTION.ParentActions); VisualizationMgr.DisconnectAction(`OLDACTION)
+
+var config float HEAT_Area_Radius_Meters;
+var config float HEDP_Area_Radius_Meters;
+
+var config float HE_Area_Radius_Meters;
+var config int HE_Range_Tiles;
+
+var config float HESH_Area_Radius_Meters;
+var config int HESH_Range_Tiles;
+
+var config int Shrapnel_Cone_Length_Tiles;
+var config int Shrapnel_Cone_Width_Tiles;
+
+var config int Flechette_Cone_Length_Tiles;
+var config int Flechette_Cone_Width_Tiles;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
+	local X2AbilityTemplate		Template;
 
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT());
 	Templates.AddItem(Create_FireArtilleryCannon_HE());
@@ -15,6 +33,32 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_FireArtilleryCannon_HEAT_Passive());
 	Templates.AddItem(Create_FireArtilleryCannon_AP_Passive());
 	Templates.AddItem(Create_FireArtilleryCannon_Shrapnel_Passive());
+
+	//	Set of dummy abilities used for icon in tactical to remind the player about shells equipped.
+	//	Oh the fire and brimstone that will rain on anyone creating an ablity template outside a separate function!..
+	Template = PurePassive('IRI_Shell_HEAT_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireHEAT", false, 'eAbilitySource_Item', true);
+	SetHidden(Template);
+	Templates.AddItem(Template);
+
+	Template = PurePassive('IRI_Shell_HEDP_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireHEAT", false, 'eAbilitySource_Item', true);
+	SetHidden(Template);
+	Templates.AddItem(Template);
+
+	Template = PurePassive('IRI_Shell_HE_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireHE", false, 'eAbilitySource_Item', true);
+	SetHidden(Template);
+	Templates.AddItem(Template);
+
+	Template = PurePassive('IRI_Shell_HESH_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireHE", false, 'eAbilitySource_Item', true);
+	SetHidden(Template);
+	Templates.AddItem(Template);
+
+	Template = PurePassive('IRI_Shell_Shrapnel_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireShrapnel", false, 'eAbilitySource_Item', true);
+	SetHidden(Template);
+	Templates.AddItem(Template);
+
+	Template = PurePassive('IRI_Shell_Flechette_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireShrapnel", false, 'eAbilitySource_Item', true);
+	SetHidden(Template);
+	Templates.AddItem(Template);
 
 	return Templates;
 }
@@ -108,10 +152,13 @@ static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllow
 	AmmoCost.iAmmo = 1;
 	Template.AbilityCosts.AddItem(AmmoCost);
 	
-	//	Special cannon shots do not benefit from ammo bonuses
-	Template.bAllowAmmoEffects = false;
+	//	Special cannon shots still benefit from ammo bonuses
+	//	Requires Mr.Nice's Weapon Fixes mod and config for it.
+	Template.bAllowAmmoEffects = true;
 
-	Template.bAllowBonusWeaponEffects = true;
+	//	Do not apply bonus weapon effects; the bonus effect for artillery cannons is destroying target's cover, it's only valid for the default firemode,
+	//	and with Weapon Fixes mod could lead to stupid interactions, like shrapnel shells destroying targets' cover.
+	Template.bAllowBonusWeaponEffects = false;
 	Template.bAllowFreeFireWeaponUpgrade = true; // Hair Trigger
 
 	// Target Conditions
@@ -148,13 +195,13 @@ static function X2AbilityTemplate SetUpCannonShot(name TemplateName, bool bAllow
 	// Game State and Viz
 	Template.bUsesFiringCamera = true;
 	Template.CinescriptCameraType = "StandardGunFiring";	
-	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;	
+	Template.BuildNewGameStateFn = MrNice_WeaponFixes_BuildNewGameState;
+	Template.BuildVisualizationFn = MrNice_WeaponFixes_BuildVisualization;	
 	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
 
-	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
+	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealShotMax;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
-	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
+	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.HeavyWeaponLostSpawnIncreasePerUse;
 
 	Template.AlternateFriendlyNameFn = class'X2Ability_WeaponCommon'.static.StandardShot_AlternateFriendlyName;
 	Template.bFrameEvenWhenUnitIsHidden = true;
@@ -178,8 +225,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_AP_Passive()
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_FireArtilleryCannon_AP_Passive');
 
 	SetPassive(Template);
-	SetHidden(Template);
-	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireCannon";
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 
 	SabotAmmo = new class'X2Effect_SabotShell';
@@ -188,6 +235,66 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_AP_Passive()
 	Template.AddTargetEffect(SabotAmmo);
 
 	return Template;
+}
+
+/*
+// Issue #200 Start, allow listeners to modify environment damage
+ModifyEnvironmentDamageTuple = new class'XComLWTuple';
+ModifyEnvironmentDamageTuple.Id = 'ModifyEnvironmentDamage';
+ModifyEnvironmentDamageTuple.Data.Add(3);
+ModifyEnvironmentDamageTuple.Data[0].kind = XComLWTVBool;
+ModifyEnvironmentDamageTuple.Data[0].b = false;  // override? (true) or add? (false)
+ModifyEnvironmentDamageTuple.Data[1].kind = XComLWTVInt;
+ModifyEnvironmentDamageTuple.Data[1].i = 0;  // override/bonus environment damage
+ModifyEnvironmentDamageTuple.Data[2].kind = XComLWTVObject;
+ModifyEnvironmentDamageTuple.Data[2].o = AbilityStateObject;  // ability being used
+
+`XEVENTMGR.TriggerEvent('ModifyEnvironmentDamage', ModifyEnvironmentDamageTuple, self, NewGameState);
+*/
+
+static function EventListenerReturn ModifyEnvironmenDamage_Listener(Object EventData, Object EventSource, XComGameState GameState, name InEventID, Object CallbackData)
+{
+	local XComLWTuple				ModifyEnvironmentDamageTuple;
+	local XComGameState_Ability		AbilityState;
+	local XComGameState_Item		SourceWeapon;
+	local X2WeaponTemplate			WeaponTemplate;
+
+	ModifyEnvironmentDamageTuple = XComLWTuple(EventData);
+	if (ModifyEnvironmentDamageTuple == none)
+		return ELR_NoInterrupt;
+
+	AbilityState = XComGameState_Ability(ModifyEnvironmentDamageTuple.Data[2].o);
+	if (AbilityState == none)
+		return ELR_NoInterrupt;
+
+	switch (AbilityState.GetMyTemplateName())
+	{
+		case 'IRI_FireArtilleryCannon_HEAT':
+		case 'IRI_FireArtilleryCannon_HE':
+		//case 'IRI_FireArtilleryCannon_Shrapnel':
+		case 'IRI_FireArtilleryCannon_HEDP':
+		case 'IRI_FireArtilleryCannon_HESH':
+		//case 'IRI_FireArtilleryCannon_Flechette':
+			break;
+		default:
+			return ELR_NoInterrupt;
+	}
+
+	SourceWeapon = AbilityState.GetSourceWeapon();
+	if (SourceWeapon == none)
+		return ELR_NoInterrupt;
+
+	WeaponTemplate = X2WeaponTemplate(SourceWeapon.GetMyTemplate());
+
+	if (WeaponTemplate == none)
+		return ELR_NoInterrupt;
+
+	//	by default, the abilities from the list above deal 0 environmental damage, because their apply weapon damage effect is set to ignore base damage.
+	//	So we simply add weapon's normal environmental damage.
+	//`LOG("Adding base environment damage to ability:" @ AbilityState.GetMyTemplateName() @ WeaponTemplate.iEnvironmentDamage,, 'IRITEST');
+	ModifyEnvironmentDamageTuple.Data[1].i += WeaponTemplate.iEnvironmentDamage;
+	
+    return ELR_NoInterrupt;
 }
 
 //	=============================================================
@@ -204,7 +311,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HEAT', true, 'HEATDamage', true, 'IRI_Shell_HEAT');
 
 	//	Icon Setup
-	Template.IconImage = "img:///IRISparkHeavyWeapons.UI.Inv_HeavyAutgoun";
+	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireHEAT";
 
 	//	Multi Target Effects
 	AreaDamage = new class'X2Effect_Shredder';
@@ -212,7 +319,6 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	AreaDamage.bIgnoreBaseDamage = true;
 	AreaDamage.bApplyOnHit = true;
 	AreaDamage.bApplyOnMiss = true;
-	AreaDamage.EnvironmentalDamageAmount = 15;
 	Template.AddMultiTargetEffect(AreaDamage);
 
 	KnockbackEffect = new class'X2Effect_Knockback';
@@ -223,7 +329,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
 
 	MultiTargetRadius = new class'X2AbilityMultiTarget_Radius';
-	MultiTargetRadius.fTargetRadius = 2.5f;
+	MultiTargetRadius.fTargetRadius = default.HEAT_Area_Radius_Meters;
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
 	SetFireAnim(Template, 'FF_FireHEAT_Shell');
@@ -278,7 +384,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEDP()
 	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HEDP', true, 'HEDPDamage', true, 'IRI_Shell_HEDP');
 
 	//	Icon Setup
-	Template.IconImage = "img:///IRISparkHeavyWeapons.UI.Inv_HeavyAutgoun";
+	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireHEAT";
 
 	//	Multi Target Effects
 	AreaDamage = new class'X2Effect_Shredder';
@@ -286,7 +392,6 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEDP()
 	AreaDamage.bIgnoreBaseDamage = true;
 	AreaDamage.bApplyOnHit = true;
 	AreaDamage.bApplyOnMiss = true;
-	AreaDamage.EnvironmentalDamageAmount = 15;
 	Template.AddMultiTargetEffect(AreaDamage);
 
 	KnockbackEffect = new class'X2Effect_Knockback';
@@ -297,7 +402,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEDP()
 	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
 
 	MultiTargetRadius = new class'X2AbilityMultiTarget_Radius';
-	MultiTargetRadius.fTargetRadius = 2.5f;
+	MultiTargetRadius.fTargetRadius = default.HEDP_Area_Radius_Meters;
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
 	SetFireAnim(Template, 'FF_FireHEAT_Shell');
@@ -316,12 +421,12 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT_Passive()
 
 	SetPassive(Template);
 	SetHidden(Template);
-	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
+	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireHEAT";
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 
 	HeatShell = new class'X2Effect_HeatShell';
 	HeatShell.BuildPersistentEffect(1, true);
-	HeatShell.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, true,, Template.AbilitySourceName);
+	HeatShell.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, false,, Template.AbilitySourceName);
 	Template.AddTargetEffect(HeatShell);
 
 	return Template;
@@ -346,11 +451,11 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 
 	CursorTarget = new class'X2AbilityTarget_Cursor';
 	//CursorTarget.bRestrictToWeaponRange = true;
-	CursorTarget.FixedAbilityRange = `UNITSTOMETERS(`TILESTOUNITS(14));	// Feed range in tiles to this
+	CursorTarget.FixedAbilityRange = `UNITSTOMETERS(`TILESTOUNITS(default.HE_Range_Tiles));	// Feed range in tiles to this
 	Template.AbilityTargetStyle = CursorTarget;
 
 	//	Icon Setup
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_fanfire";
+	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireHE";
 
 	//	Multi Target Effects
 	AreaDamage = new class'X2Effect_Shredder';
@@ -366,7 +471,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 	Template.TargetingMethod = class'X2TargetingMethod_Grenade';
 
 	MultiTargetRadius = new class'X2AbilityMultiTarget_Radius';
-	MultiTargetRadius.fTargetRadius = 2.5f;
+	MultiTargetRadius.fTargetRadius = default.HE_Area_Radius_Meters;
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
 	SetFireAnim(Template, 'FF_FireHE_Shell');
@@ -389,11 +494,11 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HESH()
 
 	CursorTarget = new class'X2AbilityTarget_Cursor';
 	//CursorTarget.bRestrictToWeaponRange = true;
-	CursorTarget.FixedAbilityRange = `UNITSTOMETERS(`TILESTOUNITS(18));	// Feed range in tiles to this
+	CursorTarget.FixedAbilityRange = `UNITSTOMETERS(`TILESTOUNITS(default.HESH_Range_Tiles));	// Feed range in tiles to this
 	Template.AbilityTargetStyle = CursorTarget;
 
 	//	Icon Setup
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_fanfire";
+	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireHE";
 
 	//	Multi Target Effects
 	AreaDamage = new class'X2Effect_Shredder';
@@ -409,7 +514,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HESH()
 	Template.TargetingMethod = class'X2TargetingMethod_Grenade';
 
 	MultiTargetRadius = new class'X2AbilityMultiTarget_Radius';
-	MultiTargetRadius.fTargetRadius = 2.5f;
+	MultiTargetRadius.fTargetRadius = default.HESH_Area_Radius_Meters;
 	Template.AbilityMultiTargetStyle = MultiTargetRadius;
 
 	Template.ModifyNewContextFn = HESH_Shot_ModifyActivatedAbilityContext;
@@ -456,7 +561,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
 	//	Allow disoriented, skip primary target damage, reqires Shrapnel Shells
 	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Shrapnel', true, 'NoPrimary',, 'IRI_Shell_Shrapnel');
 	
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_shreddergun";
+	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireShrapnel";
 	
 	StandardAim = new class'X2AbilityToHitCalc_StandardAim';
 	StandardAim.bGuaranteedHit = true;
@@ -468,8 +573,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
 
 	ConeMultiTarget = new class'X2AbilityMultiTarget_Cone';
 	ConeMultiTarget.bUseWeaponRadius = true;
-	ConeMultiTarget.ConeEndDiameter = 5 * class'XComWorldData'.const.WORLD_StepSize;
-	ConeMultiTarget.ConeLength = 15 * class'XComWorldData'.const.WORLD_StepSize;
+	ConeMultiTarget.ConeEndDiameter = default.Shrapnel_Cone_Width_Tiles * class'XComWorldData'.const.WORLD_StepSize;
+	ConeMultiTarget.ConeLength = default.Shrapnel_Cone_Length_Tiles * class'XComWorldData'.const.WORLD_StepSize;
 	Template.AbilityMultiTargetStyle = ConeMultiTarget;
 
 	Template.TargetingMethod = class'X2TargetingMethod_Cone';
@@ -499,12 +604,12 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel_Passive()
 
 	SetPassive(Template);
 	SetHidden(Template);
-	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
+	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireShrapnel";
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 
 	HeatShell = new class'X2Effect_ShrapnelShell';
 	HeatShell.BuildPersistentEffect(1, true);
-	HeatShell.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, true,, Template.AbilitySourceName);
+	HeatShell.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, false,, Template.AbilitySourceName);
 	Template.AddTargetEffect(HeatShell);
 
 	return Template;
@@ -567,7 +672,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Flechette()
 	//	Allow disoriented, skip primary target damage, reqires Shrapnel Shells
 	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Flechette', true, 'NoPrimary',, 'IRI_Shell_Flechette');
 	
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_shreddergun";
+	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireShrapnel";
 	
 	Template.AbilityToHitCalc = default.DeadEye;
 	
@@ -578,8 +683,8 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Flechette()
 	ConeMultiTarget = new class'X2AbilityMultiTarget_Cone';
 	ConeMultiTarget.bIgnoreBlockingCover = false;
 	ConeMultiTarget.bUseWeaponRadius = true;
-	ConeMultiTarget.ConeEndDiameter = 5 * class'XComWorldData'.const.WORLD_StepSize;
-	ConeMultiTarget.ConeLength = 15 * class'XComWorldData'.const.WORLD_StepSize;
+	ConeMultiTarget.ConeEndDiameter = default.Flechette_Cone_Width_Tiles * class'XComWorldData'.const.WORLD_StepSize;
+	ConeMultiTarget.ConeLength = default.Flechette_Cone_Length_Tiles * class'XComWorldData'.const.WORLD_StepSize;
 	Template.AbilityMultiTargetStyle = ConeMultiTarget;
 
 	Template.TargetingMethod = class'X2TargetingMethod_Cone';
@@ -710,4 +815,402 @@ static function SetFireAnim(out X2AbilityTemplate Template, name Anim)
 	Template.CustomMovingTurnLeftFireKillAnim = Anim;
 	Template.CustomMovingTurnRightFireAnim = Anim;
 	Template.CustomMovingTurnRightFireKillAnim = Anim;
+}
+
+//	================================
+//	Copied from [WotC] Weapon Fixes https://steamcommunity.com/sharedfiles/filedetails/?id=1737532501 by Mr.Nice
+//	Could not obtain permission since he's no longer active, but he made code for my mods before, I don't think he would mind.
+
+function XComGameState MrNice_WeaponFixes_BuildNewGameState(XComGameStateContext Context)
+{
+	local XComGameState NewGameState;
+	local XComGameStateHistory History;
+	local XComGameState_Ability ShootAbilityState;
+	local X2AbilityTemplate AbilityTemplate;
+	local XComGameStateContext_Ability AbilityContext;
+	local int TargetIndex;	
+
+	local XComGameState_BaseObject AffectedTargetObject_OriginalState;	
+	local XComGameState_BaseObject AffectedTargetObject_NewState;
+	local XComGameState_BaseObject SourceObject_OriginalState;
+	local XComGameState_Item       SourceWeapon, SourceWeapon_NewState;
+	local X2AmmoTemplate           AmmoTemplate;
+	local X2WeaponTemplate         WeaponTemplate;
+	local EffectResults            MultiTargetEffectResults;
+	local bool ApplyAmmo, ApplyWeapon;
+
+	NewGameState = TypicalAbility_BuildGameState(Context);
+	//Build the new game state frame, and unit state object for the acting unit
+	AbilityContext = XComGameStateContext_Ability(NewGameState.GetContext());
+	if (AbilityContext.InputContext.MultiTargets.Length == 0) return NewGameState;
+
+	History = `XCOMHISTORY;	
+	ShootAbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityContext.InputContext.AbilityRef.ObjectID));	
+	AbilityTemplate = ShootAbilityState.GetMyTemplate();
+	//`log("Weapon fixes started to build gamestate for " $ AbilityTemplate.LocFriendlyName $ "(" $ string(AbilityTemplate.DataName) $ ")");
+	//`log(`showvar(BaseGameStateFn));
+	SourceWeapon = ShootAbilityState.GetSourceWeapon();
+	
+	if (SourceWeapon != none)
+	{
+		SourceWeapon_NewState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', SourceWeapon.ObjectID));
+	}
+	if (SourceWeapon_NewState == none)
+		return NewGameState;
+
+	ShootAbilityState = XComGameState_Ability(NewGameState.ModifyStateObject(ShootAbilityState.Class, ShootAbilityState.ObjectID));
+
+	if (AbilityTemplate.bAllowAmmoEffects && SourceWeapon_NewState.HasLoadedAmmo())
+	{
+		AmmoTemplate = X2AmmoTemplate(SourceWeapon_NewState.GetLoadedAmmoTemplate(ShootAbilityState));
+		ApplyAmmo = AmmoTemplate != none && AmmoTemplate.TargetEffects.Length != 0;
+	}
+
+	if (AbilityTemplate.bAllowBonusWeaponEffects)
+	{
+		WeaponTemplate = X2WeaponTemplate(SourceWeapon_NewState.GetMyTemplate());
+		ApplyWeapon = WeaponTemplate != none && WeaponTemplate.BonusWeaponEffects.Length != 0;
+	}
+
+	if (ApplyAmmo || ApplyWeapon)
+	{
+		SourceObject_OriginalState = History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID);	
+
+		for( TargetIndex = 0; TargetIndex < AbilityContext.InputContext.MultiTargets.Length; ++TargetIndex )
+		{
+			AffectedTargetObject_OriginalState = History.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[TargetIndex].ObjectID, eReturnType_Reference);
+			AffectedTargetObject_NewState = NewGameState.ModifyStateObject(AffectedTargetObject_OriginalState.Class, AbilityContext.InputContext.MultiTargets[TargetIndex].ObjectID);
+
+			MultiTargetEffectResults = AbilityContext.ResultContext.MultiTargetEffectResults[TargetIndex];        //  clear struct for use - cannot pass dynamic array element as out parameter
+			if (ApplyAmmo)
+			{
+				class'X2Ability'.static.ApplyEffectsToTarget(
+					AbilityContext, 
+					AffectedTargetObject_OriginalState, 
+					SourceObject_OriginalState, 
+					ShootAbilityState, 
+					AffectedTargetObject_NewState, 
+					NewGameState, 
+					AbilityContext.ResultContext.MultiTargetHitResults[TargetIndex],
+					AbilityContext.ResultContext.MultiTargetArmorMitigation[TargetIndex],
+					AbilityContext.ResultContext.MultiTargetStatContestResult[TargetIndex],
+					AmmoTemplate.TargetEffects, 
+					MultiTargetEffectResults, 
+					AmmoTemplate.DataName,  //Use the ammo template for TELT_AmmoTargetEffects
+					TELT_AmmoTargetEffects);
+			}
+			if (ApplyWeapon)
+			{
+				class'X2Ability'.static.ApplyEffectsToTarget(
+					AbilityContext, 
+					AffectedTargetObject_OriginalState, 
+					SourceObject_OriginalState, 
+					ShootAbilityState, 
+					AffectedTargetObject_NewState, 
+					NewGameState, 
+					AbilityContext.ResultContext.MultiTargetHitResults[TargetIndex],
+					AbilityContext.ResultContext.MultiTargetArmorMitigation[TargetIndex],
+					AbilityContext.ResultContext.MultiTargetStatContestResult[TargetIndex],
+					WeaponTemplate.BonusWeaponEffects, 
+					MultiTargetEffectResults, 
+					WeaponTemplate.DataName,  //Use the ammo template for TELT_AmmoTargetEffects
+					TELT_WeaponEffects);
+			}
+			AbilityContext.ResultContext.MultiTargetEffectResults[TargetIndex] = MultiTargetEffectResults;  //  copy results into dynamic array
+		}
+	}
+
+	return NewGameState;
+}
+
+function MrNice_WeaponFixes_BuildVisualization(XComGameState VisualizeGameState)
+{
+	//general
+	local XComGameStateHistory	History;
+	local XComGameStateVisualizationMgr VisualizationMgr;
+
+	//actions
+	local X2Action JoinAction;
+	local array<X2Action> Actions, DummyActions;
+
+	//state objects
+	local XComGameState_BaseObject			TargetStateObject;
+	local XComGameState_Item				SourceWeapon;
+	local StateObjectReference				ShootingUnitRef;
+
+	//contexts
+	local XComGameStateContext_Ability	Context;
+	local AbilityInputContext			AbilityContext;
+	
+	//templates
+	local X2AbilityTemplate	AbilityTemplate;
+	local X2AmmoTemplate	AmmoTemplate;
+	local X2WeaponTemplate	WeaponTemplate;
+
+	//Tree metadata
+	local VisualizationActionMetadata   InitData;
+	local VisualizationActionMetadata   BuildData;
+	local VisualizationActionMetadata   SourceData;
+
+	local name         ApplyResult;
+
+	//indices
+	local int	idx, TargetIndex, FireIndex;
+
+	//Flags
+	local bool bMultiSourceIsAlsoTarget, ApplyAmmo, ApplyWeapon, MultiFireAction;
+
+	TypicalAbility_BuildVisualization(VisualizeGameState);
+
+	History = `XCOMHISTORY;
+	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+	AbilityContext = Context.InputContext;
+
+	SourceWeapon = XComGameState_Item(History.GetGameStateForObjectID(AbilityContext.ItemObject.ObjectID));
+	if (SourceWeapon == None) return;
+
+	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager().FindAbilityTemplate(AbilityContext.AbilityTemplateName);
+
+	//`log("Weapon fixes started to build visualization for " $ AbilityTemplate.LocFriendlyName $ "(" $ string(AbilityTemplate.DataName) $ ")");
+	//`log(`showvar(BaseVisualizationFn));
+
+	if (AbilityTemplate.bAllowAmmoEffects && SourceWeapon.HasLoadedAmmo())
+	{
+		AmmoTemplate = X2AmmoTemplate(SourceWeapon.GetLoadedAmmoTemplate(XComGameState_Ability(History.GetGameStateForObjectID(AbilityContext.AbilityRef.ObjectID))));
+		ApplyAmmo = AmmoTemplate != none && AmmoTemplate.TargetEffects.Length != 0;
+	}
+
+	if (AbilityTemplate.bAllowBonusWeaponEffects)
+	{
+		WeaponTemplate = X2WeaponTemplate(SourceWeapon.GetMyTemplate());
+		ApplyWeapon = WeaponTemplate != none && WeaponTemplate.BonusWeaponEffects.Length != 0;
+	}
+
+	if (ApplyAmmo || ApplyWeapon)
+	{
+		VisualizationMgr = `XCOMVISUALIZATIONMGR;
+		VisualizationMgr.GetNodesOfType(VisualizationMgr.BuildVisTree, class'X2Action_MarkerNamed', Actions);
+		for(idx=0; idx<Actions.Length; idx++)
+			if (X2Action_MarkerNamed(Actions[idx]).MarkerName=='Join')
+		{
+			JoinAction = Actions[idx];
+			break;
+		}
+		SourceData.StateObject_OldState = History.GetGameStateForObjectID(ShootingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
+		SourceData.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(ShootingUnitRef.ObjectID);
+		if (SourceData.StateObject_NewState == none)
+			SourceData.StateObject_NewState = SourceData.StateObject_OldState;
+		SourceData.VisualizeActor = History.GetVisualizer(Context.InputContext.SourceObject.ObjectID);;	
+		VisualizationMgr.GetNodesOfType(VisualizationMgr.BuildVisTree, class'X2Action_Fire', Actions, SourceData.VisualizeActor);
+		if (Actions.Length!=0)
+		{
+			SourceData.LastActionAdded = Actions[0];
+			for (idx=0; idx<SourceData.LastActionAdded.ChildActions.Length; idx++)
+			{	
+				if (X2Action_EnterCover(SourceData.LastActionAdded.ChildActions[idx]) == none
+					&& SourceData.VisualizeActor == SourceData.LastActionAdded.ChildActions[idx].MetaData.VisualizeActor)
+				{
+					SourceData.LastActionAdded = SourceData.LastActionAdded.ChildActions[idx];
+					idx=-1;
+				}
+			}
+			if(Actions.Length!=1)
+			{
+				for (idx=0; idx<Actions.Length; idx++)
+				{	
+					DummyActions.AddItem(class'X2Action'.static.CreateVisualizationActionClass(class'X2Action_MarkerNamed', Context));
+					`SWITCHACTIONS(DummyActions[idx], Actions[idx]);
+				}
+				MultiFireAction = true;				
+			}
+
+		}
+		/*
+		if(HandlePrimary)
+		{
+			if( AbilityContext.PrimaryTarget.ObjectID == AbilityContext.SourceObject.ObjectID )
+			{
+				bMultiSourceIsAlsoTarget = true;
+				BuildData=SourceData;
+				if(MultiFireAction)
+				{
+					FireIndex=0;
+					`SWITCHACTIONS(Actions[0], DummyActions[0]);
+				}
+			}
+			else
+			{
+				BuildData = InitData;
+				BuildData.VisualizeActor = History.GetVisualizer(AbilityContext.PrimaryTarget.ObjectID);
+
+				TargetStateObject = VisualizeGameState.GetGameStateForObjectID(AbilityContext.PrimaryTarget.ObjectID);
+				if( TargetStateObject != none )
+				{
+					History.GetCurrentAndPreviousGameStatesForObjectID(AbilityContext.PrimaryTarget.ObjectID, 
+																		BuildData.StateObject_OldState, BuildData.StateObject_NewState,
+																		eReturnType_Reference,
+																		VisualizeGameState.HistoryIndex);
+				}			
+				else
+				{
+					//If TargetStateObject is none, it means that the visualize game state does not contain an entry for the primary target. Use the history version
+					//and show no change.
+					BuildData.StateObject_OldState = History.GetGameStateForObjectID(AbilityContext.PrimaryTarget.ObjectID);
+					BuildData.StateObject_NewState = BuildData.StateObject_OldState;
+				}
+
+				if(Actions.Length!=0)
+				{
+					if(MultiFireAction)
+					{
+						for (FireIndex=0; FireIndex<Actions.Length; FireIndex++)
+						{	
+							if ( AbilityContext.PrimaryTarget.ObjectID == X2Action_Fire(Actions[FireIndex]).PrimaryTargetID
+								|| X2Action_Fire(Actions[FireIndex]).PrimaryTargetID == 0)
+								break;
+						}
+						if(FireIndex == Actions.Length) FireIndex = 0;
+						BuildData.LastActionAdded = Actions[FireIndex];
+						`SWITCHACTIONS(Actions[FireIndex], DummyActions[FireIndex]);
+					}
+					else  BuildData.LastActionAdded = Actions[0];
+					for (idx=0; idx<BuildData.LastActionAdded.ChildActions.Length; idx++)
+					{	
+						if ( BuildData.VisualizeActor == BuildData.LastActionAdded.ChildActions[idx].MetaData.VisualizeActor)
+						{
+							BuildData.LastActionAdded = BuildData.LastActionAdded.ChildActions[idx];
+							idx=-1;
+						}
+					}
+				}
+			}
+		
+			if (ApplyAmmo) for (idx = 0; idx < AmmoTemplate.TargetEffects.Length; ++idx)
+			{
+				ApplyResult = Context.FindTargetEffectApplyResult(AmmoTemplate.TargetEffects[idx]);
+
+				// Target effect visualization
+				AmmoTemplate.TargetEffects[idx].AddX2ActionsForVisualization(VisualizeGameState, BuildData, ApplyResult);
+				AmmoTemplate.TargetEffects[idx].AddX2ActionsForVisualizationSource(VisualizeGameState, SourceData, ApplyResult);
+			}
+				
+			if (ApplyWeapon) for (idx = 0; idx < WeaponTemplate.BonusWeaponEffects.Length; ++idx)
+			{
+				ApplyResult = Context.FindTargetEffectApplyResult(WeaponTemplate.BonusWeaponEffects[idx]);
+
+				// Target effect visualization
+				WeaponTemplate.BonusWeaponEffects[idx].AddX2ActionsForVisualization(VisualizeGameState, BuildData, ApplyResult);
+				WeaponTemplate.BonusWeaponEffects[idx].AddX2ActionsForVisualizationSource(VisualizeGameState, SourceData, ApplyResult);
+			}
+			if( bMultiSourceIsAlsoTarget )
+			{
+				SourceData = BuildData;
+				bMultiSourceIsAlsoTarget = false;
+			}
+			if(MultiFireAction)
+			{
+				`SWITCHACTIONS(DummyActions[FireIndex], Actions[FireIndex]);
+			}
+		}
+		*/
+
+		for( TargetIndex = 0; TargetIndex < AbilityContext.MultiTargets.Length; ++TargetIndex )
+		{	
+			if( AbilityContext.MultiTargets[TargetIndex].ObjectID == AbilityContext.SourceObject.ObjectID )
+			{
+				bMultiSourceIsAlsoTarget = true;
+				BuildData=SourceData;
+				if(MultiFireAction)
+				{
+					FireIndex=0;
+					`SWITCHACTIONS(Actions[0], DummyActions[0]);
+				}
+			}
+			else
+			{
+				BuildData = InitData;
+				BuildData.VisualizeActor = History.GetVisualizer(AbilityContext.MultiTargets[TargetIndex].ObjectID);
+
+				TargetStateObject = VisualizeGameState.GetGameStateForObjectID(AbilityContext.MultiTargets[TargetIndex].ObjectID);
+				if( TargetStateObject != none )
+				{
+					History.GetCurrentAndPreviousGameStatesForObjectID(AbilityContext.MultiTargets[TargetIndex].ObjectID, 
+																		BuildData.StateObject_OldState, BuildData.StateObject_NewState,
+																		eReturnType_Reference,
+																		VisualizeGameState.HistoryIndex);
+				}			
+				else
+				{
+					//If TargetStateObject is none, it means that the visualize game state does not contain an entry for the primary target. Use the history version
+					//and show no change.
+					BuildData.StateObject_OldState = History.GetGameStateForObjectID(AbilityContext.MultiTargets[TargetIndex].ObjectID);
+					BuildData.StateObject_NewState = BuildData.StateObject_OldState;
+				}
+
+				if(Actions.Length!=0)
+				{
+					if(MultiFireAction)
+					{
+						for (FireIndex=0; FireIndex<Actions.Length; FireIndex++)
+						{	
+							if ( AbilityContext.MultiTargets[TargetIndex].ObjectID == X2Action_Fire(Actions[FireIndex]).PrimaryTargetID)
+								break;
+						}
+						if(FireIndex == Actions.Length) FireIndex = 0;
+						BuildData.LastActionAdded = Actions[FireIndex];
+						`SWITCHACTIONS(Actions[FireIndex], DummyActions[FireIndex]);
+					}
+					else  BuildData.LastActionAdded = Actions[0];
+					for (idx=0; idx<BuildData.LastActionAdded.ChildActions.Length; idx++)
+					{	
+						if ( BuildData.VisualizeActor == BuildData.LastActionAdded.ChildActions[idx].MetaData.VisualizeActor)
+						{
+							BuildData.LastActionAdded = BuildData.LastActionAdded.ChildActions[idx];
+							idx=-1;
+						}
+					}
+				}
+			}
+		
+			if (ApplyAmmo) for (idx = 0; idx < AmmoTemplate.TargetEffects.Length; ++idx)
+			{
+				ApplyResult = Context.FindMultiTargetEffectApplyResult(AmmoTemplate.TargetEffects[idx], TargetIndex);
+
+				// Target effect visualization
+				AmmoTemplate.TargetEffects[idx].AddX2ActionsForVisualization(VisualizeGameState, BuildData, ApplyResult);
+				AmmoTemplate.TargetEffects[idx].AddX2ActionsForVisualizationSource(VisualizeGameState, SourceData, ApplyResult);
+			}
+				
+			if (ApplyWeapon) for (idx = 0; idx < WeaponTemplate.BonusWeaponEffects.Length; ++idx)
+			{
+				ApplyResult = Context.FindMultiTargetEffectApplyResult(WeaponTemplate.BonusWeaponEffects[idx], TargetIndex);
+
+				// Target effect visualization
+				WeaponTemplate.BonusWeaponEffects[idx].AddX2ActionsForVisualization(VisualizeGameState, BuildData, ApplyResult);
+				WeaponTemplate.BonusWeaponEffects[idx].AddX2ActionsForVisualizationSource(VisualizeGameState, SourceData, ApplyResult);
+			}
+			if( bMultiSourceIsAlsoTarget )
+			{
+				SourceData = BuildData;
+				bMultiSourceIsAlsoTarget = false;
+			}
+			if(MultiFireAction)
+			{
+				`SWITCHACTIONS(DummyActions[FireIndex], Actions[FireIndex]);
+			}
+		}
+
+		if(MultiFireAction) for(idx=0; idx<DummyActions.Length; idx++)
+		{
+			VisualizationMgr.ReplaceNode(Actions[idx], DummyActions[idx]);
+		}
+
+		if (JoinAction!=none)
+		{
+			VisualizationMgr.GetAllLeafNodes(VisualizationMgr.BuildVisTree, Actions);
+			Actions.RemoveItem(JoinAction);
+			if (Actions.Length != 0)
+				VisualizationMgr.ConnectAction(JoinAction, VisualizationMgr.BuildVisTree,,, Actions);
+		}
+	}
 }

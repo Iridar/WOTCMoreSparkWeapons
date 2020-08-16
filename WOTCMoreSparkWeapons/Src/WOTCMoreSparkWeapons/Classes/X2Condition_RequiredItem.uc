@@ -16,10 +16,11 @@ event name CallMeetsCondition(XComGameState_BaseObject kTarget)
 		}
 	}
 	else return 'AA_NotAUnit';
+
+	//	DEBUG ONLY
+	return 'AA_Success';
 	
 	//return 'AA_WeaponIncompatible';
-
-	return 'AA_Success'; 
 }
 /*
 function bool CanEverBeValid(XComGameState_Unit SourceUnit, bool bStrategyCheck)
