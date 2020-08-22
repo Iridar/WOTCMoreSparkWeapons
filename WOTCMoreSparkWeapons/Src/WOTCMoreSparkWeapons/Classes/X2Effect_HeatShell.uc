@@ -28,7 +28,7 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 
 	if (TileDistance > 0)
 	{
-		`LOG("X2Effect_HeatShell: Reducing crit by:" @ class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_DISTANCE_MOD * TileDistance,, 'WOTCMoreSparkWeapons');
+		//`LOG("X2Effect_HeatShell: Reducing crit by:" @ class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_DISTANCE_MOD * TileDistance,, 'WOTCMoreSparkWeapons');
 		ModInfo.ModType = eHit_Crit;
 		ModInfo.Reason = FriendlyName;
 		ModInfo.Value = class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_DISTANCE_MOD * TileDistance * SquadsightCritChancePenaltyModifier;

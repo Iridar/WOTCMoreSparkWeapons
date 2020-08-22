@@ -37,7 +37,7 @@ static function X2DataTemplate Create_ArmCannonTech()
 	Template.PointsToComplete = class'X2StrategyElement_DefaultTechs'.static.StafferXDays(1, default.ARM_CANNON_TECH_DAYS);
 	Template.strImage = "img:///IRISparkHeavyWeapons.UI.UI_ArmCannon_ProvingGrounds";
 	Template.SortingTier = 3;
-	
+
 	// Created Item
 	//Template.ResearchCompletedFn = class'X2StrategyElement_DefaultTechs'.static.UpgradeItems;
 
@@ -75,8 +75,8 @@ static function X2DataTemplate Create_ExperimentalShells_Tech()
 
 	`CREATE_X2TEMPLATE(class'X2TechTemplate', Template, 'IRI_ExperimentalShells_Tech');
 
-	Template.PointsToComplete = class'X2StrategyElement_DefaultTechs'.static.StafferXDays(1, default.ARM_CANNON_TECH_DAYS);
-	Template.strImage = "img:///IRISparkHeavyWeapons.UI.UI_ArmCannon_ProvingGrounds";
+	Template.PointsToComplete = class'X2StrategyElement_DefaultTechs'.static.StafferXDays(1, default.EXPERIMENTAL_SHELLS_TECH_DAYS);
+	Template.strImage = "img:///IRIArtilleryCannon.UI.ExperimentalShells";
 	Template.SortingTier = 3;
 	
 	Template.ResearchCompletedFn = GiveShells;
@@ -164,10 +164,10 @@ static function X2DataTemplate Create_ImprovedShells_Tech()
 
 	`CREATE_X2TEMPLATE(class'X2TechTemplate', Template, 'IRI_ImprovedShells_Tech');
 
-	Template.PointsToComplete = class'X2StrategyElement_DefaultTechs'.static.StafferXDays(1, default.ARM_CANNON_TECH_DAYS);
-	Template.strImage = "img:///IRISparkHeavyWeapons.UI.UI_ArmCannon_ProvingGrounds";
+	Template.PointsToComplete = class'X2StrategyElement_DefaultTechs'.static.StafferXDays(1, default.IMPROVED_SHELLS_TECH_DAYS);
+	Template.strImage = "img:///IRIArtilleryCannon.UI.ImprovedShells";
 	Template.SortingTier = 3;
-	
+
 	Template.ResearchCompletedFn = class'X2StrategyElement_DefaultTechs'.static.UpgradeItems;
 
 	//	Requirements

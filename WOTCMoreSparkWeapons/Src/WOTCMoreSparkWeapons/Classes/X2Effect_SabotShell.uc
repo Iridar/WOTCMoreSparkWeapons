@@ -147,7 +147,7 @@ function int GetAttackingDamageModifier(XComGameState_Effect EffectState, XComGa
 	{
 		GetDamageReduction(Attacker, TargetUnit, DamageMod);
 
-		`LOG("GetAttackingDamageModifier:" @ DamageMod @ "Current Damage:" @ CurrentDamage,, 'WOTCMoreSparkWeapons');
+		//`LOG("GetAttackingDamageModifier:" @ DamageMod @ "Current Damage:" @ CurrentDamage,, 'WOTCMoreSparkWeapons');
 
 		//	Compensate for exhausting Pierce first
 		//DamageMod += GetPierceAmount(AbilityState);

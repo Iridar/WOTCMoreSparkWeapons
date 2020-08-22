@@ -20,11 +20,10 @@ var config(ClassData) array<name> AbilitiesToRemove;
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 /*
-experimental and improved cannon shells icons in Proving Grounds
-set 99 ammo to 1
 check HE/HESH radius
 check logging
 check localization
+add handling for mechatronic warfare
 playtest a mission
 */
 //	Immedaite goals:
