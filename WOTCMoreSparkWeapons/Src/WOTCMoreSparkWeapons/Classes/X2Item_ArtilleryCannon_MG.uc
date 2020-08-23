@@ -25,6 +25,7 @@ var config int NUM_UPGRADE_SLOTS;
 var config bool STARTING_ITEM;
 var config bool INFINITE_ITEM;
 var config name CREATOR_TEMPLATE_NAME;
+var config name MECHATRONIC_WARFARE_CREATOR_TEMPLATE_NAME;
 var config name BASE_ITEM;
 var config bool CAN_BE_BUILT;
 var config array<name> REQUIRED_TECHS;
@@ -156,7 +157,16 @@ static function X2DataTemplate Create_ArtilleryCannon_MG()
 	}
 	
 	Template.PointsToComplete = 0;
-	Template.CreatorTemplateName = default.CREATOR_TEMPLATE_NAME; // The schematic which creates this item
+
+	if (class'X2Item_OrdnanceLauncher_BM'.static.DLCLoaded('MechatronicWarfare')) 
+	{
+		Template.CreatorTemplateName = default.MECHATRONIC_WARFARE_CREATOR_TEMPLATE_NAME;
+	}
+	else
+	{	
+		Template.CreatorTemplateName = default.CREATOR_TEMPLATE_NAME; // The schematic which creates this item
+	}
+
 	Template.BaseItem = default.BASE_ITEM; // Which item this will be upgraded from
 	
 	return Template;

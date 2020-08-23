@@ -177,7 +177,8 @@ static function X2AbilityTemplate Create_FireLAC_Spark_with_BIT()
 	local X2AbilityTemplate Template;
 
 	Template = SetupFire_LAC_Ability('IRI_Fire_HeavyAutogun_BIT');
-	
+
+	Template.bSkipExitCoverWhenFiring = true;
 	Template.bStationaryWeapon = true;	
 	Template.BuildVisualizationFn = SparkHeavyWeaponVisualization;
 

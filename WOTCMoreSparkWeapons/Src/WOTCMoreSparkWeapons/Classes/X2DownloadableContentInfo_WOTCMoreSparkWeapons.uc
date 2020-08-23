@@ -19,23 +19,23 @@ var config(ClassData) array<name> AbilitiesToRemove;
 
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
-/*
-check HE/HESH radius
-check logging
-check localization
-add handling for mechatronic warfare
-playtest a mission
-*/
 //	Immedaite goals:
 
+//	Mention scatter mod as compatible, double check HE / HESH config for it.
+//	Maybe do something for HE/HESH and Shrapnel with Sabot Ammo.
+//	Add a way to carry special ammo in the aux slot. Make sure it adheres to unique equip rules.
+//	Improve descriptions of Sabot Ammo interactions with special cannon shells
+//	Regular cannon shots don't always destroy cover?
+//	Secondary weapon item: Gun Rack. Adds a heavy weapon slot and shells of all three types.
+// marry Spark Arsenal and Jet Packs mod. Move the Rocket Punch from Jet Packs to infantry-sized KSM as a Heavy Weapon.
+// have Jet Slam / Crater be available when equipping both Infantry KSM and Booster Jets on a soldier with Heavy Armor.
 //	Deployment Shield -> Firing or reloading a Heavy Cannon generates a shield that grants High Cover defense bonus.
 //	Targeting Computer -> Snapshot? Shoot through walls? increase HE shot range? 
 //	Visible meshes for shells on the spark
 //	Fire Sniper Rifle - fix localization
 //	Artillery Cannons - support for Demolition? -> is this even necessary? direct cannon shots are already basically demolition.
-//	Passive Icons for carrying special shells
-//	Special shells as weapon upgrades?
 //	Make Hunter Protocol work with the Autogun if primary heavy cannon is equipped.
+//	Adaptive Aim perk to provide a bonus with artillery cannons? It does not apply to Autogun. 
 
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	## ADVENT grunts -> stratosphere
@@ -63,7 +63,9 @@ playtest a mission
 //	Befriend Mitzruti's canisters with Claus' flamethrowers: https://discordapp.com/channels/287872325070880770/520730736630824980/723925790240145468
 
 //	LOW PRIORITY
-//	Textures are too dark in Photobooth.
+//	Different projectile for plasma HE / HESH?
+//  Make the gun form the plasma projectile before firing? 
+//	Textures are too dark in Photobooth. >>it's dark because the material doesn't have Character Mod Lighting ticked in the Usage section of the material
 //	Sparkfall within the context of this mod?
 //	Better heart material for bers heart
 //	KSM Tintable
@@ -189,13 +191,18 @@ static event OnLoadedSavedGameToStrategy()
 	{
 		ItemTemplate = ItemMgr.FindItemTemplate(TemplateName);
 
-		if (ItemTemplate != none && ItemTemplate.StartingItem && !XComHQ.HasItem(ItemTemplate))
-		{	
-			ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
-			NewGameState.AddStateObject(ItemState);
-			XComHQ.AddItemToHQInventory(ItemState);	
+		//	If the item is not in the HQ Inventory already
+		if (ItemTemplate != none && !XComHQ.HasItem(ItemTemplate))
+		{
+			//	If it's a starting item or if the schematic this item is created by is present in the HQ inventory
+			if (ItemTemplate.StartingItem || ItemTemplate.CreatorTemplateName != '' && XComHQ.HasItemByName(ItemTemplate.CreatorTemplateName))
+			{	
+				ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+				NewGameState.AddStateObject(ItemState);
+				XComHQ.AddItemToHQInventory(ItemState);	
 
-			bChange = true;
+				bChange = true;
+			}
 		}
 	}
 
@@ -1194,6 +1201,12 @@ static function bool AbilityTagExpandHandler(string InString, out string OutStri
 		return true;
 	case 'IRI_SABOT_AMMO_SQUADSIGHT_CRIT':
 		OutString = String(class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_CRIT_MOD);
+		return true;
+	case 'IRI_HEAVY_CANNON_LOW_COVER_DAMAGE_PENALTY':
+		OutString = SetColor(int(class'X2Effect_SabotShell '.default.ReduceDamageLowCover * 100) $ "%");
+		return true;
+	case 'IRI_HEAVY_CANNON_HIGH_COVER_DAMAGE_PENALTY':
+		OutString = SetColor(int(class'X2Effect_SabotShell '.default.ReduceDamageHighCover * 100) $ "%");
 		return true;
 
 	//	===================================================

@@ -7,6 +7,20 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 {	
 	local ShotModifierInfo				ModInfo;
 	local int							TileDistance;
+	local XComGameState_Item			SourceWeapon;
+	local X2ItemTemplate				AmmoTemplate;
+
+	//	Don't apply hit modifiers if Sabot Ammo is loaded into the cannon.
+	SourceWeapon = AbilityState.GetSourceWeapon();
+	if (SourceWeapon != none)
+	{
+		AmmoTemplate = SourceWeapon.GetLoadedAmmoTemplate(AbilityState);
+		
+		if (AmmoTemplate != none && AmmoTemplate.DataName == 'IRI_Ammo_Sabot') 
+		{
+			return;
+		}
+	}
 
 	switch (AbilityState.GetMyTemplateName())
 	{
@@ -17,7 +31,6 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 			return;
 	}
 
-	//	Compensate Squadsight Aim and Crit penalties
 	TileDistance = Attacker.TileDistanceBetween(Target);
 
 	//  Calculate how far into Squadsight range are we.
