@@ -22,7 +22,36 @@ Adds new weapons and tools for SPARKs and MEC Troopers.
 
 Adds new weapons and tools for SPARKs and [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1452700934]MEC Troopers[/url][/b], a new Inventory Slot, and makes some changes to BITs.
 
-[b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2568690416483865842/]>>> FULL LIST OF NEW WEAPONS AND ITEMS <<<[/url][/b]
+[b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2568690416483865842/]>>> CLICK HERE FOR THE FULL LIST OF NEW WEAPONS, ITEMS AND OTHER FEATURES <<<[/url][/b]+
+
+[b]New Primary Weapons:[/b][list]
+[*] Heavy Cannons (3 tiers)[/list]
+
+[b]New Secondary Weapons:[/b][list]
+[*] Ordnance Launchers (3 tiers)
+[*] Kinetic Strike Module[/list]
+
+[b]New Heavy Weapons:[/b][list]
+[*] Kiruka Autogun
+[*] Kiruka Autopulser[/list]
+
+[b]Arm Cannon animations for SPARK / MEC Heavy Weapons[/b]
+
+[b]New Inventory Slot: Auxiliary Weapon[/b]
+
+[b]New items that go into that slot:[/b][list]
+[*] Restorative Mist
+[*] E.M. Pulse
+[*] Special Shells for Heavy Cannons (3 variants, each has 2 tiers)[/list]
+
+[b]New Experimental Ammo: Sabot Rounds[/b]
+
+[b]BIT Changes:[/b][list]
+[*] Active Camo passive ability
+[*] Grants more Hacking
+[*] Fixed bug that prevented BIT's bonus to Hacking from showing up in the Armory[/list]
+
+[b]Shredder Gun, Shredstorm Cannon and Plasma Blaster heavy weapons now properly knockback enemies on kills.[/b]
 
 [h1]BALANCING[/h1]
 
@@ -48,6 +77,10 @@ I tried to keep the mod as compatible as possible, including all the major overh
 The mod is [b][i]highly[/i][/b] configurable through various files in:
 [code]..\steamapps\workshop\content\268500\2127166233\Config\[/code]
 
+[h1]MOD STATUS[/h1]
+
+Currently hard at work making this mod more awesome. Stay tuned for updates.
+
 [h1]CREDITS[/h1]
 
 First of all, huge thanks to my [b][url=https://www.patreon.com/Iridar]patrons on patreon[/url][/b] for producing this mod. It's a [b][i]blast[/i][/b] to work with so many wonderful people. Particularly:
@@ -56,16 +89,8 @@ First of all, huge thanks to my [b][url=https://www.patreon.com/Iridar]patrons o
 
 And thanks to comrades in arms:
 [b]Musashi[/b] - for graciously providing the custom death animation code. 
-[b]NeIVIeSiS[/b] - for making all the ability icons for this mod.
+[b]NeIVIeSiS[/b] - for making many of the icons for this mod.
 [b]bstar[/b] - brainstorm assistance.
-
-
-
-
-
-
-
-
 
 
 
