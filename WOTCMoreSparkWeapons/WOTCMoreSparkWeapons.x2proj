@@ -127,6 +127,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Content\IRIRestorativeMist.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\IRISparkArsenal.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\IRISparkHeavyWeapons.upk">
       <SubType>Content</SubType>
     </Content>
@@ -222,6 +225,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2EventListener_HasHeavyWeapon.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2EventListener_SparkArsenal.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_Ammo.uc">

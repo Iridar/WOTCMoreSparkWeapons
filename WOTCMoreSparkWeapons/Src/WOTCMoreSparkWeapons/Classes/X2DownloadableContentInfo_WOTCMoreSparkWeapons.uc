@@ -21,6 +21,10 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 //	Immedaite goals:
 
+//	Marry Claus Flamethrowers and Mitzruti's Chemthrower canisters by changing their default sockets
+//	Remove Hack ability from Sparks in Finalize for Init if they don't have a BIT equipped. Or OPTC it out from the character template.
+//	Reloading the weapon when dashing? 
+//	Jet Jump for Booster Jets as a free action. Uses grapple traversal type with superman flight? Use stormrider teleport as an example, maybe, or look at archon movement.
 //	Mention scatter mod as compatible, double check HE / HESH config for it.
 //	Maybe do something for HE/HESH and Shrapnel with Sabot Ammo.
 //	Add a way to carry special ammo in the aux slot. Make sure it adheres to unique equip rules.
@@ -30,7 +34,7 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 // marry Spark Arsenal and Jet Packs mod. Move the Rocket Punch from Jet Packs to infantry-sized KSM as a Heavy Weapon.
 // have Jet Slam / Crater be available when equipping both Infantry KSM and Booster Jets on a soldier with Heavy Armor.
 //	Deployment Shield -> Firing or reloading a Heavy Cannon generates a shield that grants High Cover defense bonus.
-//	Targeting Computer -> Snapshot? Shoot through walls? increase HE shot range? 
+//	Targeting Computer -> Snapshot? Shoot through walls? increase HE shot range? HOLOTARGET!! Turn ending action. SPARK raises hand to the head and "scans" the target.
 //	Visible meshes for shells on the spark
 //	Fire Sniper Rifle - fix localization
 //	Artillery Cannons - support for Demolition? -> is this even necessary? direct cannon shots are already basically demolition.
@@ -352,6 +356,7 @@ static event OnPostTemplatesCreated()
 	class'X2Item_ArtilleryCannon_CV'.static.UpdateMods();
 	class'X2Item_ArtilleryCannon_MG'.static.UpdateMods();
 	class'X2Item_ArtilleryCannon_BM'.static.UpdateMods();
+	class'X2Item_Ammo'.static.PatchWeaponUpgrades();
 }
 
 static function PatchSoldierClassTemplates()
@@ -428,6 +433,8 @@ static function PatchCharacterTemplates()
 				CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideHighSpark");
 
 				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_LAC_Spark")));
+
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Hack")));
 			}
 		}
 	}

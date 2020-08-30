@@ -19,6 +19,8 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(IRI_DebuffConcealment());
 	Templates.AddItem(Create_IRI_Bombard());
 
+	//Templates.AddItem(PurePassive('IRI_ExperimentalMagazine_Passive', "img:///UILibrary_PerkIcons.UIPerk_standard", false, 'eAbilitySource_Item', false));
+
 	// Separate versions of abilities to fire from the arm cannon with a different cinecam.
 	Templates.AddItem(SparkRocketLauncher());
 	Templates.AddItem(SparkShredderGun());

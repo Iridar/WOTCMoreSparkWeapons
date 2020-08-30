@@ -184,17 +184,17 @@ static function UpdateMods() {
 	AddAimBonusUpgrade_T2(ItemTemplateManager, 'AimUpgrade_Adv');
 	AddAimBonusUpgrade_T3(ItemTemplateManager, 'AimUpgrade_Sup');
 
-	//AddClipSizeBonusUpgrade(ItemTemplateManager, 'ClipSizeUpgrade_Bsc');
-	//AddClipSizeBonusUpgrade(ItemTemplateManager, 'ClipSizeUpgrade_Adv');
-	//AddClipSizeBonusUpgrade(ItemTemplateManager, 'ClipSizeUpgrade_Sup');
+	AddClipSizeBonusUpgrade(ItemTemplateManager, 'ClipSizeUpgrade_Bsc');
+	AddClipSizeBonusUpgrade(ItemTemplateManager, 'ClipSizeUpgrade_Adv');
+	AddClipSizeBonusUpgrade(ItemTemplateManager, 'ClipSizeUpgrade_Sup');
 
 	AddFreeFireBonusUpgrade(ItemTemplateManager, 'FreeFireUpgrade_Bsc');
 	AddFreeFireBonusUpgrade(ItemTemplateManager, 'FreeFireUpgrade_Adv');
 	AddFreeFireBonusUpgrade(ItemTemplateManager, 'FreeFireUpgrade_Sup');
 
-	//AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Bsc');
-	//AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Adv');
-	//AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Sup');
+	AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Bsc');
+	AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Adv');
+	AddReloadUpgrade(ItemTemplateManager, 'ReloadUpgrade_Sup');
 
 	AddMissDamageUpgrade(ItemTemplateManager, 'MissDamageUpgrade_Bsc');
 	AddMissDamageUpgrade(ItemTemplateManager, 'MissDamageUpgrade_Adv');
@@ -203,6 +203,8 @@ static function UpdateMods() {
 	AddFreeKillUpgrade_T1(ItemTemplateManager, 'FreeKillUpgrade_Bsc');
 	AddFreeKillUpgrade_T2(ItemTemplateManager, 'FreeKillUpgrade_Adv');
 	AddFreeKillUpgrade_T3(ItemTemplateManager, 'FreeKillUpgrade_Sup');
+
+	AddClipSizeBonusUpgrade(ItemTemplateManager, 'IRI_ExperimentalMagazine_Upgrade');
 }
 
 
@@ -274,8 +276,6 @@ static function AddFreeFireBonusUpgrade(X2ItemTemplateManager ItemTemplateManage
 	Template.AddUpgradeAttachment('Trigger', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Mag', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_CV_HairTrigger", "", 'IRI_ArtilleryCannon_BM', , "", "img:///IRIArtilleryCannon.UI.HairTrigger_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_trigger");
 }
 
-
-/*
 //	EX MAG
 static function AddClipSizeBonusUpgrade(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
 {
@@ -283,7 +283,7 @@ static function AddClipSizeBonusUpgrade(X2ItemTemplateManager ItemTemplateManage
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	//Template.AddUpgradeAttachment('Mag', 'UIPawnLocation_WeaponUpgrade_Shotgun_Mag', "MagSMG.Meshes.SM_HOR_Mag_SMG_MagA", "", 'IRI_ArtilleryCannon_BM', , "", "img:///AdventPistol_MG.UI.ExMag_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_clip");	
+	Template.AddUpgradeAttachment('', 'UIPawnLocation_WeaponUpgrade_Shotgun_Mag', "" /* mesh path*/, "", 'IRI_ArtilleryCannon_BM', , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.MagCannon_MagA_inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_clip");	
 }
 
 //	AUTO LOADER
@@ -293,9 +293,8 @@ static function AddReloadUpgrade(X2ItemTemplateManager ItemTemplateManager, Name
 
 	Template = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate(TemplateName));
 
-	Template.AddUpgradeAttachment('Handle', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Mag', "IRIArtilleryCannon.Meshes.SM_ArtilleryCannon_BM_AutoLoader", "", 'IRI_ArtilleryCannon_BM', , "", "img:///AdventPistol_MG.UI.AutoLoader_Inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_clip");
+	Template.AddUpgradeAttachment('', 'UIPawnLocation_WeaponUpgrade_AssaultRifle_Mag', "" /* mesh path */, "", 'IRI_ArtilleryCannon_BM', , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.MagCannon_MagA_inv", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_clip");
 }
-*/
 
 //	STOCK
 static function AddMissDamageUpgrade(X2ItemTemplateManager ItemTemplateManager, Name TemplateName)
