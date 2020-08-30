@@ -434,7 +434,10 @@ static function PatchCharacterTemplates()
 
 				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_LAC_Spark")));
 
-				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Hack")));
+				//	The loadout contains the item required for SPARKs to hack; a replacement for the regular XPad.
+				CharTemplate.RequiredLoadout = 'RequiredSpark';
+				//	Animations don't work when given through weapon archetype, for some reason.//retest
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_Hack")));				
 			}
 		}
 	}

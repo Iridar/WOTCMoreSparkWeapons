@@ -266,6 +266,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_RestorativeMist_CV.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_SparkArsenal.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2StrategyElement_AuxSlot.uc">
       <SubType>Content</SubType>
     </Content>
