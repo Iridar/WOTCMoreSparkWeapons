@@ -52,9 +52,6 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Compatibility\XComScatter.ini">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Config\Compatibility\XComSPARKLaunchers.ini">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Config\Compatibility\XComSPARKUpgrades.ini">
       <SubType>Content</SubType>
     </Content>
@@ -116,6 +113,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIElectroPulse.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\IRIHeavyCannonShells.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIKineticStrikeModule.upk">

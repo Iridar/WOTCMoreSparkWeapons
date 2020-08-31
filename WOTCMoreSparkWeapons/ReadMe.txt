@@ -18,8 +18,6 @@ Adds new weapons and tools for SPARKs and MEC Troopers.
 -- EM Pulse - temporarily shuts down robotic enemies around the SPARK. If BIT is equipped, applies same effects in a targeted area. SPARK itself is not affected, but other allied robotics are.
 
 [WOTC] Iridar's SPARK Arsenal
-[h1]FEATURES[/h1]
-
 Adds new weapons and tools for SPARKs and [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1452700934]MEC Troopers[/url][/b], a new Inventory Slot, and makes some changes to BITs.
 
 [b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2568690416483865842/]>>> CLICK HERE FOR THE FULL LIST OF NEW WEAPONS, ITEMS AND OTHER FEATURES <<<[/url][/b]+
@@ -44,6 +42,8 @@ Adds new weapons and tools for SPARKs and [b][url=https://steamcommunity.com/sha
 [*] E.M. Pulse
 [*] Special Shells for Heavy Cannons (3 variants, each has 2 tiers)[/list]
 
+[b]New Weapon Upgrade: Experimental Magazine - grants an Ammo Slot.[/b]
+
 [b]New Experimental Ammo: Sabot Rounds[/b]
 
 [b]BIT Changes:[/b][list]
@@ -52,6 +52,8 @@ Adds new weapons and tools for SPARKs and [b][url=https://steamcommunity.com/sha
 [*] Fixed bug that prevented BIT's bonus to Hacking from showing up in the Armory[/list]
 
 [b]Shredder Gun, Shredstorm Cannon and Plasma Blaster heavy weapons now properly knockback enemies on kills.[/b]
+
+[b]SPARKs and MEC Troopers can now Hack objectives without having a BIT equipped.[/b]
 
 [h1]BALANCING[/h1]
 

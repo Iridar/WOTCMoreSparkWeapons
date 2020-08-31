@@ -19,10 +19,18 @@ var config(ClassData) array<name> AbilitiesToRemove;
 
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
+//	Special Heavy Cannon Shells are now displayed on the SPARK's body.
+//	New Secondary Weapon: Munitions Mount: grants an Ammo Slot and all three types of currently available Special Heavy Cannon Shells.
+
 //	Immedaite goals:
 
+//	Inventory Icons for munitions mount.
+//	Alternative model for munitons mount for powered armor.
+//	Forbid equipping special shells if Munitons Mount is equipped, and force unequip them.
+
+//	Display grenades on the Spark's body when 1.22 goes live.
+//	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Marry Claus Flamethrowers and Mitzruti's Chemthrower canisters by changing their default sockets
-//	Remove Hack ability from Sparks in Finalize for Init if they don't have a BIT equipped. Or OPTC it out from the character template.
 //	Reloading the weapon when dashing? 
 //	Jet Jump for Booster Jets as a free action. Uses grapple traversal type with superman flight? Use stormrider teleport as an example, maybe, or look at archon movement.
 //	Mention scatter mod as compatible, double check HE / HESH config for it.
@@ -30,12 +38,10 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 //	Add a way to carry special ammo in the aux slot. Make sure it adheres to unique equip rules.
 //	Improve descriptions of Sabot Ammo interactions with special cannon shells
 //	Regular cannon shots don't always destroy cover?
-//	Secondary weapon item: Gun Rack. Adds a heavy weapon slot and shells of all three types.
 // marry Spark Arsenal and Jet Packs mod. Move the Rocket Punch from Jet Packs to infantry-sized KSM as a Heavy Weapon.
 // have Jet Slam / Crater be available when equipping both Infantry KSM and Booster Jets on a soldier with Heavy Armor.
 //	Deployment Shield -> Firing or reloading a Heavy Cannon generates a shield that grants High Cover defense bonus.
 //	Targeting Computer -> Snapshot? Shoot through walls? increase HE shot range? HOLOTARGET!! Turn ending action. SPARK raises hand to the head and "scans" the target.
-//	Visible meshes for shells on the spark
 //	Fire Sniper Rifle - fix localization
 //	Artillery Cannons - support for Demolition? -> is this even necessary? direct cannon shots are already basically demolition.
 //	Make Hunter Protocol work with the Autogun if primary heavy cannon is equipped.
@@ -356,7 +362,7 @@ static event OnPostTemplatesCreated()
 	class'X2Item_ArtilleryCannon_CV'.static.UpdateMods();
 	class'X2Item_ArtilleryCannon_MG'.static.UpdateMods();
 	class'X2Item_ArtilleryCannon_BM'.static.UpdateMods();
-	class'X2Item_Ammo'.static.PatchWeaponUpgrades();
+	class'X2Item_SparkArsenal'.static.PatchWeaponUpgrades();
 }
 
 static function PatchSoldierClassTemplates()

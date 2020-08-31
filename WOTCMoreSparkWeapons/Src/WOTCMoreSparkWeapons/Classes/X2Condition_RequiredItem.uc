@@ -1,18 +1,23 @@
 class X2Condition_RequiredItem extends X2Condition;
 
-var name ItemName;
+var array<name> ItemNames;
+//var name WeaponUpgradeName;
 
 event name CallMeetsCondition(XComGameState_BaseObject kTarget) 
 {
 	local XComGameState_Unit	UnitState;
+	local name					ItemName;
 	
 	UnitState = XComGameState_Unit(kTarget);
 	
 	if (UnitState != none)
 	{
-		if (UnitState.HasItemOfTemplateType(ItemName))
+		foreach ItemNames(ItemName)
 		{
-			return 'AA_Success'; 
+			if (UnitState.HasItemOfTemplateType(ItemName))
+			{
+				return 'AA_Success'; 
+			}
 		}
 	}
 	else return 'AA_NotAUnit';
@@ -25,5 +30,14 @@ event name CallMeetsCondition(XComGameState_BaseObject kTarget)
 
 function bool CanEverBeValid(XComGameState_Unit SourceUnit, bool bStrategyCheck)
 {
-	return SourceUnit.HasItemOfTemplateType(ItemName);
+	local name ItemName;
+
+	foreach ItemNames(ItemName)
+	{
+		if (SourceUnit.HasItemOfTemplateType(ItemName))
+		{
+			return true;
+		}
+	}
+	return false;
 }

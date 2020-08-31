@@ -49,6 +49,16 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 		ItemStates = UnitState.GetAllInventoryItems(, true);
 		foreach ItemStates(ItemState)
 		{
+			switch (ItemState.GetMyTemplateName())
+			{
+				case 'IRI_Shells_T1':
+				case 'IRI_Shells_T2':
+					Tuple.Data[0].b = true;
+					return ELR_NoInterrupt;
+				default:
+					break;
+			}
+
 			WeaponUpgradeTemplateNames = ItemState.GetMyWeaponUpgradeTemplateNames();
 			if (WeaponUpgradeTemplateNames.Find('IRI_ExperimentalMagazine_Upgrade') != INDEX_NONE)
 			{
@@ -59,6 +69,9 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 	}
 	return ELR_NoInterrupt;
 }
+
+
+
 
 
 
