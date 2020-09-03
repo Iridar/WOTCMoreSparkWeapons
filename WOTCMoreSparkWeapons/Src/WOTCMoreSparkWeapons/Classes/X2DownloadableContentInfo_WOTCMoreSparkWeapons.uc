@@ -24,28 +24,28 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 //	Immedaite goals:
 
-//	Inventory Icons for munitions mount.
-//	Alternative model for munitons mount for powered armor.
 //	Forbid equipping special shells if Munitons Mount is equipped, and force unequip them.
+//	Make Munitions Mount buildable
 
-//	Display grenades on the Spark's body when 1.22 goes live.
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
+//	Mention scatter mod as compatible, double check HE / HESH config for it.
+
 //	Marry Claus Flamethrowers and Mitzruti's Chemthrower canisters by changing their default sockets
 //	Reloading the weapon when dashing? 
-//	Jet Jump for Booster Jets as a free action. Uses grapple traversal type with superman flight? Use stormrider teleport as an example, maybe, or look at archon movement.
-//	Mention scatter mod as compatible, double check HE / HESH config for it.
 //	Maybe do something for HE/HESH and Shrapnel with Sabot Ammo.
 //	Add a way to carry special ammo in the aux slot. Make sure it adheres to unique equip rules.
 //	Improve descriptions of Sabot Ammo interactions with special cannon shells
 //	Regular cannon shots don't always destroy cover?
 // marry Spark Arsenal and Jet Packs mod. Move the Rocket Punch from Jet Packs to infantry-sized KSM as a Heavy Weapon.
+//	Jet Jump for Booster Jets as a free action. Uses grapple traversal type with superman flight? Use stormrider teleport as an example, maybe, or look at archon movement.
 // have Jet Slam / Crater be available when equipping both Infantry KSM and Booster Jets on a soldier with Heavy Armor.
-//	Deployment Shield -> Firing or reloading a Heavy Cannon generates a shield that grants High Cover defense bonus.
+//	Deployment Shield -> Firing or reloading a Heavy Cannon (any weapon?) generates a shield that grants High Cover defense bonus.
 //	Targeting Computer -> Snapshot? Shoot through walls? increase HE shot range? HOLOTARGET!! Turn ending action. SPARK raises hand to the head and "scans" the target.
 //	Fire Sniper Rifle - fix localization
-//	Artillery Cannons - support for Demolition? -> is this even necessary? direct cannon shots are already basically demolition.
 //	Make Hunter Protocol work with the Autogun if primary heavy cannon is equipped.
 //	Adaptive Aim perk to provide a bonus with artillery cannons? It does not apply to Autogun. 
+//	Display grenades on the Spark's body when 1.22 goes live.
+//	Artillery Cannons - support for Demolition? -> is this even necessary? direct cannon shots are already basically demolition.
 
 //	Codex -> grab skull as they attempt to flicker all over the place and crush it
 //	## ADVENT grunts -> stratosphere
@@ -56,6 +56,7 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 //	Faceless - flaming elbow drop
 //	High stance Sectopod -> jump on the jump jet and strike right into the Wrath cannon as it opens up
 //	Archon - bitchslap?
+//	MEC -> push it into the ground, physically breaking its body
 //	Muton - break their weapon with a punch, then kill them with a second one.
 //	Riftkeeper -> punch away their plating? or stick it right into their eye? Smash them into the ground?
 //	Purifier -> use them as an explosive grenade?

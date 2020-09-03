@@ -1,8 +1,10 @@
-class X2Item_Ammo extends X2Item;
+class X2Item_Ammo extends X2Item config(ArtilleryCannon);
 
 var localized string strDodgeReduction;
 var localized string strDefenseReduction;
 var localized string strSquadsightPenaltyReduction;
+
+var config bool bShowSpecialCannonShellsOnSparkBody;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -80,6 +82,8 @@ static function X2DataTemplate Create_Shell_HEAT()
 	Template.Tier = 1;
 	
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HEAT";
+
+	if (default.bShowSpecialCannonShellsOnSparkBody)
 	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_HEAT";
 
 	Template.StartingItem = false;
@@ -113,6 +117,8 @@ static function X2DataTemplate Create_Shell_HE()
 	Template.Tier = 1;
 	
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HE";
+
+	if (default.bShowSpecialCannonShellsOnSparkBody)
 	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_HE";
 
 	Template.StartingItem = false;
@@ -146,6 +152,8 @@ static function X2DataTemplate Create_Shell_Shrapnel()
 	Template.Tier = 1;
 	
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_Shrapnel";
+
+	if (default.bShowSpecialCannonShellsOnSparkBody)
 	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_Shrapnel";
 
 	Template.StartingItem = false;
@@ -183,6 +191,8 @@ static function X2DataTemplate Create_Shell_HEDP()
 	Template.Tier = 1;
 	
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HEDP";
+
+	if (default.bShowSpecialCannonShellsOnSparkBody)
 	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_HEDP";
 
 	Template.StartingItem = false;
@@ -217,6 +227,8 @@ static function X2DataTemplate Create_Shell_HESH()
 	Template.Tier = 1;
 	
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HESH";
+
+	if (default.bShowSpecialCannonShellsOnSparkBody)
 	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_HESH";
 
 	Template.StartingItem = false;
@@ -251,6 +263,8 @@ static function X2DataTemplate Create_Shell_Flechette()
 	Template.Tier = 1;
 
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_Flechette";
+
+	if (default.bShowSpecialCannonShellsOnSparkBody)
 	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_Flechette";
 
 	Template.StartingItem = false;
@@ -288,8 +302,15 @@ static function X2DataTemplate Create_Shells_T1()
 	
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HEAT";
-	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_T1";
+	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shells_T1";
+
+	if (default.bShowSpecialCannonShellsOnSparkBody)
+	{
+		Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_T1";
+
+		Template.AltGameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_T1_BM";
+		Template.ArmorTechCatForAltArchetype = 'powered';
+	}
 
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
@@ -325,10 +346,18 @@ static function X2DataTemplate Create_Shells_T2()
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.NumUpgradeSlots = 0;
 	
-	Template.Tier = 1;
+	Template.Tier = 2;
 	
-	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HEAT";
-	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_T2";
+	//Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shells_T2";
+	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shells_T2_BM";
+
+	if (default.bShowSpecialCannonShellsOnSparkBody)
+	{
+		Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_T2";
+
+		Template.AltGameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_T2_BM";
+		Template.ArmorTechCatForAltArchetype = 'powered';
+	}
 
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
