@@ -19,16 +19,17 @@ var config(ClassData) array<name> AbilitiesToRemove;
 
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
+var localized string str_ShellsMutuallyExclusiveWithMunitionsMount;
+var localized string str_MunitionsMountMutuallyExclusiveWithShells;
+
 //	Special Heavy Cannon Shells are now displayed on the SPARK's body.
 //	New Secondary Weapon: Munitions Mount: grants an Ammo Slot and all three types of currently available Special Heavy Cannon Shells.
+//	Tentative compatibility with Psionic MEC Troopers.
 
 //	Immedaite goals:
 
-//	Forbid equipping special shells if Munitons Mount is equipped, and force unequip them.
-//	Make Munitions Mount buildable
-
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
-//	Mention scatter mod as compatible, double check HE / HESH config for it.
+//	Double check HE / HESH config for scatter
 
 //	Marry Claus Flamethrowers and Mitzruti's Chemthrower canisters by changing their default sockets
 //	Reloading the weapon when dashing? 
@@ -774,6 +775,20 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 
     if(DisabledReason != "")
         return DoNotOverrideNormalBehavior;
+
+	if (IsItemSpecialShell(ItemTemplate.DataName) && DoesUnitHaveMunitionsMount(UnitState, CheckGameState))
+	{	
+		DisabledReason = default.str_ShellsMutuallyExclusiveWithMunitionsMount;
+		bCanAddItem = 0;
+		return OverrideNormalBehavior;
+	}
+
+	if (IsItemMunitionsMount(ItemTemplate.DataName) && DoesUnitHaveSpecialShells(UnitState, CheckGameState))
+	{	
+		DisabledReason = default.str_MunitionsMountMutuallyExclusiveWithShells;
+		bCanAddItem = 0;
+		return OverrideNormalBehavior;
+	}
 		
 	//	If we're trying to equip an Autogun
 	if (ItemTemplate.DataName == 'IRI_Heavy_Autogun' || ItemTemplate.DataName == 'IRI_Heavy_Autogun_MK2') 
@@ -782,9 +797,9 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 		if (Slot == eInvSlot_HeavyWeapon)
 		{
 			//	Grab Item State in the Aux Slot
-			OtherItemState = UnitState.GetItemInSlot(eInvSlot_AuxiliaryWeapon, CheckGameState);
+			OtherItemState = UnitState.GetItemInSlot(class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot, CheckGameState);
 		}	//	Into Aux SLot
-		else if (Slot == eInvSlot_AuxiliaryWeapon)
+		else if (Slot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot)
 		{
 			//	Grab Item State from the Heavy Weapon slot
 			OtherItemState = UnitState.GetItemInSlot(eInvSlot_HeavyWeapon, CheckGameState);
@@ -807,6 +822,63 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 		}
 	}
     return DoNotOverrideNormalBehavior;
+}
+
+private static function bool DoesUnitHaveMunitionsMount(const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	local XComGameState_Item ItemState;
+
+	ItemState = UnitState.GetItemInSlot(class'X2Item_Shells_T1'.default.INVENTORY_SLOT, CheckGameState);
+
+	if (ItemState != none && ItemState.GetMyTemplateName() == 'IRI_Shells_T1')
+	{
+		return true;
+	}
+
+	if (class'X2Item_Shells_T1'.default.INVENTORY_SLOT != class'X2Item_Shells_T2'.default.INVENTORY_SLOT)
+	{
+		ItemState = UnitState.GetItemInSlot(class'X2Item_Shells_T2'.default.INVENTORY_SLOT, CheckGameState);
+
+		return ItemState != none && ItemState.GetMyTemplateName() == 'IRI_Shells_T2';
+	}
+	return false;
+}
+
+private static function bool IsItemSpecialShell(const name TemplateName)
+{
+	switch (TemplateName)
+	{
+		case 'IRI_Shell_HEAT':
+		case 'IRI_Shell_HE':
+		case 'IRI_Shell_Shrapnel':
+		case 'IRI_Shell_HEDP':
+		case 'IRI_Shell_HESH':
+		case 'IRI_Shell_Flechette':
+			return true;
+		default:
+			return false;
+	}
+}
+
+private static function bool IsItemMunitionsMount(const name TemplateName)
+{
+	switch (TemplateName)
+	{
+		case 'IRI_Shells_T1':
+		case 'IRI_Shells_T2':
+			return true;
+		default:
+			return false;
+	}
+}
+
+private static function bool DoesUnitHaveSpecialShells(const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	local XComGameState_Item ItemState;
+
+	ItemState = UnitState.GetItemInSlot(class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot, CheckGameState);
+
+	return ItemState != none && IsItemSpecialShell(ItemState.GetMyTemplateName());
 }
 
 static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
@@ -1050,7 +1122,7 @@ static function bool DoesThisRefAuxSlotItem(const StateObjectReference Ref)
     ItemState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(Ref.ObjectID));
 
     //`LOG("Checking item:" @ ItemState.GetMyTemplateName() @ "in slot:" @ ItemState.InventorySlot,, 'WOTCMoreSparkWeapons');
-    if (ItemState != none && ItemState.InventorySlot == eInvSlot_AuxiliaryWeapon) return true;
+    if (ItemState != none && ItemState.InventorySlot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot) return true;
 
     return false;
 }
@@ -1104,7 +1176,7 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 			if (WeaponTemplate.WeaponCat == 'heavy')
 			{
 				//	If it is in the Aux Slot, or if the the SPARK doesn't have a BIT equipped, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
-				if (InternalWeaponState.InventorySlot == eInvSlot_AuxiliaryWeapon || default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
+				if (InternalWeaponState.InventorySlot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot || default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
 				{
 					//	Replace the mesh for this heavy weapon with the arm cannon and replace the weapon and pawn animations.
 					Weapon.CustomUnitPawnAnimsets.Length = 0;

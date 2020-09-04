@@ -153,13 +153,13 @@ static function GiveShells(XComGameState NewGameState, XComGameState_Tech TechSt
 		ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
 		XComHQ.AddItemToHQInventory(ItemState);
 	}	
-	ItemTemplate = ItemMgr.FindItemTemplate('IRI_Shells_T1');
-	if (ItemTemplate != none)
-	{
-		TechState.ItemRewards.AddItem(ItemTemplate);
-		ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
-		XComHQ.AddItemToHQInventory(ItemState);
-	}	
+	//ItemTemplate = ItemMgr.FindItemTemplate('IRI_Shells_T1');
+	//if (ItemTemplate != none)
+	//{
+	//	TechState.ItemRewards.AddItem(ItemTemplate);
+	//	ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+	//	XComHQ.AddItemToHQInventory(ItemState);
+	//}	
 }
 
 

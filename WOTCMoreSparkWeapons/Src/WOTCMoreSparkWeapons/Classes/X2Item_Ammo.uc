@@ -20,8 +20,8 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_Shell_HESH());
 	Templates.AddItem(Create_Shell_Flechette());
 
-	Templates.AddItem(Create_Shells_T1());
-	Templates.AddItem(Create_Shells_T2());
+	//Templates.AddItem(Create_Shells_T1());
+	//Templates.AddItem(Create_Shells_T2());
 
 	return Templates;
 }
@@ -66,6 +66,7 @@ static function X2DataTemplate Create_Ammo_Sabot()
 static function X2DataTemplate Create_Shell_HEAT()
 {
 	local X2WeaponTemplate Template;
+	local WeaponAttachment Attach;
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_Shell_HEAT');
 	
@@ -84,7 +85,17 @@ static function X2DataTemplate Create_Shell_HEAT()
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HEAT";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
-	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_HEAT";
+	{
+		Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back";
+
+		Template.AltGameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back_BM";
+		Template.ArmorTechCatForAltArchetype = 'powered';
+
+		Attach.AttachSocket = 'iri_back_shells';
+		Attach.AttachMeshName = "IRIHeavyCannonShells.Meshes.SM_Shells_HEAT";
+		Attach.AttachToPawn = true;
+		Template.DefaultAttachments.AddItem(Attach);
+	}
 
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
@@ -101,7 +112,8 @@ static function X2DataTemplate Create_Shell_HEAT()
 static function X2DataTemplate Create_Shell_HE()
 {
 	local X2WeaponTemplate Template;
-	
+	local WeaponAttachment Attach;
+
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_Shell_HE');
 
 	Template.WeaponPanelImage = "_ConventionalRifle";
@@ -119,7 +131,17 @@ static function X2DataTemplate Create_Shell_HE()
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HE";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
-	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_HE";
+	{
+		Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back";
+
+		Template.AltGameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back_BM";
+		Template.ArmorTechCatForAltArchetype = 'powered';
+
+		Attach.AttachSocket = 'iri_back_shells';
+		Attach.AttachMeshName = "IRIHeavyCannonShells.Meshes.SM_Shells_HE";
+		Attach.AttachToPawn = true;
+		Template.DefaultAttachments.AddItem(Attach);
+	}
 
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
@@ -136,7 +158,8 @@ static function X2DataTemplate Create_Shell_HE()
 static function X2DataTemplate Create_Shell_Shrapnel()
 {
 	local X2WeaponTemplate Template;
-	
+	local WeaponAttachment Attach;
+
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_Shell_Shrapnel');
 	
 	Template.WeaponPanelImage = "_ConventionalRifle";
@@ -154,7 +177,17 @@ static function X2DataTemplate Create_Shell_Shrapnel()
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_Shrapnel";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
-	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_Shrapnel";
+	{
+		Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back";
+
+		Template.AltGameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back_BM";
+		Template.ArmorTechCatForAltArchetype = 'powered';
+
+		Attach.AttachSocket = 'iri_back_shells';
+		Attach.AttachMeshName = "IRIHeavyCannonShells.Meshes.SM_Shells_Shrapnel";
+		Attach.AttachToPawn = true;
+		Template.DefaultAttachments.AddItem(Attach);
+	}
 
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
@@ -175,7 +208,8 @@ static function X2DataTemplate Create_Shell_Shrapnel()
 static function X2DataTemplate Create_Shell_HEDP()
 {
 	local X2WeaponTemplate Template;
-	
+	local WeaponAttachment Attach;
+
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_Shell_HEDP');
 	
 	Template.WeaponPanelImage = "_ConventionalRifle";
@@ -193,7 +227,17 @@ static function X2DataTemplate Create_Shell_HEDP()
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HEDP";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
-	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_HEDP";
+	{
+		Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back";
+
+		Template.AltGameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back_BM";
+		Template.ArmorTechCatForAltArchetype = 'powered';
+
+		Attach.AttachSocket = 'iri_back_shells';
+		Attach.AttachMeshName = "IRIHeavyCannonShells.Meshes.SM_Shells_HEDP";
+		Attach.AttachToPawn = true;
+		Template.DefaultAttachments.AddItem(Attach);
+	}
 
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
@@ -211,7 +255,8 @@ static function X2DataTemplate Create_Shell_HEDP()
 static function X2DataTemplate Create_Shell_HESH()
 {
 	local X2WeaponTemplate Template;
-	
+	local WeaponAttachment Attach;
+
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_Shell_HESH');
 	
 	Template.WeaponPanelImage = "_ConventionalRifle";
@@ -229,7 +274,17 @@ static function X2DataTemplate Create_Shell_HESH()
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HESH";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
-	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_HESH";
+	{
+		Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back";
+
+		Template.AltGameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back_BM";
+		Template.ArmorTechCatForAltArchetype = 'powered';
+
+		Attach.AttachSocket = 'iri_back_shells';
+		Attach.AttachMeshName = "IRIHeavyCannonShells.Meshes.SM_Shells_HESH";
+		Attach.AttachToPawn = true;
+		Template.DefaultAttachments.AddItem(Attach);
+	}
 
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
@@ -247,7 +302,8 @@ static function X2DataTemplate Create_Shell_HESH()
 static function X2DataTemplate Create_Shell_Flechette()
 {
 	local X2WeaponTemplate Template;
-	
+	local WeaponAttachment Attach;
+
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_Shell_Flechette');
 	
 	Template.WeaponPanelImage = "_ConventionalRifle";
@@ -265,7 +321,17 @@ static function X2DataTemplate Create_Shell_Flechette()
 	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_Flechette";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
-	Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Shells_Flechette";
+	{
+		Template.GameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back";
+
+		Template.AltGameArchetype = "IRIHeavyCannonShells.Archetypes.WP_Rack_Back_BM";
+		Template.ArmorTechCatForAltArchetype = 'powered';
+
+		Attach.AttachSocket = 'iri_back_shells';
+		Attach.AttachMeshName = "IRIHeavyCannonShells.Meshes.SM_Shells_Flechette";
+		Attach.AttachToPawn = true;
+		Template.DefaultAttachments.AddItem(Attach);
+	}
 
 	Template.StartingItem = false;
 	Template.bInfiniteItem = true;
@@ -283,7 +349,7 @@ static function X2DataTemplate Create_Shell_Flechette()
 //	==============================================================
 //			GUN RACKS
 //	==============================================================
-
+/*
 static function X2DataTemplate Create_Shells_T1()
 {
 	local X2WeaponTemplate Template;
@@ -376,4 +442,4 @@ static function X2DataTemplate Create_Shells_T2()
 	Template.Abilities.AddItem('IRI_Shell_Flechette_Passive');
 
 	return Template;
-}
+}*/

@@ -79,7 +79,6 @@ private static function bool IsTemplateValidForSlot(EInventorySlot InvSlot, X2It
 	local X2WeaponTemplate					WeaponTemplate;
 	local X2EquipmentTemplate				EqTemplate;
 	local XComGameState_HeadquartersXCom	XComHQ;
-
 	
 	//	Whitelist items by template name
 	if (default.AuxSlotAllowedItems.Find(ItemTemplate.DataName) != INDEX_NONE)
@@ -146,6 +145,7 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 		//`LOG("WARNING Unit:" @ Unit.GetFullName() @ "soldier class:" @ Unit.GetSoldierClassTemplateName() @ "has an item equipped in the Slot:" @ Slot.InvSlot @ ", but they are not supposed to have the Slot. Attempting to unequip the item.",, 'WOTCMoreSparkWeapons');
 
 		ItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', ItemState.ObjectID));
+		Unit = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', Unit.ObjectID));
 		if (Unit.RemoveItemFromInventory(ItemState, NewGameState))
 		{
 			//`LOG("Successfully unequipped the item. Putting it into HQ Inventory.",, 'WOTCMoreSparkWeapons');
