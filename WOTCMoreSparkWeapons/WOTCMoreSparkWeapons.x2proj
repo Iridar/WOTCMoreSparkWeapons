@@ -221,6 +221,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_ShrapnelShell.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_SpeedLoader_Trigger.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_StunCyberus.uc">
       <SubType>Content</SubType>
     </Content>

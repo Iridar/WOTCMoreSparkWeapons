@@ -8,6 +8,8 @@ static function array<X2DataTemplate> CreateTemplates()
 	local array<X2DataTemplate> Templates;
 
 	Templates.AddItem(Create_Ammo_Sabot_Ability());
+	Templates.AddItem(Create_SpeedLoader_Passive());
+	Templates.AddItem(Create_SpeedLoader_Reload());
 
 	Templates.AddItem(Create_RestorativeMist_Heal());
 	Templates.AddItem(Create_RestorativeMist_HealBit());
@@ -56,6 +58,45 @@ static function X2AbilityTemplate Create_Ammo_Sabot_Ability()
 
 	return Template;
 }
+//	==============================================================
+//			SPEED LOADER WEAPON UPGRADE
+//	==============================================================
+
+static function X2AbilityTemplate Create_SpeedLoader_Passive()
+{
+	local X2AbilityTemplate				Template;
+	local X2Effect_SpeedLoader_Trigger	Effect;
+	
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_SpeedLoader_Passive');
+
+	SetPassive(Template);
+	//SetHidden(Template);
+	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+
+	Effect = new class'X2Effect_SpeedLoader_Trigger';
+	Effect.BuildPersistentEffect(1, true);
+	Effect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, true,, Template.AbilitySourceName);
+	Template.AddTargetEffect(Effect);
+
+	return Template;
+}
+
+static function X2AbilityTemplate Create_SpeedLoader_Reload()
+{
+	local X2AbilityTemplate Template;	
+
+	Template = class'X2Ability_DefaultAbilitySet'.static.AddReloadAbility('IRI_SpeedLoader_Reload');
+
+	Template.AbilityCosts.Length = 0;
+
+	SetHidden(Template);
+	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+
+	return Template;
+}
+
 
 
 //	==============================================================

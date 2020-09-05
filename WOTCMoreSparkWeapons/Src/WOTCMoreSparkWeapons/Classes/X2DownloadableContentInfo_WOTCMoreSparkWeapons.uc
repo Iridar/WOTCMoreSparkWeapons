@@ -881,6 +881,8 @@ private static function bool DoesUnitHaveSpecialShells(const XComGameState_Unit 
 
 static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
 {
+	local AbilitySetupData			NewSetupData;
+	local array<XComGameState_Item>	ItemStates;
 	local XComGameState_Item		ItemState;
 	local X2AbilityTemplate			AbilityTemplate;
 	local StateObjectReference		OrdLauncherRef, KSMRef, BITRef;
@@ -1111,6 +1113,25 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			}
 		}
 	}
+
+	//	Grant Speed Loader Reload to weapons that have it equipped.
+	ItemStates = UnitState.GetAllInventoryItems(StartState, true);
+	if (AbilityTemplateManager == none)
+	{
+		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();	
+	}
+	AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate('IRI_SpeedLoader_Reload');
+	foreach ItemStates(ItemState)
+	{
+		if (WeaponHasSpeedLoader(ItemState))
+		{
+			NewSetupData.TemplateName = 'IRI_SpeedLoader_Reload';
+			NewSetupData.Template = AbilityTemplate;
+			NewSetupData.SourceWeaponRef = ItemState.GetReference();
+
+			SetupData.AddItem(NewSetupData);
+		}
+	}
 }
 
 static function bool DoesThisRefAuxSlotItem(const StateObjectReference Ref)
@@ -1123,6 +1144,15 @@ static function bool DoesThisRefAuxSlotItem(const StateObjectReference Ref)
     if (ItemState != none && ItemState.InventorySlot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot) return true;
 
     return false;
+}
+
+private static function bool WeaponHasSpeedLoader(const XComGameState_Item ItemState)
+{
+	local array<name> UpgradeNames;
+
+	UpgradeNames = ItemState.GetMyWeaponUpgradeTemplateNames();
+
+	return UpgradeNames.Find('IRI_SpeedLoader_Upgrade') != INDEX_NONE;
 }
 
 static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, optional XComGameState_Item ItemState=none)

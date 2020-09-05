@@ -9,6 +9,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_IRI_Spark_XPad());
 
 	Templates.AddItem(Create_ExperimentalMagazine());
+	Templates.AddItem(Create_SpeedLoader());
 
 	return Templates;
 }
@@ -57,7 +58,7 @@ static function X2DataTemplate Create_ExperimentalMagazine()
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'IRI_ExperimentalMagazine_Upgrade');
 
 	class'X2Item_DefaultUpgrades'.static.SetUpWeaponUpgrade(Template);
-	class'X2Item_DefaultUpgrades'.static.SetUpCritUpgrade(Template);
+	//class'X2Item_DefaultUpgrades'.static.SetUpCritUpgrade(Template);
 	class'X2Item_DefaultUpgrades'.static.SetUpTier2Upgrade(Template);
 
 	Template.MutuallyExclusiveUpgrades.AddItem('IRI_ExperimentalMagazine_Upgrade');
@@ -73,6 +74,29 @@ static function X2DataTemplate Create_ExperimentalMagazine()
 	return Template;
 }
 
+static function X2DataTemplate Create_SpeedLoader()
+{
+	local X2WeaponUpgradeTemplate Template;
+
+	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'IRI_SpeedLoader_Upgrade');
+
+	class'X2Item_DefaultUpgrades'.static.SetUpWeaponUpgrade(Template);
+	//class'X2Item_DefaultUpgrades'.static.SetUpCritUpgrade(Template);
+	class'X2Item_DefaultUpgrades'.static.SetUpTier2Upgrade(Template);
+
+	Template.MutuallyExclusiveUpgrades.AddItem('IRI_SpeedLoader_Upgrade');
+	Template.MutuallyExclusiveUpgrades.AddItem('ReloadUpgrade');
+	Template.MutuallyExclusiveUpgrades.AddItem('ReloadUpgrade_Bsc');
+	Template.MutuallyExclusiveUpgrades.AddItem('ReloadUpgrade_Adv');
+	Template.MutuallyExclusiveUpgrades.AddItem('ReloadUpgrade_Sup');
+
+	Template.BonusAbilities.AddItem('IRI_SpeedLoader_Passive');
+
+	Template.strImage = "img:///UILibrary_StrategyImages.X2InventoryIcons.MagAssaultRifle_MagC_inv";
+	
+	return Template;
+}
+
 static function PatchWeaponUpgrades()
 {
 	local X2WeaponUpgradeTemplate FirstTemplate, SecondTemplate;
@@ -80,6 +104,7 @@ static function PatchWeaponUpgrades()
 
 	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 
+	//	EXPERIMENTAL MAGAZINE
 	FirstTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate('ClipSizeUpgrade_Adv'));
 	SecondTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate('IRI_ExperimentalMagazine_Upgrade'));
 
@@ -108,6 +133,37 @@ static function PatchWeaponUpgrades()
 	if (FirstTemplate != none)
 	{
 		FirstTemplate.MutuallyExclusiveUpgrades.AddItem('IRI_ExperimentalMagazine_Upgrade');
+	}
+
+	//	SPEED LOADER
+	FirstTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate('ReloadUpgrade_Adv'));
+	SecondTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate('IRI_SpeedLoader_Upgrade'));
+
+	//	Copy visual weapon attachments from Advanced Extended Magazines to Experimental Magazine.
+	if (FirstTemplate != none && SecondTemplate != none)
+	{
+		SecondTemplate.UpgradeAttachments = FirstTemplate.UpgradeAttachments;
+
+		FirstTemplate.MutuallyExclusiveUpgrades.AddItem('IRI_SpeedLoader_Upgrade');
+	}
+
+	//	Make all tiers of Extended Mags mutually exclusive with Experimental Magazine
+	FirstTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate('ReloadUpgrade'));
+	if (FirstTemplate != none)
+	{
+		FirstTemplate.MutuallyExclusiveUpgrades.AddItem('IRI_SpeedLoader_Upgrade');
+	}
+
+	FirstTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate('ReloadUpgrade_Bsc'));
+	if (FirstTemplate != none)
+	{
+		FirstTemplate.MutuallyExclusiveUpgrades.AddItem('IRI_SpeedLoader_Upgrade');
+	}
+
+	FirstTemplate = X2WeaponUpgradeTemplate(ItemTemplateManager.FindItemTemplate('ReloadUpgrade_Sup'));
+	if (FirstTemplate != none)
+	{
+		FirstTemplate.MutuallyExclusiveUpgrades.AddItem('IRI_SpeedLoader_Upgrade');
 	}
 
 	AddLootTables();
