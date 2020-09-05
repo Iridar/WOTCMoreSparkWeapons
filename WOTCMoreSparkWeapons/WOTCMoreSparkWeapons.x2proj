@@ -52,6 +52,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Compatibility\XComScatter.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\Compatibility\XComShields.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\Compatibility\XComSPARKUpgrades.ini">
       <SubType>Content</SubType>
     </Content>

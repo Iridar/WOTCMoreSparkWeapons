@@ -1180,6 +1180,15 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 			//	Initial checks complete, this is a weapon equipped on a SPARK.
 
 			Content = `CONTENT;
+
+			//	Ballistic Shields
+			if (WeaponTemplate.WeaponCat == 'shield')
+			{
+				//	Needs Ballistic Shields' Update Animations hook to not fire.
+				Weapon.DefaultSocket = 'iri_spark_ballistic_shield';
+				Weapon.CustomUnitPawnAnimsets.Length = 0;
+				Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+			}
 			
 			//	If this is an Ordnance Launcher and the Rocket Launchers mod is present, add Weapon Animations for firing rockets.
 			if (WeaponTemplate.WeaponCat == 'iri_ordnance_launcher' && default.bRocketLaunchersModPresent)
@@ -1287,7 +1296,19 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 		}
 	}		
 }
+/*
+static private function bool HasShieldEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	local XComGameState_Item ItemState;
 
+	ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
+	if (ItemState != none)
+	{
+		return ItemState.GetWeaponCategory() == 'shield';
+	}
+	return false;
+}
+*/
 static function bool AbilityTagExpandHandler(string InString, out string OutString)
 {
 	local name TagText;
