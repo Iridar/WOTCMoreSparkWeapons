@@ -22,10 +22,6 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 var localized string str_ShellsMutuallyExclusiveWithMunitionsMount;
 var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
-//	Special Heavy Cannon Shells are now displayed on the SPARK's body.
-//	New Secondary Weapon: Munitions Mount: grants an Ammo Slot and all three types of currently available Special Heavy Cannon Shells.
-//	Tentative compatibility with Psionic MEC Troopers.
-
 //	Immedaite goals:
 
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
@@ -39,7 +35,9 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 //	Regular cannon shots don't always destroy cover?
 // marry Spark Arsenal and Jet Packs mod. Move the Rocket Punch from Jet Packs to infantry-sized KSM as a Heavy Weapon.
 //	Jet Jump for Booster Jets as a free action. Uses grapple traversal type with superman flight? Use stormrider teleport as an example, maybe, or look at archon movement.
+//	Point to point flight ability for SPARKs that makes them crash straight through roofs.
 // have Jet Slam / Crater be available when equipping both Infantry KSM and Booster Jets on a soldier with Heavy Armor.
+//	Spark transforms into a plane for the Flight abiltiy? Or a strafing run flyby?
 //	Deployment Shield -> Firing or reloading a Heavy Cannon (any weapon?) generates a shield that grants High Cover defense bonus.
 //	Targeting Computer -> Snapshot? Shoot through walls? increase HE shot range? HOLOTARGET!! Turn ending action. SPARK raises hand to the head and "scans" the target.
 //	Fire Sniper Rifle - fix localization

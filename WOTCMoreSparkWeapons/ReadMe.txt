@@ -2,21 +2,6 @@
 
 More info at: https://www.patreon.com/Iridar
 
-/*
-Credits:
-
-*/
-
-
-Adds new weapons and tools for SPARKs and MEC Troopers.
-- Ordnance Launcher - secondary weapon, can be used to launch grenades and rockets, adds grenade-only slots to carry ammunition. Can be used to fire the [b]Bombard[/b] ability.
-- Kinetic Strike Module - secondary weapon, boosts melee damage from Strike ability, if learned. Adds its own Kinestic Strike ability that can be used to target an adjacent tile. Has special death animations for a few enemies.
-- New Heavy Weapon - Kiruka Autogun - works more or less like a normal automatic weapon, but with infinite ammo. Can deal Headshots to Lost. Generally meant as a sort of a sidearm. Can be used by regular soldiers as well.
-- BIT is now optional. It is required for hacking and repair. If you unequip the BIT, you lose the Heavy Weapon slot. BIT's bonus to hacking is boosted to be slightly below Specialists', and BIT now provides Active Camo ability, that (for now) works like Phantom.
-- New inventory slot for SPARKs and MECs - Auxiliary Weapon. Can be used to house a Heavy Weapon (fired from the SPARK's arm, regardless if you have a BIT or not), to carry an extra grenade/rocket with Ordnance Launcher equipped, to carry a SPARK Launcher from SPARK Launchers Redux mod, or to carry one of the two new tools:
--- Restorative Mist - heals organics around the SPARK. If BIT is equipped, heals organics in a targeted area at range.
--- EM Pulse - temporarily shuts down robotic enemies around the SPARK. If BIT is equipped, applies same effects in a targeted area. SPARK itself is not affected, but other allied robotics are.
-
 [WOTC] Iridar's SPARK Arsenal
 Adds new weapons and tools for SPARKs and [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1452700934]MEC Troopers[/url][/b], a new Inventory Slot, and makes some changes to BITs.
 
@@ -27,7 +12,8 @@ Adds new weapons and tools for SPARKs and [b][url=https://steamcommunity.com/sha
 
 [b]New Secondary Weapons:[/b][list]
 [*] Ordnance Launchers (3 tiers)
-[*] Kinetic Strike Module[/list]
+[*] Kinetic Strike Module
+[*] Munitions Mount (2 tiers)[/list]
 
 [b]New Heavy Weapons:[/b][list]
 [*] Kiruka Autogun
@@ -68,7 +54,8 @@ This mod is a significant buff to SPARKs' and MECs' power. However, it is create
 [h1]COMPANION MODS[/h1]
 [list]
 [*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1775963384][WOTC] Rocket Launchers 2.0[/url][/b] - fully supported. This mod enables SPARKs to carry, Take, Arm and Give rockets, as well as Fire them with the Ordnance Launcher. SPARKs do not suffer movement penalties for carrying rockets. All rockets are supported, including the Tactical Elerium Nuke. Judgement Day is upon ADVENT.
-[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1161324428]SPARK Launchers Redux[/url][/b] - in a weak attempt to keep things more balanced, my mod nerfs SPARK Launchers' charges to 1 for offensive launchers and 2 for support launchers.[/list]
+[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1161324428]SPARK Launchers Redux[/url][/b] - can be carried in the Auxiliary Weapon Slot. 
+[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2025780967][WOTC] Iridar's Scatter Mod[/url][/b] - adds scatter to grenades and rockets and HE/HESH Heavy Cannon shots.[/list]
 
 [h1]COMPATIBILITY[/h1]
 
@@ -93,7 +80,6 @@ And thanks to comrades in arms:
 [b]Musashi[/b] - for graciously providing the custom death animation code. 
 [b]NeIVIeSiS[/b] - for making many of the icons for this mod.
 [b]bstar[/b] - brainstorm assistance.
-
 
 
 
