@@ -27,6 +27,7 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
 
+//	Canister rounds -> experimental ammo, adds aim bonuses up close, aim penalties at range, +1 crit, -1 Ammo, add shotgun projectile.
 //	Marry Claus Flamethrowers and Mitzruti's Chemthrower canisters by changing their default sockets
 //	Reloading the weapon when dashing? 
 //	Maybe do something for HE/HESH and Shrapnel with Sabot Ammo.
@@ -720,10 +721,23 @@ static function string DLCAppendSockets(XComUnitPawn Pawn)
 	local XComGameState_Unit UnitState;
 
 	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Pawn.ObjectID));
+	if (UnitState == none)
+		return "";
 
-	if (UnitState != none && (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE))
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
 	{
 		return "IRIOrdnanceLauncher.Meshes.Spark_Sockets";
+	}
+	if (UnitState.IsSoldier())
+	{
+		if (UnitState.kAppearance.iGender == eGender_Male)
+		{
+			return "IRIKineticStrikeModule.Meshes.SM_SoldierSockets_M";
+		}
+		else
+		{
+			return "IRIKineticStrikeModule.Meshes.SM_SoldierSockets_F";
+		}
 	}
 	return "";
 }
@@ -784,6 +798,17 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 	if (IsItemMunitionsMount(ItemTemplate.DataName) && DoesUnitHaveSpecialShells(UnitState, CheckGameState))
 	{	
 		DisabledReason = default.str_MunitionsMountMutuallyExclusiveWithShells;
+		bCanAddItem = 0;
+		return OverrideNormalBehavior;
+	}
+
+	//	Can't equip Heavy Strike Module on SPARK.
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && 
+		(ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T1' || ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T2'))
+	{
+		LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+		LocTag.StrValue0 = class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_HeavyWeapon];				
+		DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strCategoryRestricted));
 		bCanAddItem = 0;
 		return OverrideNormalBehavior;
 	}

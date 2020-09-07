@@ -28,7 +28,9 @@ Adds new weapons and tools for SPARKs and [b][url=https://steamcommunity.com/sha
 [*] E.M. Pulse
 [*] Special Shells for Heavy Cannons (3 variants, each has 2 tiers)[/list]
 
-[b]New Weapon Upgrade: Experimental Magazine - grants an Ammo Slot.[/b]
+[b]New Weapon Upgrades:[/b][list]
+[*] Experimental Magazine - grants an Ammo Slot.
+[*] Speed Loader - reload for free when performing a dash.[/list]
 
 [b]New Experimental Ammo: Sabot Rounds[/b]
 
@@ -68,7 +70,7 @@ The mod is [b][i]highly[/i][/b] configurable through various files in:
 
 [h1]MOD STATUS[/h1]
 
-Currently hard at work making this mod more awesome. Stay tuned for updates.
+Currently hard at work making this mod more awesome. Keep your eye on the [url=https://steamcommunity.com/sharedfiles/filedetails/changelog/2127166233][b]changelog[/b][/url].
 
 [h1]CREDITS[/h1]
 
