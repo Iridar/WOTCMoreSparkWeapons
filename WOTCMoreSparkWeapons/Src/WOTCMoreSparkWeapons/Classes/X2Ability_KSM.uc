@@ -38,6 +38,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 
 	//	Targeting and Triggering
 	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StandardMelee';
+	Template.DisplayTargetHitChance = true;
 	
 	CursorTarget = new class'X2AbilityTarget_Cursor';
 	//CursorTarget.bRestrictToWeaponRange = true;

@@ -26,6 +26,9 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
+
+//	Hit chance for KSM?
+
 //	Scan sound
 //	AkEvent'DLC_90_SoundCharacterFX.Intimidate_BUZZ'
 
