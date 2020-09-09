@@ -31,6 +31,7 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
 //	Scan sound
 //	AkEvent'DLC_90_SoundCharacterFX.Intimidate_BUZZ'
+//	
 
 //	Canister rounds -> experimental ammo, adds aim bonuses up close, aim penalties at range, +1 crit, -1 Ammo, add shotgun projectile.
 //	Marry Claus Flamethrowers and Mitzruti's Chemthrower canisters by changing their default sockets
