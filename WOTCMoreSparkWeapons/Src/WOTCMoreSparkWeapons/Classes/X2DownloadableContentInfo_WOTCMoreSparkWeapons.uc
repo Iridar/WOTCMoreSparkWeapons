@@ -27,15 +27,11 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
 
-//	Hit chance for KSM?
-
 //	Scan sound
 //	AkEvent'DLC_90_SoundCharacterFX.Intimidate_BUZZ'
-//	
 
 //	Canister rounds -> experimental ammo, adds aim bonuses up close, aim penalties at range, +1 crit, -1 Ammo, add shotgun projectile.
 //	Marry Claus Flamethrowers and Mitzruti's Chemthrower canisters by changing their default sockets
-//	Reloading the weapon when dashing? 
 //	Maybe do something for HE/HESH and Shrapnel with Sabot Ammo.
 //	Add a way to carry special ammo in the aux slot. Make sure it adheres to unique equip rules.
 //	Improve descriptions of Sabot Ammo interactions with special cannon shells
@@ -80,8 +76,9 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 //	Befriend Mitzruti's canisters with Claus' flamethrowers: https://discordapp.com/channels/287872325070880770/520730736630824980/723925790240145468
 
 //	LOW PRIORITY
+//	Hit chance for KSM?
 //	Different projectile for plasma HE / HESH?
-//  Make the gun form the plasma projectile before firing? 
+//  Make the Plasma Heavy Cannon gun form the plasma projectile before firing? 
 //	Textures are too dark in Photobooth. >>it's dark because the material doesn't have Character Mod Lighting ticked in the Usage section of the material
 //	Sparkfall within the context of this mod?
 //	Better heart material for bers heart
@@ -794,6 +791,7 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
     if(DisabledReason != "")
         return DoNotOverrideNormalBehavior;
 
+	//	Can't equip Munitions Mount and special shells at the same time.
 	if (IsItemSpecialShell(ItemTemplate.DataName) && DoesUnitHaveMunitionsMount(UnitState, CheckGameState))
 	{	
 		DisabledReason = default.str_ShellsMutuallyExclusiveWithMunitionsMount;

@@ -24,6 +24,11 @@ function Update(float DeltaTime)
 	local Vector ShooterToTarget;
 	local Rotator ConeRotator;
 
+	//local XComWorldData WorldData;
+	//local array<StateObjectReference> UnitsOnTile;
+	//local XComPresentationLayer Pres;
+	//local UITacticalHUD TacticalHud;
+
 	//NewTargetLocation = GetSplashRadiusCenter();
 	NewTargetLocation = Cursor.GetCursorFeetLocation();
 
@@ -46,8 +51,42 @@ function Update(float DeltaTime)
 		ConeRotator.Pitch = 0;
 		ConeActor.SetRotation(ConeRotator);
 	}
+	/*
+	WorldData = `XWORLD;
+	UnitsOnTile = WorldData.GetUnitsOnTile(Tiles[0]);
+	if (UnitsOnTile.Length > 0)
+	{
+		Pres = `PRES;
+		TacticalHud = Pres.GetTacticalHUD();
+		TacticalHud.TargetEnemy(UnitsOnTile[0].ObjectID);
+		TacticalHud.ToggleEnemyInfo();
+	}*/
+}
+/*
+function int GetTargetedObjectID()
+{
+	local XComWorldData WorldData;
+	local array<StateObjectReference> UnitsOnTile;
+	local TTile Tile;
+	local vector NewTargetLocation;
+
+	WorldData = `XWORLD;
+	NewTargetLocation = Cursor.GetCursorFeetLocation();
+	Tile = WorldData.GetTileCoordinatesFromPosition(NewTargetLocation);
+	UnitsOnTile = WorldData.GetUnitsOnTile(Tile);
+
+	if (UnitsOnTile.Length > 0)
+	{
+		return UnitsOnTile[0].ObjectID;
+	}
+	return 0;
 }
 
+function int GetTargetIndex()
+{
+	return 0;
+}
+*/
 function Canceled()
 {
 	super.Canceled();

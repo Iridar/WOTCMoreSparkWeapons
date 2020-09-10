@@ -4,7 +4,8 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
-	Templates.AddItem(Create_KineticStrike());
+	Templates.AddItem(Create_KineticStrike('IRI_KineticStrike'));
+	Templates.AddItem(Create_KineticStrike('IRI_KineticStrike_Soldier', false));
 	Templates.AddItem(Create_KineticStrike_Passive());
 
 	return Templates;
@@ -14,7 +15,7 @@ static function array<X2DataTemplate> CreateTemplates()
 //			KINETIC STRIKE MODULE
 //	==============================================================
 
-static function X2AbilityTemplate Create_KineticStrike()
+static function X2AbilityTemplate Create_KineticStrike(name TemplateName, optional bool bForSpark = true)
 {
 	local X2AbilityTemplate                 Template;	
 	local X2AbilityCost_ActionPoints        ActionPointCost;
@@ -22,16 +23,36 @@ static function X2AbilityTemplate Create_KineticStrike()
 	local X2AbilityTarget_Cursor            CursorTarget;
 	local X2AbilityMultiTarget_Cylinder		MultiTarget;
 	local X2Effect_ApplyKSMWorldDamage		KSMWorldDamage;
-	//local X2Effect_AdditionalAnimSets		AnimSetEffect;
 	local X2Effect_OverrideDeathAction		OverrideDeathAction;
-	//local X2Effect_Knockback				KnockbackEffect;
-	//local X2Condition_UnblockedTile			UnblockedTileCondition;
-	//local X2Effect_ApplyDirectionalWorldDamage	WorldDamage;
 	
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_KineticStrike');
+	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
 
 	//	Icon setup
-	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SERGEANT_PRIORITY;	//	Same as Strike
+	if (bForSpark)
+	{
+		Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SERGEANT_PRIORITY;	//	Same as Strike
+
+		Template.ActionFireClass = class'X2Action_KSM_Kill';
+
+		OverrideDeathAction = new class'X2Effect_OverrideDeathAction';
+		OverrideDeathAction.DeathActionClass = class'X2Action_KSM_Death';
+		OverrideDeathAction.EffectName = 'IRI_KineticStrike_DeathActionEffect';
+		Template.AddMultiTargetEffect(OverrideDeathAction);
+
+		Template.CinescriptCameraType = "Spark_Strike";
+
+		Template.CustomFireAnim = 'FF_Melee';
+	}
+	else
+	{
+		Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.ARMOR_ACTIVE_PRIORITY; //	Same as Heavy Weapons
+
+		Template.CinescriptCameraType = "Soldier_HeavyWeapons";
+
+		//	Apparently necessary to force the animation to play correctly against friendly units/exploding purifiers?..
+		SetFireAnim(Template, 'FF_KineticStrike');
+	}
+	
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.IconImage = "img:///IRIKineticStrikeModule.UI.UI_KineticStrike";
@@ -41,7 +62,6 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.DisplayTargetHitChance = true;
 	
 	CursorTarget = new class'X2AbilityTarget_Cursor';
-	//CursorTarget.bRestrictToWeaponRange = true;
 	CursorTarget.FixedAbilityRange = 2;	//	Able to target diagonally
 	Template.AbilityTargetStyle = CursorTarget;
 	
@@ -52,9 +72,7 @@ static function X2AbilityTemplate Create_KineticStrike()
 	MultiTarget.fTargetRadius = 0.75f;
 	Template.AbilityMultiTargetStyle = MultiTarget;
 
-	//Template.SkipRenderOfAOETargetingTiles = true;
 	Template.TargetingMethod = class'X2TargetingMethod_KSM';
-
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
 	//	Shooter Conditions
@@ -71,27 +89,6 @@ static function X2AbilityTemplate Create_KineticStrike()
 	Template.AbilityCosts.AddItem(ActionPointCost);
 	
 	//	Multi Target effects
-	/*
-	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
-	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Kill");
-	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	Template.AddShooterEffect(AnimSetEffect);*/
-	/*
-	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
-	AnimSetEffect.AddAnimSetWithPath("IRIKineticStrikeModule.Anims.AS_Trooper_Death");
-	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
-	AnimSetEffect.TargetConditions.AddItem(new class'X2Condition_UnblockedTile');
-	Template.AddMultiTargetEffect(AnimSetEffect);*/
-
-	Template.ActionFireClass = class'X2Action_KSM_Kill';
-	OverrideDeathAction = new class'X2Effect_OverrideDeathAction';
-	OverrideDeathAction.DeathActionClass = class'X2Action_KSM_Death';
-	OverrideDeathAction.EffectName = 'IRI_KineticStrike_DeathActionEffect';
-	//OverrideDeathAction.BuildPersistentEffect(1, false, true, true, eGameRule_PlayerTurnBegin);
-	//OverrideDeathAction.TargetConditions.AddItem(new class'X2Condition_UnblockedTile');
-	Template.AddMultiTargetEffect(OverrideDeathAction);
-
-	//Template.AddMultiTargetEffect(new class'X2Effect_DLC_3StrikeDamage');
 	WeaponDamageEffect = new class'X2Effect_DLC_3StrikeDamage';
 	Template.AddMultiTargetEffect(WeaponDamageEffect);
 
@@ -101,26 +98,10 @@ static function X2AbilityTemplate Create_KineticStrike()
 	KSMWorldDamage.bApplyOnMiss = true;
 	Template.AddMultiTargetEffect(KSMWorldDamage);
 
-	//	Add knockback only to enemies that *are* on blocked tiles.
-	/*
-	UnblockedTileCondition = new class'X2Condition_UnblockedTile';
-	UnblockedTileCondition.bReverseCondition = true;
-
-	KnockbackEffect = new class'X2Effect_Knockback';
-	KnockbackEffect.KnockbackDistance = 8;
-	KnockbackEffect.bKnockbackDestroysNonFragile = true;
-	KnockbackEffect.TargetConditions.AddItem(UnblockedTileCondition);
-	Template.AddMultiTargetEffect(KnockbackEffect);
-	Template.bOverrideMeleeDeath = true;*/
-
 	Template.bOverrideMeleeDeath = true;
-	Template.CustomFireAnim = 'FF_Melee';
 	Template.SourceMissSpeech = 'SwordMiss';
-	//Template.ActivationSpeech = 'RocketLauncher';
-	Template.CinescriptCameraType = "Spark_Strike";
 
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
-	//Template.MeleePuckMeshPath = "Materials_DLC3.MovePuck_Strike";
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = KineticStrike_BuildVisualization;
 	Template.ModifyNewContextFn = KineticStrike_ModifyActivatedAbilityContext;

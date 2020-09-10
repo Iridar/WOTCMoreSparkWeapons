@@ -32,6 +32,8 @@ var config array<name> BUILD_COST_TYPE;
 var config array<int> BUILD_COST_QUANTITY;
 var config int BLACKMARKET_VALUE;
 
+var config array<name> REWARD_DECKS;
+
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
@@ -81,10 +83,21 @@ static function X2DataTemplate Create_Item()
 	Template.ExtraDamage = default.EXTRA_DAMAGE;
 	Template.Aim = default.AIM;
 	Template.CritChance = default.CRITCHANCE;
-	Template.iClipSize = default.ICLIPSIZE;
+	if (default.ICLIPSIZE == -1)
+	{
+		Template.iClipSize = 99;
+		Template.InfiniteAmmo = true;
+		Template.bHideClipSizeStat = true;
+	}
+	else
+	{
+		Template.iClipSize = default.ICLIPSIZE;
+	}
 	Template.iSoundRange = default.ISOUNDRANGE;
 	Template.iEnvironmentDamage = default.IENVIRONMENTDAMAGE;
 	Template.DamageTypeTemplateName = default.DAMAGE.DamageType;
+
+	Template.RewardDecks = default.REWARD_DECKS;
 	
 	Template.iPhysicsImpulse = 5;
 	Template.fKnockbackDamageAmount = 5.0f;
