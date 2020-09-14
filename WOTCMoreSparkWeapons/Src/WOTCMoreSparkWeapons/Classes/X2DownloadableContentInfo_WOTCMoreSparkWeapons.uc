@@ -30,6 +30,7 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 //	Scan sound
 //	AkEvent'DLC_90_SoundCharacterFX.Intimidate_BUZZ'
 
+//	Autogun Overwatch
 //	Canister rounds -> experimental ammo, adds aim bonuses up close, aim penalties at range, +1 crit, -1 Ammo, add shotgun projectile.
 //	Marry Claus Flamethrowers and Mitzruti's Chemthrower canisters by changing their default sockets
 //	Maybe do something for HE/HESH and Shrapnel with Sabot Ammo.
@@ -76,6 +77,7 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 //	Befriend Mitzruti's canisters with Claus' flamethrowers: https://discordapp.com/channels/287872325070880770/520730736630824980/723925790240145468
 
 //	LOW PRIORITY
+//	Photobooth poses?
 //	Hit chance for KSM?
 //	Different projectile for plasma HE / HESH?
 //  Make the Plasma Heavy Cannon gun form the plasma projectile before firing? 
@@ -291,7 +293,7 @@ static private function bool AddSparkSquaddieWeapons(XComGameState AddToGameStat
 				{
 					if (Loadout.LoadoutName == SquaddieLoadout)
 					{
-						`LOG("Found loadout.",, 'WOTCMoreSparkWeapons');
+						`LOG("Found loadout:" @ SquaddieLoadout,, 'WOTCMoreSparkWeapons');
 
 						//	Cycle through all items in the loadout
 						for (i = 0; i < Loadout.Items.Length; i++)
@@ -792,14 +794,15 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
         return DoNotOverrideNormalBehavior;
 
 	//	Can't equip Munitions Mount and special shells at the same time.
-	if (IsItemSpecialShell(ItemTemplate.DataName) && DoesUnitHaveMunitionsMount(UnitState, CheckGameState))
+	//	Also can't equip MM and Shells on non-SPARKS.
+	if (IsItemSpecialShell(ItemTemplate.DataName) && (DoesUnitHaveMunitionsMount(UnitState, CheckGameState) || default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE))
 	{	
 		DisabledReason = default.str_ShellsMutuallyExclusiveWithMunitionsMount;
 		bCanAddItem = 0;
 		return OverrideNormalBehavior;
 	}
 
-	if (IsItemMunitionsMount(ItemTemplate.DataName) && DoesUnitHaveSpecialShells(UnitState, CheckGameState))
+	if (IsItemMunitionsMount(ItemTemplate.DataName) && (DoesUnitHaveSpecialShells(UnitState, CheckGameState) || default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE))
 	{	
 		DisabledReason = default.str_MunitionsMountMutuallyExclusiveWithShells;
 		bCanAddItem = 0;

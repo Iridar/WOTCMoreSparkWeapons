@@ -103,7 +103,7 @@ static function X2AbilityTemplate Create_SpeedLoader_Reload()
 //			RESTORATIVE MIST
 //	==============================================================
 
-static function SetUpRestorativeMist(X2AbilityTemplate Template)
+static function SetUpRestorativeMist(X2AbilityTemplate Template, optional bool bHealShooter = false)
 {
 	local X2Condition_UnitProperty				UnitPropertyCondition;
 	local X2AbilityMultiTarget_Radius			MultiTargetStyle;
@@ -157,6 +157,12 @@ static function SetUpRestorativeMist(X2AbilityTemplate Template)
 	MedikitHeal.IncreasedPerUseHP = class'X2Item_RestorativeMist_CV'.default.BATTLEFIELD_MEDICINE_HEAL_HP;
 	Template.AddMultiTargetEffect(MedikitHeal);
 
+	if (bHealShooter)
+	{
+		MedikitHeal.TargetConditions.AddItem(UnitPropertyCondition);
+		Template.AddShooterEffect(MedikitHeal);
+	}
+
 	RemoveEffects = new class'X2Effect_RemoveEffectsByDamageType';
 	foreach class'X2Ability_DefaultAbilitySet'.default.MedikitHealEffectTypes(HealType)
 	{
@@ -177,7 +183,7 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_RestorativeMist_Heal');
 
-	SetUpRestorativeMist(Template);
+	SetUpRestorativeMist(Template, true);
 
 	//	Icon Setup
 	Template.IconImage = "img:///IRIRestorativeMist.UI.UI_RestorativeMist";

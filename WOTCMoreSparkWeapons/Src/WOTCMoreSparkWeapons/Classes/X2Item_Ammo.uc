@@ -146,7 +146,6 @@ static function X2DataTemplate Create_Shell_HE()
 
 	Template.HideIfResearched = 'IRI_ImprovedShells_Tech';
 
-	Template.Abilities.AddItem('IRI_FireArtilleryCannon_HE_Passive');
 	Template.Abilities.AddItem('IRI_Shell_HE_Passive');
 
 	return Template;
@@ -290,7 +289,6 @@ static function X2DataTemplate Create_Shell_HESH()
 	Template.BaseItem = 'IRI_Shell_HE';
 	Template.CreatorTemplateName = 'IRI_ImprovedShells_Tech';
 
-	Template.Abilities.AddItem('IRI_FireArtilleryCannon_HE_Passive');
 	Template.Abilities.AddItem('IRI_Shell_HESH_Passive');
 
 	return Template;

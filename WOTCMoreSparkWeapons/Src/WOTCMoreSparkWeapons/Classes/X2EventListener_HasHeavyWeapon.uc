@@ -31,6 +31,7 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 	local XComGameState_Unit	UnitState;
 	local XComGameState			CheckGameState;
 	local XComGameState_Item	ItemState;
+	local X2ItemTemplate		ItemTemplate;
 
 	/*
 	Tuple = new class'XComLWTuple';
@@ -67,6 +68,19 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 				Tuple.Data[1].b = class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.WeaponCategoriesAddHeavyWeaponSlot.Find(ItemState.GetWeaponCategory()) != INDEX_NONE;
 
 				//`LOG("Override: unit has heavy weapon:" @ Tuple.Data[0].b,, 'WOTCMoreSparkWeapons');
+
+				//	If the unit is supposed to have the heavy weapon slot, but it's currently empty, we equip a free heavy weapon on them.
+				if (Tuple.Data[1].b && UnitState.GetItemInSlot(eInvSlot_HeavyWeapon, CheckGameState) == none && NewGameState != none)
+				{	
+					ItemTemplate = class'X2ItemTemplateManager'.static.GetItemTemplateManager().FindItemTemplate(class'X2Item_HeavyWeapons'.default.FreeHeavyWeaponToEquip);
+					
+					if (ItemTemplate != none)
+					{
+						//`LOG("Equipping a free heavy weapon on unit:" @ UnitState.GetFullName(),, 'WOTCMoreSparkWeapons');
+						ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+						UnitState.AddItemToInventory(ItemState, eInvSlot_HeavyWeapon, NewGameState);
+					}
+				}
 
 				return ELR_NoInterrupt;
 			}

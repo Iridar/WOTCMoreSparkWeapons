@@ -40,17 +40,12 @@ static function X2AbilityTemplate Create_KineticStrike(name TemplateName, option
 		Template.AddMultiTargetEffect(OverrideDeathAction);
 
 		Template.CinescriptCameraType = "Spark_Strike";
-
-		Template.CustomFireAnim = 'FF_Melee';
 	}
 	else
 	{
 		Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.ARMOR_ACTIVE_PRIORITY; //	Same as Heavy Weapons
 
-		Template.CinescriptCameraType = "Soldier_HeavyWeapons";
-
-		//	Apparently necessary to force the animation to play correctly against friendly units/exploding purifiers?..
-		SetFireAnim(Template, 'FF_KineticStrike');
+		Template.CinescriptCameraType = "Soldier_HeavyWeapons";		
 	}
 	
 	Template.AbilitySourceName = 'eAbilitySource_Item';
@@ -101,6 +96,8 @@ static function X2AbilityTemplate Create_KineticStrike(name TemplateName, option
 	Template.bOverrideMeleeDeath = true;
 	Template.SourceMissSpeech = 'SwordMiss';
 
+	//	Apparently necessary to force the animation to play correctly against friendly units/exploding purifiers?..
+	SetFireAnim(Template, 'FF_KineticStrike');
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = KineticStrike_BuildVisualization;

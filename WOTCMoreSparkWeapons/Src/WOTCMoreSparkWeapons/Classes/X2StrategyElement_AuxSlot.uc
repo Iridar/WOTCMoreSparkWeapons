@@ -7,6 +7,7 @@ var config EInventorySlot AuxiliaryWeaponSlot;
 
 var config array<name> AuxSlotAllowedWeaponCategories;
 var config array<name> AuxSlotAllowedItems;
+var config array<name> AuxSlotAlwaysAllowedItems;
 var config name		   TechRequiredForItems;
 
 static function array<X2DataTemplate> CreateTemplates()
@@ -79,6 +80,11 @@ private static function bool IsTemplateValidForSlot(EInventorySlot InvSlot, X2It
 	local X2WeaponTemplate					WeaponTemplate;
 	local X2EquipmentTemplate				EqTemplate;
 	local XComGameState_HeadquartersXCom	XComHQ;
+
+	if (default.AuxSlotAlwaysAllowedItems.Find(ItemTemplate.DataName) != INDEX_NONE)
+	{
+		return true;
+	}
 	
 	//	Whitelist items by template name
 	if (default.AuxSlotAllowedItems.Find(ItemTemplate.DataName) != INDEX_NONE)

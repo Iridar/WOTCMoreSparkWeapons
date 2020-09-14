@@ -31,8 +31,10 @@ private function Get_KSMKill_AnimName(out name AnimName)
 					TargetUnit.GetPawn().GetAnimTreeController().CanPlayAnimation(DeathSequence))
 				{
 					AnimName = KillSequence;
+					return;
 				}
 			}
 		}
 	}
+	AnimName = 'FF_KineticStrikeA';
 }
