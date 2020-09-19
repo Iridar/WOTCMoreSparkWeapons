@@ -88,6 +88,12 @@ static function X2AbilityTemplate Create_SpeedLoader_Reload()
 
 	Template = class'X2Ability_DefaultAbilitySet'.static.AddReloadAbility('IRI_SpeedLoader_Reload');
 
+	//	Should prevent this ability from not allowing the unit end turn automatically, though I haven't been able to confirm this bug.
+	Template.AbilityTriggers.Length = 0;
+	Template.AbilityTriggers.AddItem(new class'X2AbilityTrigger_Placeholder');
+	//	Not sure it's necessary, but it still works, so why not.
+	Template.bIsPassive = true;
+
 	Template.AbilityCosts.Length = 0;
 
 	SetHidden(Template);

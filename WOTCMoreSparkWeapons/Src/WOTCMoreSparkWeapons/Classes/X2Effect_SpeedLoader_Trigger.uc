@@ -104,12 +104,21 @@ private static function bool WeaponHasSpeedLoader(const XComGameState_Item ItemS
 
 function bool PostAbilityCostPaid(XComGameState_Effect EffectState, XComGameStateContext_Ability AbilityContext, XComGameState_Ability kAbility, XComGameState_Unit SourceUnit, XComGameState_Item AffectWeapon, XComGameState NewGameState, const array<name> PreCostActionPoints, const array<name> PreCostReservePoints) 
 { 
+	local XComGameState_Ability PassiveAbilityState;
+	local StateObjectReference	AbilityRef;
+
 	//	This is a movement ability and the unit is dashing.
 	if (AbilityContext.InputContext.MovementPaths.Length > 0)
 	{	
 		if (AbilityContext.InputContext.MovementPaths[0].CostIncreases.Length > 0)
 		{
-			`XEVENTMGR.TriggerEvent('IRI_SpeedLoader_Trigger_Event', SourceUnit, SourceUnit, NewGameState);
+			AbilityRef = SourceUnit.FindAbility('IRI_SpeedLoader_Passive');
+			if (AbilityRef.ObjectID > 0)
+			{
+				PassiveAbilityState = XComGameState_Ability(`XCOMHISTORY.GetGameStateForObjectID(AbilityRef.ObjectID));
+			}
+
+			`XEVENTMGR.TriggerEvent('IRI_SpeedLoader_Trigger_Event', PassiveAbilityState, SourceUnit, NewGameState);
 		}
 	}
 	return false; 
