@@ -24,6 +24,9 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
 //	Immedaite goals:
 
+//	Bridge config for CI. Look at rocket launchers for an example.
+//	KSM animation fails to play when killing (or just attacking?) a unit in high cover from the SPARK
+
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
 

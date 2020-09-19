@@ -99,6 +99,7 @@ static function X2AbilityTemplate Create_KineticStrike(name TemplateName, option
 	//	Apparently necessary to force the animation to play correctly against friendly units/exploding purifiers?..
 	SetFireAnim(Template, 'FF_KineticStrike');
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
+	Template.bSkipExitCoverWhenFiring = true;
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = KineticStrike_BuildVisualization;
 	Template.ModifyNewContextFn = KineticStrike_ModifyActivatedAbilityContext;
