@@ -98,8 +98,10 @@ static function X2AbilityTemplate Create_KineticStrike(name TemplateName, option
 
 	//	Apparently necessary to force the animation to play correctly against friendly units/exploding purifiers?..
 	SetFireAnim(Template, 'FF_KineticStrike');
+
+	//	This makes the attack animation glitch out at all times.
+	//Template.bSkipExitCoverWhenFiring = true;
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
-	Template.bSkipExitCoverWhenFiring = true;
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = KineticStrike_BuildVisualization;
 	Template.ModifyNewContextFn = KineticStrike_ModifyActivatedAbilityContext;
@@ -144,7 +146,7 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 	local X2Action_PlayAnimation		PlayAnimation;
 	//local X2Action						DamageUnitAction;
 	//local X2Action_MarkerNamed	DamageTerrainAction;
-	local int i;
+	//local int i;
 
 	class'X2Ability'.static.TypicalAbility_BuildVisualization(VisualizeGameState);
 	
@@ -152,10 +154,10 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 	VisMgr = `XCOMVISUALIZATIONMGR;
 	AbilityContext = XComGameStateContext_Ability(VisualizeGameState.GetContext());
 
-	for (i = 0; i < AbilityContext.InputContext.MultiTargets.Length; i++)
-	{
-		//`LOG("Target unit:" @ XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID)).GetFullName(),, 'WOTCMoreSparkWeapons');
-	}
+	//for (i = 0; i < AbilityContext.InputContext.MultiTargets.Length; i++)
+	//{
+	//	`LOG("Target unit:" @ XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID)).GetFullName(),, 'WOTCMoreSparkWeapons');
+	//}
 
 	//	Make the "primary target" of the ability rotate towards the spark
 	if (AbilityContext.InputContext.MultiTargets.Length > 0)
@@ -190,7 +192,7 @@ static function KineticStrike_BuildVisualization(XComGameState VisualizeGameStat
 		ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[0].ObjectID);
 		ActionMetadata.VisualizeActor = History.GetVisualizer(AbilityContext.InputContext.MultiTargets[0].ObjectID);
 		
-		MoveTurnAction = X2Action_MoveTurn(class'X2Action_MoveTurn'.static.AddToVisualizationTree(ActionMetadata, AbilityContext, true, FireAction.ParentActions[0]));
+		MoveTurnAction = X2Action_MoveTurn(class'X2Action_MoveTurn'.static.AddToVisualizationTree(ActionMetadata, AbilityContext, false, FireAction.ParentActions[0]));
 		MoveTurnAction.m_vFacePoint =  `XWORLD.GetPositionFromTileCoordinates(SourceUnit.TileLocation);
 		MoveTurnAction.UpdateAimTarget = true;
 
