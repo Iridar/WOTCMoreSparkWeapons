@@ -23,8 +23,9 @@ private function Get_KSMKill_AnimName(out name AnimName)
 	{
 		TargetUnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[0].ObjectID));
 
-		if (class'X2Condition_UnblockedTile'.static.IsUnitOnAnUnblockedTile(SourceUnitState, TargetUnitState, "FireAction"))
-		{
+		//	Removed because it's apparently unnecessary?
+		//if (class'X2Condition_UnblockedTile'.static.IsUnitOnAnUnblockedTile(SourceUnitState, TargetUnitState, "FireAction"))
+		//{
 			if (class'KSMHelper'.static.GetKillDeathAnimationNamesForCharacterTemplate(TargetUnitState.GetMyTemplateName(), KillSequence, DeathSequence))
 			{
 				if	(UnitPawn.GetAnimTreeController().CanPlayAnimation(KillSequence) && 
@@ -34,7 +35,7 @@ private function Get_KSMKill_AnimName(out name AnimName)
 					return;
 				}
 			}
-		}
+		//}
 	}
 	AnimName = 'FF_KineticStrikeA';
 }

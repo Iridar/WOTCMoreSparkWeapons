@@ -46,6 +46,7 @@ static function X2AbilityTemplate Create_KineticStrike(name TemplateName, option
 		Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.ARMOR_ACTIVE_PRIORITY; //	Same as Heavy Weapons
 
 		Template.CinescriptCameraType = "Soldier_HeavyWeapons";		
+		//Template.CinescriptCameraType = "Iridar_HeavyStrikeModule";		
 	}
 	
 	Template.AbilitySourceName = 'eAbilitySource_Item';
