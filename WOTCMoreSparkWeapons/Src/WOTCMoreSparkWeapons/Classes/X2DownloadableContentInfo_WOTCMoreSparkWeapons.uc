@@ -22,11 +22,11 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 var localized string str_ShellsMutuallyExclusiveWithMunitionsMount;
 var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
-//	Immedaite goals:
+//	Heavy Cannons should now be unable to benefit from any clip size increases, as intended.
+//	Added Korean translation by KimKast
+//	Error messages about not being able to equip two Autoguns on the same time, a KSM on a regular soldier, and a HSM on a SPARK will now make more sense.
 
-//	Bridge config for CI. Look at rocket launchers for an example.
-//	KSM animation fails to play when killing (or just attacking?) a unit in high cover from the SPARK
-//	Better HSM cinecam? Flametrhower one, maybe?
+//	Immedaite goals:
 
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
@@ -38,7 +38,6 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 //	Canister rounds -> experimental ammo, adds aim bonuses up close, aim penalties at range, +1 crit, -1 Ammo, add shotgun projectile.
 //	Marry Claus Flamethrowers and Mitzruti's Chemthrower canisters by changing their default sockets
 //	Maybe do something for HE/HESH and Shrapnel with Sabot Ammo.
-//	Add a way to carry special ammo in the aux slot. Make sure it adheres to unique equip rules.
 //	Improve descriptions of Sabot Ammo interactions with special cannon shells
 //	Regular cannon shots don't always destroy cover?
 // marry Spark Arsenal and Jet Packs mod. Move the Rocket Punch from Jet Packs to infantry-sized KSM as a Heavy Weapon.
@@ -81,6 +80,7 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 //	Befriend Mitzruti's canisters with Claus' flamethrowers: https://discordapp.com/channels/287872325070880770/520730736630824980/723925790240145468
 
 //	LOW PRIORITY
+//	Better HSM cinecam? Flametrhower one, maybe?
 //	Photobooth poses?
 //	Hit chance for KSM?
 //	Different projectile for plasma HE / HESH?
@@ -140,6 +140,7 @@ HWZ-1 "Arbalest", HWZ-3 "Onager",     HWZ-9 "Scorpion"
 
 //	REJECTED
 //	shells equippable into ammo slot? -> cannot do that,  would have compatibility issues with regular ammo, wouldn't be able to carry them with special ammo and HotLoadAmmo would try to grab special shells.
+// SPARK Arsenal -> hacking a door without BIT crashes the game? -- Couldn't confirm.
 
 /// Start Issue #260
 /// Called from XComGameState_Item:CanWeaponApplyUpgrade.
@@ -783,6 +784,7 @@ static function GetNumUtilitySlotsOverride(out int NumUtilitySlots, XComGameStat
 	}
 }
 */
+
 static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, int Quantity, XComGameState_Unit UnitState, optional XComGameState CheckGameState, optional out string DisabledReason, optional XComGameState_Item ItemState) 
 {
     local XGParamTag                    LocTag;
@@ -790,36 +792,71 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
     local bool							DoNotOverrideNormalBehavior;
 	local XComGameState_Item			OtherItemState;
 	local name							TemplateName;
+    local X2SoldierClassTemplateManager Manager;
 
     OverrideNormalBehavior = CheckGameState != none;
     DoNotOverrideNormalBehavior = CheckGameState == none;
 
+	`LOG("Item:" @ ItemTemplate.DataName @ "Disabled Reason:" @ DisabledReason,, 'IRITEST');
+
     if(DisabledReason != "")
         return DoNotOverrideNormalBehavior;
 
-	//	Can't equip Munitions Mount and special shells at the same time.
-	//	Also can't equip MM and Shells on non-SPARKS.
-	if (IsItemSpecialShell(ItemTemplate.DataName) && (DoesUnitHaveMunitionsMount(UnitState, CheckGameState) || default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE))
+	//	I don't understand why this is necessary. 
+	//if (IsItemCanister(ItemTemplate))
+	//{
+	//	bCanAddItem = 1;
+	//	return OverrideNormalBehavior;
+	//}
+
+	
+	if (IsItemSpecialShell(ItemTemplate.DataName))
 	{	
-		DisabledReason = default.str_ShellsMutuallyExclusiveWithMunitionsMount;
-		bCanAddItem = 0;
-		return OverrideNormalBehavior;
+		//	Can't equip Munitions Mount and special shells at the same time.
+		if (DoesUnitHaveMunitionsMount(UnitState, CheckGameState))
+		{
+			DisabledReason = default.str_ShellsMutuallyExclusiveWithMunitionsMount;
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}//	Also can't equip MM and Shells on non-SPARKS.
+		else if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+		{
+			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+			LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
+			DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}
 	}
 
-	if (IsItemMunitionsMount(ItemTemplate.DataName) && (DoesUnitHaveSpecialShells(UnitState, CheckGameState) || default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE))
+	if (IsItemMunitionsMount(ItemTemplate.DataName))
 	{	
-		DisabledReason = default.str_MunitionsMountMutuallyExclusiveWithShells;
-		bCanAddItem = 0;
-		return OverrideNormalBehavior;
+		if (DoesUnitHaveSpecialShells(UnitState, CheckGameState))
+		{
+			DisabledReason = default.str_MunitionsMountMutuallyExclusiveWithShells;
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}
+		else if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+		{
+			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+			LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
+			DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}
 	}
 
 	//	Can't equip Heavy Strike Module on SPARK.
 	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && 
 		(ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T1' || ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T2'))
 	{
+		Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
 		LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
-		LocTag.StrValue0 = class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_HeavyWeapon];				
-		DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strCategoryRestricted));
+		LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
+		DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
 		bCanAddItem = 0;
 		return OverrideNormalBehavior;
 	}
@@ -848,7 +885,7 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 			{
 				//	Autogun already equipped, forbid equipping another one.
 				LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
-				LocTag.StrValue0 = class'UIArmory_Loadout'.default.m_strInventoryLabels[eInvSlot_HeavyWeapon];				
+				LocTag.StrValue0 = OtherItemState.GetMyTemplate().FriendlyName;
 				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strCategoryRestricted));
 				bCanAddItem = 0;
 				return OverrideNormalBehavior;
@@ -913,6 +950,15 @@ private static function bool DoesUnitHaveSpecialShells(const XComGameState_Unit 
 	ItemState = UnitState.GetItemInSlot(class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot, CheckGameState);
 
 	return ItemState != none && IsItemSpecialShell(ItemState.GetMyTemplateName());
+}
+
+private static function bool IsItemCanister(const X2ItemTemplate ItemTemplate)
+{
+	local X2WeaponTemplate	WeaponTemplate;
+
+	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
+
+	return WeaponTemplate != none && WeaponTemplate.WeaponCat =='canister';
 }
 
 static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
@@ -1214,6 +1260,13 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 		if (UnitState != none && (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE) && WeaponTemplate != none)
 		{
 			//	Initial checks complete, this is a weapon equipped on a SPARK.
+
+			if (IsItemCanister(WeaponTemplate))
+			{
+				SkeletalMeshComponent(Weapon.Mesh).SetScale(1.75f);
+			//	`LOG("This item is canister",, 'IRITEST');
+			//	Weapon.DefaultSocket = 'iri_spark_canister';
+			}
 
 			Content = `CONTENT;
 

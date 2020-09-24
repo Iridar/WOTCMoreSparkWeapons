@@ -81,6 +81,8 @@ private static function bool IsTemplateValidForSlot(EInventorySlot InvSlot, X2It
 	local X2EquipmentTemplate				EqTemplate;
 	local XComGameState_HeadquartersXCom	XComHQ;
 
+	//`LOG("IsTemplateValidForSlot:" @ ItemTemplate.DataName,, 'IRITEST');
+
 	if (default.AuxSlotAlwaysAllowedItems.Find(ItemTemplate.DataName) != INDEX_NONE)
 	{
 		return true;

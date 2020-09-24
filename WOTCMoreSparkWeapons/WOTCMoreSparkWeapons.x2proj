@@ -46,6 +46,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Compatibility\XComDualWieldMelee.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\Compatibility\XComMZChemthrower.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\Compatibility\XComPrimarySecondaries.ini">
       <SubType>Content</SubType>
     </Content>
@@ -148,6 +151,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Localization\WOTCMoreSparkWeapons.int">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Localization\WOTCMoreSparkWeapons.kor">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Localization\WOTCMoreSparkWeapons.rus">
       <SubType>Content</SubType>
     </Content>
@@ -155,6 +161,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\XComGame.cht">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\XComGame.kor">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\XComGame.rus">
