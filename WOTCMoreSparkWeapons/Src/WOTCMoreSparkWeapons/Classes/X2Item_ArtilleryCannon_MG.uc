@@ -32,6 +32,7 @@ var config array<name> REQUIRED_TECHS;
 var config array<name> BUILD_COST_TYPE;
 var config array<int> BUILD_COST_QUANTITY;
 var config int BLACKMARKET_VALUE;
+var config string COMP_GAME_ARCHETYPE;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -47,6 +48,7 @@ static function X2DataTemplate Create_ArtilleryCannon_MG()
 	local X2WeaponTemplate						Template;
 	local ArtifactCost							Resources;
 	local X2Effect_ApplyDirectionalWorldDamage	WorldDamage;
+	local AltGameArchetypeUse					GameArch;
 	//local X2Effect_IRI_TriggerEvent	TriggerEvent;
 	local int i;
 	
@@ -168,9 +170,33 @@ static function X2DataTemplate Create_ArtilleryCannon_MG()
 	}
 
 	Template.BaseItem = default.BASE_ITEM; // Which item this will be upgraded from
+
+	GameArch.UseGameArchetypeFn = HighlanderVersionCheck;
+	GameArch.ArchetypeString = default.COMP_GAME_ARCHETYPE;
+	Template.AltGameArchetypeArray.AddItem(GameArch);
 	
 	return Template;
 }
+
+static private function bool HighlanderVersionCheck(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)
+{
+	local CHXComGameVersionTemplate VersionTemplate;
+
+	VersionTemplate = CHXComGameVersionTemplate(class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager().FindStrategyElementTemplate('CHXComGameVersion'));
+	if (VersionTemplate != none)
+	{
+		//	If this is Highlander v1.21 or higher then we don't use the alternative archetype.
+		if (VersionTemplate.MajorVersion >= 1 && VersionTemplate.MinorVersion >= 21)
+		{
+			return false;
+		}
+		//	Use alternative archetype in all other cases.
+		return true;
+	}
+	//	Don't really care what happens if there's no version template cuz we have crashed by this point in code :D
+	return false;
+}
+
 
 static function UpdateMods() {
 	local X2ItemTemplateManager ItemTemplateManager;

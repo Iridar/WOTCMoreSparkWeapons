@@ -22,10 +22,6 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 var localized string str_ShellsMutuallyExclusiveWithMunitionsMount;
 var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
-//	Heavy Cannons should now be unable to benefit from any clip size increases, as intended.
-//	Added Korean translation by KimKast
-//	Error messages about not being able to equip two Autoguns on the same time, a KSM on a regular soldier, and a HSM on a SPARK will now make more sense.
-
 //	Immedaite goals:
 
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
