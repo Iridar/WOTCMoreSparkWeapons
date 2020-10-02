@@ -26,24 +26,26 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
+//	Autogun Overwatch (copy Overwatch ability, create a new icon, SET OVERWATCH ACTION POINT)
+//	Fix compile shaders issue
+//	Spray Accelerant, Heat Beam and Arc Cutter canisters?
 
 //	Scan sound
 //	AkEvent'DLC_90_SoundCharacterFX.Intimidate_BUZZ'
 
-//	Autogun Overwatch
 //	Canister rounds -> experimental ammo, adds aim bonuses up close, aim penalties at range, +1 crit, -1 Ammo, add shotgun projectile.
-//	Marry Claus Flamethrowers and Mitzruti's Chemthrower canisters by changing their default sockets
+
+//	Rocket Punch. For Tier 2 KSM, maybe?
 //	Maybe do something for HE/HESH and Shrapnel with Sabot Ammo.
 //	Improve descriptions of Sabot Ammo interactions with special cannon shells
 //	Regular cannon shots don't always destroy cover?
 // marry Spark Arsenal and Jet Packs mod. Move the Rocket Punch from Jet Packs to infantry-sized KSM as a Heavy Weapon.
-//	Jet Jump for Booster Jets as a free action. Uses grapple traversal type with superman flight? Use stormrider teleport as an example, maybe, or look at archon movement.
 //	Point to point flight ability for SPARKs that makes them crash straight through roofs.
 // have Jet Slam / Crater be available when equipping both Infantry KSM and Booster Jets on a soldier with Heavy Armor.
 //	Spark transforms into a plane for the Flight abiltiy? Or a strafing run flyby?
 //	Deployment Shield -> Firing or reloading a Heavy Cannon (any weapon?) generates a shield that grants High Cover defense bonus.
 //	Targeting Computer -> Snapshot? Shoot through walls? increase HE shot range? HOLOTARGET!! Turn ending action. SPARK raises hand to the head and "scans" the target.
-//	Fire Sniper Rifle - fix localization
+//	Fire Sniper Rifle - fix localization 
 //	Make Hunter Protocol work with the Autogun if primary heavy cannon is equipped.
 //	Adaptive Aim perk to provide a bonus with artillery cannons? It does not apply to Autogun. 
 //	Display grenades on the Spark's body when 1.22 goes live.
@@ -793,17 +795,8 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
     OverrideNormalBehavior = CheckGameState != none;
     DoNotOverrideNormalBehavior = CheckGameState == none;
 
-	`LOG("Item:" @ ItemTemplate.DataName @ "Disabled Reason:" @ DisabledReason,, 'IRITEST');
-
     if(DisabledReason != "")
         return DoNotOverrideNormalBehavior;
-
-	//	I don't understand why this is necessary. 
-	//if (IsItemCanister(ItemTemplate))
-	//{
-	//	bCanAddItem = 1;
-	//	return OverrideNormalBehavior;
-	//}
 
 	
 	if (IsItemSpecialShell(ItemTemplate.DataName))
@@ -845,9 +838,19 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 		}
 	}
 
+	//	SPARK-only changes past this point.
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+		return DoNotOverrideNormalBehavior;
+
+	//	Complains about "missing allowed soldier class" without this. WTF?!
+	if (IsItemCanister(ItemTemplate))
+	{
+		bCanAddItem = 1;
+		return OverrideNormalBehavior;
+	}
+
 	//	Can't equip Heavy Strike Module on SPARK.
-	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && 
-		(ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T1' || ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T2'))
+	if (ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T1' || ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T2')
 	{
 		Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
 		LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
@@ -1257,13 +1260,6 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 		{
 			//	Initial checks complete, this is a weapon equipped on a SPARK.
 
-			if (IsItemCanister(WeaponTemplate))
-			{
-				SkeletalMeshComponent(Weapon.Mesh).SetScale(1.75f);
-			//	`LOG("This item is canister",, 'IRITEST');
-			//	Weapon.DefaultSocket = 'iri_spark_canister';
-			}
-
 			Content = `CONTENT;
 
 			//	Ballistic Shields
@@ -1381,7 +1377,7 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 		}
 	}		
 }
-/*
+/*ca
 static private function bool HasShieldEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
 	local XComGameState_Item ItemState;

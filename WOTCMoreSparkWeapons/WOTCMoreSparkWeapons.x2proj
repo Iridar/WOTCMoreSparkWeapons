@@ -46,7 +46,13 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Compatibility\XComDualWieldMelee.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\Compatibility\XComIncinerators.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\Compatibility\XComMZChemthrower.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\Compatibility\XComNiceWeaponFixes.ini">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Config\Compatibility\XComPrimarySecondaries.ini">
@@ -88,6 +94,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\XComGameData_WeaponData.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\XComIncinerators.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\XComKineticStrikeModule.ini">
       <SubType>Content</SubType>
     </Content>
@@ -127,6 +136,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Content\IRIHeavyCannonShells.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\IRIImmolatorUpgrades.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\IRIKineticStrikeModule.upk">
       <SubType>Content</SubType>
     </Content>
@@ -140,6 +152,15 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRISparkHeavyWeapons.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\WoTC_SPARK_ApocalypseCannon.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\WoTC_SPARK_FlamestormCannon.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\WoTC_SPARK_InfernoCannon.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\WOTCMoreSparkWeapons.chn">
@@ -181,6 +202,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_HeavyAutogun.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_Incinerator.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Ability_KSM.uc">
       <SubType>Content</SubType>
     </Content>
@@ -202,6 +226,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_Augmented.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_FineControl.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_HasWeaponOfCategory.uc">
       <SubType>Content</SubType>
     </Content>
@@ -212,6 +239,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_UnblockedTile.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_WithinChemthrowerRange.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2DownloadableContentInfo_WOTCMoreSparkWeapons.uc" />
@@ -267,6 +297,15 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_HeavyAutogun_MK2.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_Incinerator_BM.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_Incinerator_CV.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_Incinerator_MG.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Item_KSM.uc">
