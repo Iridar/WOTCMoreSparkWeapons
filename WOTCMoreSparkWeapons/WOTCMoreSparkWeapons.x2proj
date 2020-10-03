@@ -136,9 +136,6 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Content\IRIHeavyCannonShells.upk">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Content\IRIImmolatorUpgrades.upk">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Content\IRIKineticStrikeModule.upk">
       <SubType>Content</SubType>
     </Content>

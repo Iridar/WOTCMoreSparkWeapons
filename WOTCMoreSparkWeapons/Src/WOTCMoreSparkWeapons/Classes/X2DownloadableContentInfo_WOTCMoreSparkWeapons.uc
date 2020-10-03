@@ -22,8 +22,13 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 var localized string str_ShellsMutuallyExclusiveWithMunitionsMount;
 var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
+//	Changelog 
+//	Kiruka Autogun and Autopulser now can be used for Overwatch
+//	
+
 //	Immedaite goals:
 
+//	Heat shells don't shred bug?
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
 //	Autogun Overwatch (copy Overwatch ability, create a new icon, SET OVERWATCH ACTION POINT)
@@ -1182,7 +1187,21 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 						SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_Spark';
 						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_Spark');
 					}					
-					break;		
+					break;	
+				case 'IRI_OverwatchShot_HeavyAutogun':	//	Same for its Overwatch Shot
+					if (BITRef.ObjectID > 0 && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef))
+					{
+						//	Attach it to BIT
+						SetupData[Index].TemplateName = 'IRI_OverwatchShot_HeavyAutogun_BIT';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_OverwatchShot_HeavyAutogun_BIT');
+					}
+					else
+					{
+						//	Otherwise, replace it with the "arm cannon" version.
+						SetupData[Index].TemplateName = 'IRI_OverwatchShot_HeavyAutogun_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_OverwatchShot_HeavyAutogun_Spark');
+					}					
+					break;	
 				default:
 					//	=======	Melee =======
 					if (!bChangeMelee) break;	//	Move melee abilities to KSM so they can use KSM melee animations
