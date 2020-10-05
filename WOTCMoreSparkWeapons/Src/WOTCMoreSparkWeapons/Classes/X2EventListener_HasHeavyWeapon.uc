@@ -1,6 +1,4 @@
 class X2EventListener_HasHeavyWeapon extends X2EventListener;
-
-//	Currently unused.
 /*
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -10,7 +8,7 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	return Templates;
 }
-*/
+
 static function CHEventListenerTemplate Create_ListenerTemplate()
 {
 	local CHEventListenerTemplate Template;
@@ -24,7 +22,7 @@ static function CHEventListenerTemplate Create_ListenerTemplate()
 
 	return Template;
 }
-
+*/
 static function EventListenerReturn ListenerEventFunction(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
 {
 	local XComLWTuple			Tuple;
@@ -53,8 +51,9 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 	if (Tuple != none && UnitState != none && !Tuple.Data[0].b)
 	{
 		//	Proceed only if this unit is a SPARK and the decision of whether it has HW Slot has not been overridden already.
-		if (class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
-		{
+		//	EDIT: Do not perform character template check so that Heavy Weapon slot can be added to any unit with the BIT.
+		//if (class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
+		//{
 			CheckGameState = XComGameState(Tuple.Data[2].o);
 
 			//	We will determine right now if this unit has a Heavy Weapon slot or not.
@@ -85,10 +84,10 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 				return ELR_NoInterrupt;
 			}
 			//	Forbid the unit to have a HW slot if the listed weapon category is not present.
-			Tuple.Data[1].b = false;
+			//Tuple.Data[1].b = false;
 
 			//`LOG("Override: unit has heavy weapon Stage2:" @ Tuple.Data[0].b,, 'WOTCMoreSparkWeapons');
-		}
+		//}
 	}
 	return ELR_NoInterrupt;
 }

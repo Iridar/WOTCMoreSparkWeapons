@@ -3,21 +3,24 @@
 More info at: https://www.patreon.com/Iridar
 
 [WOTC] Iridar's SPARK Arsenal
-Adds new weapons and tools for SPARKs and [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1452700934]MEC Troopers[/url][/b], a new Inventory Slot, and makes some changes to BITs.
+Adds new weapons and tools for SPARKs and [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1452700934]MEC Troopers[/url][/b], a new Inventory Slot, and makes some changes to BITs. Some of the new stuff carries over to your regular soldiers as well.
 
 [b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2568690416483865842/]>>> CLICK HERE FOR THE FULL LIST OF NEW WEAPONS, ITEMS AND OTHER FEATURES <<<[/url][/b]+
 
 [b]New Primary Weapons:[/b][list]
-[*] Heavy Cannons (3 tiers)[/list]
+[*] Heavy Cannons (3 tiers)
+[*] Incinerators (3 tiers)[/list]
 
 [b]New Secondary Weapons:[/b][list]
 [*] Ordnance Launchers (3 tiers)
-[*] Kinetic Strike Module
+[*] Kinetic Strike Module (1 tier)
 [*] Munitions Mount (2 tiers)[/list]
 
 [b]New Heavy Weapons:[/b][list]
 [*] Kiruka Autogun
-[*] Kiruka Autopulser[/list]
+[*] Kiruka Autopulser
+[*] Heavy Strike Module
+[*] Powered Strike Module[/list]
 
 [b]Arm Cannon animations for SPARK / MEC Heavy Weapons[/b]
 
@@ -49,7 +52,7 @@ This mod is a significant buff to SPARKs' and MECs' power. However, it is create
 
 [h1]REQUIREMENTS[/h1]
 [list]
-[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1796402257][b][BETA] X2WOTCCommunityHighlander[/b][/url] v1.21 or higher is required ([b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2442587820564618365/]here are instructions[/url][/b] on how to configure the mod to work with older Highlander versions)
+[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1796402257][b][BETA] X2WOTCCommunityHighlander[/b][/url] v1.21 or higher is required. It's possible to manually configure the mod for the limited compatibility for the older Highlander versions, [b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2442587820564618365/]the instructions are here[/url][/b].
 [*] [b]Shen's Last Gift DLC[/b] is required. 
 [*] [b]Alien Hunters DLC[/b] - I used a few assets from it, so it's probably required, though the mod might still function without it.[/list]
 
@@ -57,7 +60,8 @@ This mod is a significant buff to SPARKs' and MECs' power. However, it is create
 [list]
 [*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1775963384][WOTC] Rocket Launchers 2.0[/url][/b] - fully supported. This mod enables SPARKs to carry, Take, Arm and Give rockets, as well as Fire them with the Ordnance Launcher. SPARKs do not suffer movement penalties for carrying rockets. All rockets are supported, including the Tactical Elerium Nuke. Judgement Day is upon ADVENT.
 [*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1161324428]SPARK Launchers Redux[/url][/b] - can be carried in the Auxiliary Weapon Slot. 
-[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2025780967][WOTC] Iridar's Scatter Mod[/url][/b] - adds scatter to grenades and rockets and HE/HESH Heavy Cannon shots.[/list]
+[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2025780967][WOTC] Iridar's Scatter Mod[/url][/b] - adds scatter to grenades and rockets and HE/HESH Heavy Cannon shots.
+[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1918448514]Immolator + Chemthrower Abilities[/url][/b] - adds Canisters that work with SPARK Incinerators when carried in the Auxiliary Weapon Slot. You can also subscribe to [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2237137501][WOTC] Immolator Overhaul[/url][/b] so that Mitzruti's Immolators look like mini-Incinerators.[/list]
 
 [h1]COMPATIBILITY[/h1]
 

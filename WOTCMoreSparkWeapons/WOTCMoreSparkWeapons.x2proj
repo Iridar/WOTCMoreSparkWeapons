@@ -46,9 +46,6 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Compatibility\XComDualWieldMelee.ini">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Config\Compatibility\XComIncinerators.ini">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Config\Compatibility\XComMZChemthrower.ini">
       <SubType>Content</SubType>
     </Content>
@@ -136,6 +133,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Content\IRIHeavyCannonShells.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\IRIIncineratorUpgrades.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\IRIKineticStrikeModule.upk">
       <SubType>Content</SubType>
     </Content>
@@ -151,13 +151,13 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Content\IRISparkHeavyWeapons.upk">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Content\WoTC_SPARK_ApocalypseCannon.upk">
+    <Content Include="Content\WoTC_ZPARK_ApocalypseCannon.upk">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Content\WoTC_SPARK_FlamestormCannon.upk">
+    <Content Include="Content\WoTC_ZPARK_FlamestormCannon.upk">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Content\WoTC_SPARK_InfernoCannon.upk">
+    <Content Include="Content\WoTC_ZPARK_InfernoCannon.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\WOTCMoreSparkWeapons.chn">

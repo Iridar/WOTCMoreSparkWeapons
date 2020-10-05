@@ -14,6 +14,7 @@ var config(KineticStrikeModule) array<name> MeleeAbilitiesUseKSM;
 
 var config(ClassData) array<name> AbilitiesRequireBIT;
 var config(ClassData) array<name> AbilitiesToGrantToBITs;
+var config(ClassData) array<name> AbilitiesToGrantToGREMLINs;
 var config(ClassData) array<name> ClassesToRemoveAbilitiesFrom;
 var config(ClassData) array<name> AbilitiesToRemove;
 
@@ -23,16 +24,25 @@ var localized string str_ShellsMutuallyExclusiveWithMunitionsMount;
 var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
 //	Changelog 
-//	Kiruka Autogun and Autopulser now can be used for Overwatch
-//	
 
 //	Immedaite goals:
 
-//	Heat shells don't shred bug?
+//	BIT gives soldiers' Heavy Weapon through Aux Slot. Only heavy weapons in that slot get touched by SPARK Arsenal (Finalize Abilities / OPTC Conditions patching / wepaon init)
+//	Aid Protocol given to SPARKs with GREMLIN in Finalize Abilities. Insert a dummy passive into their ability tree to let the player know about this.
+
+//	Test BIT with GREMLIN abilities
+//	Test GREMLIN with BIT abilities
+
+//	Fix weapon camera on upgrade screen using Rusty's mod
+//	No active camo animation?? Autopulser doesn't work out of the box
+//	When 1.21 Highlander becomes stable fix the mess with heavy weappon slot. Make the event listener grant the HW Slot if the unit has any ability from any source from the config array: AbilityUnlocksHeavyWeapon 
+//	Make an exception for Heavy Strike Module
+
+//	Shields: Hunker Down animations. Walk back animation is jank. Bulwark works well. TEST: Bulwark + Shield Wall, what happens when Shield Wall ends?
+//	Swords: make a melee animation.
+
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
-//	Autogun Overwatch (copy Overwatch ability, create a new icon, SET OVERWATCH ACTION POINT)
-//	Fix compile shaders issue
 //	Spray Accelerant, Heat Beam and Arc Cutter canisters?
 
 //	Scan sound
@@ -50,8 +60,7 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 //	Spark transforms into a plane for the Flight abiltiy? Or a strafing run flyby?
 //	Deployment Shield -> Firing or reloading a Heavy Cannon (any weapon?) generates a shield that grants High Cover defense bonus.
 //	Targeting Computer -> Snapshot? Shoot through walls? increase HE shot range? HOLOTARGET!! Turn ending action. SPARK raises hand to the head and "scans" the target.
-//	Fire Sniper Rifle - fix localization 
-//	Make Hunter Protocol work with the Autogun if primary heavy cannon is equipped.
+ 
 //	Adaptive Aim perk to provide a bonus with artillery cannons? It does not apply to Autogun. 
 //	Display grenades on the Spark's body when 1.22 goes live.
 //	Artillery Cannons - support for Demolition? -> is this even necessary? direct cannon shots are already basically demolition.
@@ -100,6 +109,7 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 //	Make "weapon disabled" flyover come up sooner when using BITless.
 //	Resto Mist - improve textures and tintable
 //	BIT for Specialists? If so, include Active Camo animation for them.
+//	Fire Sniper Rifle - fix localization (probably via Highlander hook in sniper standard fire alternate localization function)
 
 /*	Investigate logs:
 [0155.04] Log: No animation compression exists for sequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit)
@@ -412,6 +422,7 @@ static function GetNumHeavyWeaponSlotsOverride(out int NumHeavySlots, XComGameSt
 
 	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
 	{
+		//	TODO: Check more than just secondary weapon
 		ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
 		if (ItemState != none && default.WeaponCategoriesAddHeavyWeaponSlot.Find(ItemState.GetWeaponCategory()) != INDEX_NONE)
 		{
@@ -456,10 +467,48 @@ static function PatchCharacterTemplates()
 
 				//	The loadout contains the item required for SPARKs to hack; a replacement for the regular XPad.
 				CharTemplate.RequiredLoadout = 'RequiredSpark';
-				//	Animations don't work when given through weapon archetype, for some reason.//retest
-				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_Hack")));				
+				//	Animations don't work when given through weapon archetype, for some reason.
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_Hack")));	
+				
+				//	These hunker down animations are used by Ballistic Shields' Shield Wall ability, but they'll work for any effect named HunkerDown
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_HunkerDown")));			
 			}
 		}
+
+		//	DEBUG ONLY, find a better solution.
+		CharMgr.FindDataTemplateAllDifficulties('Soldier', DifficultyVariants);
+		foreach DifficultyVariants(DifficultyVariant)
+		{
+			CharTemplate = X2CharacterTemplate(DifficultyVariant);
+
+			if (CharTemplate != none)
+			{
+				CharTemplate.OnCosmeticUnitCreatedFn = SoldierCosmeticBITUnitCreated;
+
+				//	Add AnimSet with Active Camo
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_ActiveCamo_Soldier")));
+
+				//	Add AnimSet with firing Heavy Weapon animations 
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Soldier_BIT")));
+			}
+		}
+	}
+}
+
+static private function SoldierCosmeticBITUnitCreated(XComGameState_Unit CosmeticUnit, XComGameState_Unit OwnerUnit, XComGameState_Item SourceItem, XComGameState StartGameState)
+{
+	local XComGameState_Item SparkHeavyWeapon, BitHeavyWeapon;
+
+	//	TODO: use configurable slot here DEBUG ONLY
+	SparkHeavyWeapon = OwnerUnit.GetItemInSlot(eInvSlot_AuxiliaryWeapon);
+	if (SparkHeavyWeapon != none)
+	{
+		BitHeavyWeapon = SparkHeavyWeapon.GetMyTemplate().CreateInstanceFromTemplate(StartGameState);
+		CosmeticUnit.bIgnoreItemEquipRestrictions = true;
+		CosmeticUnit.AddItemToInventory(BitHeavyWeapon, eInvSlot_HeavyWeapon, StartGameState);
+		CosmeticUnit.bIgnoreItemEquipRestrictions = false;
+
+		XGUnit(CosmeticUnit.GetVisualizer()).ApplyLoadoutFromGameState(CosmeticUnit, StartGameState);
 	}
 }
 
@@ -471,7 +520,7 @@ static function PatchAbilityTemplates()
 	local X2AbilityTemplate				Template;
 	local X2Effect_IRI_Rainmaker		Rainmaker;
 	local X2Effect						Effect;
-	local X2Condition_SourceWeaponCat	WeaponCondition;
+	local X2Condition_HasWeaponOfCategory	WeaponCondition;
 	local name							AbilityName;
 	local X2Effect_Knockback			KnockbackEffect;
 
@@ -528,8 +577,8 @@ static function PatchAbilityTemplates()
 		Template = AbilityTemplateManager.FindAbilityTemplate(AbilityName);
 		if (Template != none)
 		{
-			WeaponCondition = new class'X2Condition_SourceWeaponCat';
-			WeaponCondition.MatchWeaponCat = 'sparkbit';
+			WeaponCondition = new class'X2Condition_HasWeaponOfCategory';
+			WeaponCondition.RequireWeaponCategory = 'sparkbit';
 			Template.AbilityShooterConditions.AddItem(WeaponCondition);
 		}
 	}
@@ -551,7 +600,39 @@ static function PatchAbilityTemplates()
 			Template.ModifyNewContextFn = ProperKnockback_ModifyActivatedAbilityContext;
 		}
 	}
+
+	//	Have to nuke these conditions so that regular soldiers can fire heavy weapon through BIT
+	RemoveSparkShooterConditionFromAbility('SparkRocketLauncher');
+	RemoveSparkShooterConditionFromAbility('SparkShredderGun');
+	RemoveSparkShooterConditionFromAbility('SparkShredstormCannon');
+	RemoveSparkShooterConditionFromAbility('SparkFlamethrower');
+	RemoveSparkShooterConditionFromAbility('SparkFlamethrowerMk2');
+	RemoveSparkShooterConditionFromAbility('SparkBlasterLauncher');
+	RemoveSparkShooterConditionFromAbility('SparkPlasmaBlaster');
 }	
+
+static private function RemoveSparkShooterConditionFromAbility(name TemplateName)
+{
+	local X2AbilityTemplateManager		AbilityTemplateManager;
+	local X2AbilityTemplate				Template;
+	local int i;
+
+	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+
+	Template = AbilityTemplateManager.FindAbilityTemplate(TemplateName);
+	if (Template != none)
+	{
+		for (i = Template.AbilityShooterConditions.Length - 1; i >= 0; i--)
+		{
+			if (X2Condition_UnitProperty(Template.AbilityShooterConditions[i]) != none && 
+				X2Condition_UnitProperty(Template.AbilityShooterConditions[i]).RequireSoldierClasses.Length > 0)
+			{
+				`LOG("Removed conditions from ability:" @ TemplateName,, 'IRITEST');
+				Template.AbilityShooterConditions.Remove(i, 1);
+			}
+		}
+	}
+}
 
 static simulated function ProperKnockback_ModifyActivatedAbilityContext(XComGameStateContext Context)
 {
@@ -619,11 +700,20 @@ static function PatchWeaponTemplates()
         {
 			foreach default.AbilitiesToGrantToBITs(AbilityName)
 			{
+				if (WeaponTemplate.Abilities.Find(AbilityName) == INDEX_NONE)
 				WeaponTemplate.Abilities.AddItem(AbilityName);
 			}
 
 			AddBITAnimSetsToCharacterTemplate(WeaponTemplate.CosmeticUnitTemplate);
         }
+		else if (WeaponTemplate.WeaponCat == 'gremlin')
+		{
+			foreach default.AbilitiesToGrantToGREMLINs(AbilityName)
+			{
+				if (WeaponTemplate.Abilities.Find(AbilityName) == INDEX_NONE)
+				WeaponTemplate.Abilities.AddItem(AbilityName);
+			}
+		}
 
 		//	Duplicate Launch Grenade icons for my Launch Ordnance abilities.
 		GrenadeTemplate = X2GrenadeTemplate(WeaponTemplate);
@@ -681,7 +771,7 @@ static function AddBITAnimSetsToCharacterTemplate(string TemplateName)
 			Content = `CONTENT;
 			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIRestorativeMist.Anims.AS_RestoMist_BIT")));
 			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIElectroPulse.Anims.AS_ElectroPulse_BIT")));
-			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("AnimSet'IRISparkHeavyWeapons.Anims.AS_LAC_Bit")));
+			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_LAC_Bit")));
 		}
 	}
 }
@@ -754,11 +844,23 @@ static function string DLCAppendSockets(XComUnitPawn Pawn)
 	}
 	return "";
 }
-/*
+//	Shield animations need to be added here to replace the Walk Back animation on the Avenger. They also contain a Deflect animation.
 static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameState_Unit UnitState, XComUnitPawn Pawn)
 {
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && UnitHasBallisticShieldEquipped(UnitState))
+	{
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_BallisticShield")));
+	}
+}
 
-}*/
+static private function bool UnitHasBallisticShieldEquipped(const XComGameState_Unit UnitState)
+{
+	local XComGameState_Item SecondaryWeapon;
+
+	SecondaryWeapon = UnitState.GetSecondaryWeapon();
+
+	return SecondaryWeapon != none && SecondaryWeapon.GetWeaponCategory() == 'shield';
+}
 
 static function OverrideItemImage(out array<string> imagePath, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, XComGameState_Unit UnitState)
 {
@@ -1213,6 +1315,46 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			}
 		}
 	}
+	else if (class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))	//	Unit not a SPARK and has a BIT equipped
+	{
+		//BITRef.ObjectID = class'X2Condition_HasWeaponOfCategory'.static.GetBITObjectID(UnitState, StartState);
+
+		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();		
+
+		for (Index = SetupData.Length - 1; Index >= 0; Index--)
+		{
+			switch (SetupData[Index].TemplateName)
+			{
+				//	=======	Heavy Weapons =======
+				case 'RocketLauncher':	//	Remove regular versions of heavy weapon abilitieis that ARE attached to BIT-granted Aux Slot heavy weapon
+				case 'ShredderGun':
+				case 'ShredstormCannon':
+				case 'Flamethrower':
+				case 'FlamethrowerMk2':
+				case 'BlasterLauncher':
+				case 'PlasmaBlaster':
+					if (DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef))
+					{
+						SetupData.Remove(Index, 1);
+					}
+					break;
+				case 'SparkRocketLauncher':	//	Remove Spark versions of heavy weapon abilitieis that are NOT attached to BIT-granted Aux Slot heavy weapon
+				case 'SparkShredderGun':
+				case 'SparkShredstormCannon':
+				case 'SparkFlamethrower':
+				case 'SparkFlamethrowerMk2':
+				case 'SparkBlasterLauncher':
+				case 'SparkPlasmaBlaster':
+					if (!DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef))
+					{
+						SetupData.Remove(Index, 1);
+					}
+					break;
+				default:
+					break;
+			}
+		}
+	}
 
 	//	Grant Speed Loader Reload to weapons that have it equipped.
 	ItemStates = UnitState.GetAllInventoryItems(StartState, true);
@@ -1275,19 +1417,50 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 		UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(InternalWeaponState.OwnerStateObject.ObjectID));
 		WeaponTemplate = X2WeaponTemplate(InternalWeaponState.GetMyTemplate());
 
-		if (UnitState != none && (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE) && WeaponTemplate != none)
+		if (UnitState != none && WeaponTemplate != none && !UnitState.GetMyTemplate().bIsCosmetic)
 		{
+			//	If this unit is a not a SPARK
+			if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+			{
+				//	If this heavy weapon is equipped on a non-SPARK and they have a BIT, replace its firing animations with point finger ones.
+				//	DEBUG ONLY
+				if (WeaponTemplate.WeaponCat == 'heavy' && class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState) && InternalWeaponState.InventorySlot == eInvSlot_AuxiliaryWeapon)
+				{	
+					Weapon.CustomUnitPawnAnimsets.Length = 0;
+					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+
+					//Content = `CONTENT;
+
+					Weapon.WeaponFireAnimSequenceName = name(Weapon.WeaponFireAnimSequenceName $ 'BIT');
+
+					`LOG("Replacing firing animation name for:" @ WeaponTemplate.DataName @ "on unit:" @ UnitState.GetFullName() @ "to:" @ Weapon.WeaponFireAnimSequenceName,, 'IRITEST');
+
+					Weapon.DefaultSocket = '';
+					//Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Soldier_BIT")));
+					//SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("DLC_3_FX_Bit_CV.Weapon_Dummy_Invisible"));
+				}
+				return;
+			}
 			//	Initial checks complete, this is a weapon equipped on a SPARK.
 
 			Content = `CONTENT;
 
-			//	Ballistic Shields
-			if (WeaponTemplate.WeaponCat == 'shield')
+			switch (WeaponTemplate.WeaponCat)
 			{
-				//	Needs Ballistic Shields' Update Animations hook to not fire.
-				Weapon.DefaultSocket = 'iri_spark_ballistic_shield';
-				Weapon.CustomUnitPawnAnimsets.Length = 0;
-				Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+				//	Ballistic Shields
+				case 'shield':
+					Weapon.DefaultSocket = 'iri_spark_ballistic_shield';
+					Weapon.CustomUnitPawnAnimsets.Length = 0;
+					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+					break;
+				//	Swords
+				case 'sword':
+					Weapon.DefaultSocket = 'iri_spark_sword';
+					Weapon.CustomUnitPawnAnimsets.Length = 0;
+					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+					break;
+				default:
+					break;
 			}
 			
 			//	If this is an Ordnance Launcher and the Rocket Launchers mod is present, add Weapon Animations for firing rockets.

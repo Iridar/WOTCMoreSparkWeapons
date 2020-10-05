@@ -54,6 +54,9 @@ static function X2DataTemplate CreateSlotTemplate()
 
 static function bool HasSlot(CHItemSlot Slot, XComGameState_Unit UnitState, out string LockedReason, optional XComGameState CheckGameState)
 {    
+	//	DEBUG ONLY
+	return true;
+
 	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE;
 }
 
@@ -82,6 +85,8 @@ private static function bool IsTemplateValidForSlot(EInventorySlot InvSlot, X2It
 	local XComGameState_HeadquartersXCom	XComHQ;
 
 	//`LOG("IsTemplateValidForSlot:" @ ItemTemplate.DataName,, 'IRITEST');
+	//	DEBUG ONLY
+	if (UnitState.GetMyTemplateName() == 'Soldier' && X2WeaponTemplate(ItemTemplate).WeaponCat == 'heavy') return true;
 
 	if (default.AuxSlotAlwaysAllowedItems.Find(ItemTemplate.DataName) != INDEX_NONE)
 	{
