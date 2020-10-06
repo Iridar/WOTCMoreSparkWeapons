@@ -17,6 +17,8 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_ElectroPulse());
 	Templates.AddItem(Create_ElectroPulse_Bit());
 
+	Templates.AddItem(Create_EntrenchProtocol());
+	Templates.AddItem(PurePassive('IRI_EntrenchProtocol_Passive', "img:///UILibrary_XPACK_Common.PerkIcons.UIPerk_defensiveprotocol", false, 'eAbilitySource_Item', true));
 	Templates.AddItem(IRI_ActiveCamo());
 	Templates.AddItem(IRI_DebuffConcealment());
 	Templates.AddItem(Create_IRI_Bombard());
@@ -809,6 +811,58 @@ simulated function CapacitorDischarge_BuildVisualization( XComGameState Visualiz
 	//****************************************************************************************
 }
 
+static function X2AbilityTemplate Create_EntrenchProtocol()
+{
+	local X2AbilityTemplate					Template;
+	local X2AbilityTrigger_EventListener	Trigger;
+	local X2Condition_UnitEffectsApplying	UnitEffects;
+	local X2Condition_UnitValue				UnitValue;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_EntrenchProtocol');
+
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.IconImage = "img:///UILibrary_XPACK_Common.PerkIcons.UIPerk_defensiveprotocol";
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+
+	Trigger = new class'X2AbilityTrigger_EventListener';
+	Trigger.ListenerData.Deferral = ELD_OnStateSubmitted;
+	Trigger.ListenerData.EventID = 'PlayerTurnBegun';
+	Trigger.ListenerData.Filter = eFilter_Player;
+	Trigger.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_Self;
+	Template.AbilityTriggers.AddItem(Trigger);
+	
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+
+	UnitEffects = new class'X2Condition_UnitEffectsApplying';
+	UnitEffects.AddRequireEffect('AidProtocol', 'AA_MissingRequiredEffect');
+	Template.AbilityShooterConditions.AddItem(UnitEffects);
+
+	UnitValue = new class'X2Condition_UnitValue';
+	UnitValue.AddCheckValue('MovesThisTurn', 0);
+	Template.AbilityShooterConditions.AddItem(UnitValue);	
+
+	Template.AddShooterEffect(new class'X2Effect_ExtendAidProtocol');
+
+	Template.Hostility = eHostility_Neutral;
+	//Template.CustomFireAnim = 'NO_Camouflage';
+	Template.bShowActivation = true;
+	Template.bSkipPerkActivationActions = true;
+	Template.bStationaryWeapon = true;
+	Template.CustomSelfFireAnim = 'NO_DefenseProtocol';
+	//Template.bSkipFireAction = true;
+	Template.BuildNewGameStateFn = class'X2Ability_SpecialistAbilitySet'.static.AttachGremlinToTarget_BuildGameState;
+	Template.BuildVisualizationFn = class'X2Ability_SpecialistAbilitySet'.static.GremlinSingleTarget_BuildVisualization;
+	//Template.PostActivationEvents.AddItem('ItemRecalled');
+
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
+
+	Template.AdditionalAbilities.AddItem('IRI_EntrenchProtocol_Passive');
+
+	return Template;
+}
 
 static function X2AbilityTemplate IRI_ActiveCamo()
 {

@@ -141,9 +141,19 @@ static function X2DataTemplate Create_Item()
 
 static function bool SparkHeavyWeaponCheck(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)
 {
-	//	Use an alternative Archetype for SPARKs with BITs. Sparks without BIT are patched in Weapon Initialized, along with other Heavy Weapons.
-	//	Unless this particular heavy weapon is in the Aux Slot.
-	return ItemState.InventorySlot != eInvSlot_AuxiliaryWeapon && class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState);
+	//	Use this game archetype only if the unit has a BIT.
+	if (!class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
+		return false;
+
+	//	Use this Autogun is in the Aux slot, then we use this Autogun-on-BIT archetype only if this unit is NOT a SPARK.
+	//	I.e. they're a regular soldier that have the Aux Slot because they equipped a BIT, and now they want to put an Autogun into that "BIT heavy weapon" aux slot.
+	if (ItemState.InventorySlot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot)
+	{
+		return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE;
+	}
+
+	//	If this Autogun is NOT in the Aux slot, then we use the Autogun-on-BIT archetype if this unit is a spark.
+	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE;
 }
 
 static function bool BitHeavyWeaponCheck(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)

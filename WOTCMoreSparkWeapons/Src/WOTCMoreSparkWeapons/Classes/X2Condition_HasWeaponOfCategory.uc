@@ -48,7 +48,7 @@ static function bool DoesUnitHaveBITEquipped(XComGameState_Unit SourceUnit)
 	local array<XComGameState_Item> InventoryItems;
 	local XComGameState_Item		InventoryItem;
 
-	InventoryItems = SourceUnit.GetAllInventoryItems();
+	InventoryItems = SourceUnit.GetAllInventoryItems(, true);
 
 	foreach InventoryItems(InventoryItem)
 	{
@@ -70,6 +70,40 @@ static function int GetBITObjectID(XComGameState_Unit SourceUnit, optional XComG
 	foreach InventoryItems(InventoryItem)
 	{
 		if (InventoryItem.GetWeaponCategory() == 'sparkbit')
+		{
+			return InventoryItem.ObjectID;
+		}
+	}
+	return -1;
+}
+
+static function bool DoesUnitHaveGremlinEquipped(XComGameState_Unit SourceUnit)
+{
+	local array<XComGameState_Item> InventoryItems;
+	local XComGameState_Item		InventoryItem;
+
+	InventoryItems = SourceUnit.GetAllInventoryItems(, true);
+
+	foreach InventoryItems(InventoryItem)
+	{
+		if (InventoryItem.GetWeaponCategory() == 'gremlin')
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+static function int GetGremlinObjectID(XComGameState_Unit SourceUnit, optional XComGameState CheckGameState)
+{
+	local array<XComGameState_Item> InventoryItems;
+	local XComGameState_Item		InventoryItem;
+
+	InventoryItems = SourceUnit.GetAllInventoryItems(CheckGameState, true);
+
+	foreach InventoryItems(InventoryItem)
+	{
+		if (InventoryItem.GetWeaponCategory() == 'gremlin')
 		{
 			return InventoryItem.ObjectID;
 		}

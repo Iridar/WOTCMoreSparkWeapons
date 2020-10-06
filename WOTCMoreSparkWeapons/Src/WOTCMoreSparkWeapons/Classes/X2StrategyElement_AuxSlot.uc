@@ -10,6 +10,8 @@ var config array<name> AuxSlotAllowedItems;
 var config array<name> AuxSlotAlwaysAllowedItems;
 var config name		   TechRequiredForItems;
 
+var config array<name> HeavyWeaponsValidForBITWithSoldiers;
+
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
@@ -54,10 +56,9 @@ static function X2DataTemplate CreateSlotTemplate()
 
 static function bool HasSlot(CHItemSlot Slot, XComGameState_Unit UnitState, out string LockedReason, optional XComGameState CheckGameState)
 {    
-	//	DEBUG ONLY
-	return true;
-
-	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE;
+	//	Aux Slot is granted to all SPARK / MEC characters and to soldiers that have a BIT equipped.
+	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE ||
+		   class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState);
 }
 
 static function bool ShowItemInLockerList(CHItemSlot Slot, XComGameState_Unit Unit, XComGameState_Item ItemState, X2ItemTemplate ItemTemplate, XComGameState CheckGameState)
@@ -85,8 +86,12 @@ private static function bool IsTemplateValidForSlot(EInventorySlot InvSlot, X2It
 	local XComGameState_HeadquartersXCom	XComHQ;
 
 	//`LOG("IsTemplateValidForSlot:" @ ItemTemplate.DataName,, 'IRITEST');
-	//	DEBUG ONLY
-	if (UnitState.GetMyTemplateName() == 'Soldier' && X2WeaponTemplate(ItemTemplate).WeaponCat == 'heavy') return true;
+	
+	//	Allow equipping whitelisted heavy weapons into Aux Slot if this is a non-SPARK character and they have a BIT equipped.
+	if (UnitIsSoldierWithBIT(UnitState))
+	{
+		return default.HeavyWeaponsValidForBITWithSoldiers.Find(ItemTemplate.DataName) != INDEX_NONE;
+	}
 
 	if (default.AuxSlotAlwaysAllowedItems.Find(ItemTemplate.DataName) != INDEX_NONE)
 	{
@@ -170,6 +175,10 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 
 function ECHSlotUnequipBehavior SlotGetUnequipBehavior(CHItemSlot Slot, ECHSlotUnequipBehavior DefaultBehavior, XComGameState_Unit UnitState, XComGameState_Item ItemState, optional XComGameState CheckGameState)
 {	
+	if (UnitIsSoldierWithBIT(UnitState))
+	{
+		return eCHSUB_AttemptReEquip;
+	}
 	return eCHSUB_AllowEmpty;
 }
 
@@ -186,4 +195,10 @@ static function string GetSlotDisplayLetter(CHItemSlot Slot)
 static function string GetDisplayName(CHItemSlot Slot)
 {
 	return default.strSlotLocName;
+}
+
+static private function bool UnitIsSoldierWithBIT(const XComGameState_Unit UnitState)
+{
+	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE &&
+		   class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState);
 }

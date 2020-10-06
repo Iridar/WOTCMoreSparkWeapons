@@ -64,7 +64,7 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 			if (ItemState != none)
 			{
 				//	Grant HW slot if the secondary weapon's category is listed.
-				Tuple.Data[1].b = class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.WeaponCategoriesAddHeavyWeaponSlot.Find(ItemState.GetWeaponCategory()) != INDEX_NONE;
+//Tuple.Data[1].b = class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.WeaponCategoriesAddHeavyWeaponSlot.Find(ItemState.GetWeaponCategory()) != INDEX_NONE;
 
 				//`LOG("Override: unit has heavy weapon:" @ Tuple.Data[0].b,, 'WOTCMoreSparkWeapons');
 
