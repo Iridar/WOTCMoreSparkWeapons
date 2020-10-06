@@ -545,6 +545,13 @@ static function PatchAbilityTemplates()
 
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 
+	Template = AbilityTemplateManager.FindAbilityTemplate('AidProtocol');
+	if (Template != none)
+	{
+		//	TODO: Add condition to this effect so it applies only if used by a BIT
+		Template.AddTargetEffect(new class'X2Effect_TransferWeapon');
+	}
+
 	//	Rainmaker
 	//	Get the Rainmaker ability template so we can use it for the purposes of our effect's localization.
 	Template = AbilityTemplateManager.FindAbilityTemplate('Rainmaker');
@@ -1368,9 +1375,9 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			}
 		}
 	}
-	else if (class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))	//	Unit not a SPARK and has a BIT equipped
-	{
-		//BITRef.ObjectID = class'X2Condition_HasWeaponOfCategory'.static.GetBITObjectID(UnitState, StartState);
+	else if (class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState) || UnitState.IsUnitAffectedByEffectName('AidProtocol'))	//	Unit not a SPARK and has a BIT equipped
+	{	//	DEBUG ONLY: Or affected by Aid Prototocl
+
 		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 		for (Index = SetupData.Length - 1; Index >= 0; Index--)
 		{
@@ -1396,7 +1403,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 				case 'SparkFlamethrowerMk2':
 				case 'SparkBlasterLauncher':
 				case 'SparkPlasmaBlaster':
-					if (!DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef))
+					if (!DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) 
 					{
 						SetupData.Remove(Index, 1);
 					}
