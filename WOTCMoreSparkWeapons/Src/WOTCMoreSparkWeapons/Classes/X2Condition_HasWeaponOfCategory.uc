@@ -30,9 +30,6 @@ function bool CanEverBeValid(XComGameState_Unit SourceUnit, bool bStrategyCheck)
 	local array<XComGameState_Item> InventoryItems;
 	local XComGameState_Item		InventoryItem;
 
-	//	DEBUG ONLY: override condition with auto success if the unit has Aid Protocol on them. Needed for Weapon Transfer. 
-	if (SourceUnit.IsUnitAffectedByEffectName('AidProtocol')) return true;
-
 	InventoryItems = SourceUnit.GetAllInventoryItems();
 
 	foreach InventoryItems(InventoryItem)

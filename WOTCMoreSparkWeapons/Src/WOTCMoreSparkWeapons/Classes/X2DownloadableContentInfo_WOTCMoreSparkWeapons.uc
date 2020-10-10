@@ -26,16 +26,23 @@ var localized string str_ShellsMutuallyExclusiveWithMunitionsMount;
 var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
 //	Changelog 
-
-// Active Camo animation for Gremlin. Aid Protocol animation for BIT
-//	Redo Resto Mist and EM Pulse BIT viz functions to properly get Bit Object ID, taking Aid Protocol into account
+/*
+Restorative Mist and EM Pulse are now Heavy Weapons and have been buffed accordingly.
+SPARKs can now equip both BITs and GREMLINs as Secondary Weapons. 
+New passive ability for SPARKs and MEC Troopers: Protocol Suite. When equipped with a BIT or GREMLIN, the unit gains Aid Protocol, Active Camo, Intrusion Protocol and Entrench Protocol.
+Entrench Protocol is a new passive ability which makes Aid Protocol used on self last indefinetely as long as you don't move. It's intended to provide a defensive buff in static combat situations to SPARKs with Heavy Cannons.
+BITs grant a BIT Heavy Weapon slot, but they are worse than GREMLINs in all other aspects, e.g. they provide a smaller Hacking bonus and lower Defense bonus when used for Aid Protocol.
+The generic Heavy Weapon slot granted by the BIT has been replaced with a new special BIT Heavy Weapon slot to clearly differentiate that this Heavy Weapon is equipped on the BIT. 
+When you use Aid Protocol with BIT, if the target of the Aid Protocol is an allied soldier, they will gain control over the weapon in the BIT Heavy Weapon slot for the duration of the Aid Protocol. 
+E.g. if you equip a Shredstorm Cannon on a BIT, then you use Aid Protocol on an allied soldier, that soldier will be able to command the BIT th fire that Shredstorm Cannon. Note that the original owner of the BIT loses control over that Shredstorm Cannon for the duration of the Aid Protocol.
+Specialists and most other popular GREMLIN-using classes can now equip a BIT and use it for their regular GREMLIN skills. They also benefit from the BIT Heavy Weapon slot and can also transfer control of it via Aid Protocol, if they have that ability.
+Again, most of their regular skills will be weaker when used via BIT.
+*/
 
 //	Immedaite goals:
 
-//	Replace archetype on the EM Pulse and Resto Mist so they don't disappear. Female socket for EM Pulse and Resto Mist. Male socket for Resto Mist. Alt Game Archetype for Resto Mist when used by a SPARK and by a BIT.
-
-//	Clear distinction now: SPARK and Soldier use BIT ability templates when the heavy weapon is in the BIT Heavy Weapon Slot.
-//	If the item is not in the heavy weapon slot, the soldier uses regular animations, and SPARK uses arm cannon animations.
+//	Set up Transfer Weapon to happen only if the target character template is a soldier and the source weapon category is a BIT
+// Active Camo animation for Gremlin. Aid Protocol animation for BIT
 
 //Reload doesn't work when carrying a unit, but I guess that's not stopping the Speed Loader from trying.
 //	Both GREMLIN and BIT grant Active Camo and Aid Protocol and Intrusion Protocol and Entrench Protocol to the SPARK. 
@@ -746,10 +753,11 @@ static function PatchWeaponTemplates()
 			AddBITAnimSetsToCharacterTemplate(WeaponTemplate.CosmeticUnitTemplate);
 			//WeaponTemplate.Abilities.AddItem('IRI_RecallCosmeticUnit');
         } 
-		//else if (WeaponTemplate.WeaponCat == 'gremlin')
-		//{
-		//	WeaponTemplate.Abilities.AddItem('IRI_RecallCosmeticUnit');
-		//}
+		else if (WeaponTemplate.WeaponCat == 'gremlin')
+		{
+			//	WeaponTemplate.Abilities.AddItem('IRI_RecallCosmeticUnit');
+			AddGREMLINAnimSetsToCharacterTemplate(WeaponTemplate.CosmeticUnitTemplate);
+		}
 
 		//	Duplicate Launch Grenade icons for my Launch Ordnance abilities.
 		GrenadeTemplate = X2GrenadeTemplate(WeaponTemplate);
@@ -808,6 +816,29 @@ static function AddBITAnimSetsToCharacterTemplate(string TemplateName)
 			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIRestorativeMist.Anims.AS_RestoMist_BIT")));
 			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIElectroPulse.Anims.AS_ElectroPulse_BIT")));
 			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_LAC_Bit")));
+			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Bit")));			
+		}
+	}
+}
+static function AddGREMLINAnimSetsToCharacterTemplate(string TemplateName)
+{
+    local X2CharacterTemplateManager    CharMgr;
+    local X2CharacterTemplate           CharTemplate;
+	local array<X2DataTemplate>			DifficultyVariants;
+	local X2DataTemplate				DifficultyVariant;
+	local XComContentManager			Content;
+	
+    CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+	
+	CharMgr.FindDataTemplateAllDifficulties(name(TemplateName), DifficultyVariants);
+	foreach DifficultyVariants(DifficultyVariant)
+	{
+		CharTemplate = X2CharacterTemplate(DifficultyVariant);
+
+		if (CharTemplate != none)
+		{
+			Content = `CONTENT;
+			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Gremlin")));	
 		}
 	}
 }
