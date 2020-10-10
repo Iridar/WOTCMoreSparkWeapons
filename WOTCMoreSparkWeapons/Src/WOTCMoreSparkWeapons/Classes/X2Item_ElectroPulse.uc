@@ -4,7 +4,6 @@ var config bool REQUIRE_SPARK;
 
 var config float PULSE_RANGE;
 var config float PULSE_RADIUS;
-var config int  CHARGES;
 var config int	COOLDOWN;
 var config int HACK_DEFENSE_REDUCTION;
 var config int STUN_DURATION_ACTIONS;
@@ -56,9 +55,10 @@ static function array<X2DataTemplate> CreateTemplates()
 
 static function X2DataTemplate Create_Item()
 {
-	local X2WeaponTemplate Template;
-	local ArtifactCost Resources;
-	local StrategyRequirement	AltReq;
+	local X2WeaponTemplate			Template;
+	local ArtifactCost				Resources;
+	local StrategyRequirement		AltReq;
+	local AltGameArchetypeUse		GameArch;
 	local int i;
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_ElectroPulse_CV');
@@ -66,9 +66,10 @@ static function X2DataTemplate Create_Item()
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.EquipSound = "Secondary_Weapon_Equip_Beam";
 
-	if (default.CHARGES > 0)
+	if (default.ICLIPSIZE > 0)
 	{
-		Template.SetUIStatMarkup(class'XLocalizedData'.default.ChargesLabel, , default.CHARGES);
+		Template.SetUIStatMarkup(class'XLocalizedData'.default.ChargesLabel, , default.ICLIPSIZE);
+		Template.bHideClipSizeStat = true;
 	}
 	if (default.COOLDOWN > 0)
 	{
@@ -112,6 +113,10 @@ static function X2DataTemplate Create_Item()
 	Template.Aim = default.AIM;
 	Template.CritChance = default.CRITCHANCE;
 	Template.iClipSize = default.ICLIPSIZE;
+	if (default.ICLIPSIZE == -1)
+	{
+		Template.InfiniteAmmo = true;
+	}
 	Template.iSoundRange = default.ISOUNDRANGE;
 	Template.iEnvironmentDamage = default.IENVIRONMENTDAMAGE;
 	Template.DamageTypeTemplateName = default.DAMAGE.DamageType;
@@ -160,8 +165,19 @@ static function X2DataTemplate Create_Item()
 		AltReq.SpecialRequirementsFn = IsLostTowersNarrativeContentComplete;
 		Template.AlternateRequirements.AddItem(AltReq);
 	}
+
+	GameArch.UseGameArchetypeFn = AltGameArchetypeForSoldier;
+	GameArch.ArchetypeString = "IRIElectroPulse.Archetypes.WP_ElectroPulse_Soldier";
+	Template.AltGameArchetypeArray.AddItem(GameArch);
+
 	
 	return Template;
+}
+
+static private function bool AltGameArchetypeForSoldier(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)
+{
+	//	Use alternative archetype for all non-SPARK characters
+	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE;
 }
 
 //	Copied from RM's MEC Troopers. Ey, no reason to reinvent the wheel, okay?

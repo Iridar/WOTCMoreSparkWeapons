@@ -12,8 +12,10 @@ var config(OrdnanceLaunchers) bool bOrdnanceAmplifierUsesBlasterLauncherTargetin
 
 var config(KineticStrikeModule) array<name> MeleeAbilitiesUseKSM;
 
-var config(ClassData) array<name> AbilitiesRequireBIT;
-var config(ClassData) array<name> AbilitiesToGrantToBITs;
+//var config(ClassData) array<name> AbilitiesRequireBIT;
+var config(SparkArsenal) array<name> BIT_GrantsAbilitiesToSPARK;
+var config(SparkArsenal) array<name> GREMLIN_GrantsAbilitiesToSPARK;
+
 var config(ClassData) array<name> ClassesToRemoveAbilitiesFrom;
 var config(ClassData) array<name> AbilitiesToRemove;
 var config(ClassData) array<name> AbilitiesToGrant;
@@ -25,8 +27,17 @@ var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
 //	Changelog 
 
+// Active Camo animation for Gremlin. Aid Protocol animation for BIT
+//	Redo Resto Mist and EM Pulse BIT viz functions to properly get Bit Object ID, taking Aid Protocol into account
+
 //	Immedaite goals:
 
+//	Replace archetype on the EM Pulse and Resto Mist so they don't disappear. Female socket for EM Pulse and Resto Mist. Male socket for Resto Mist. Alt Game Archetype for Resto Mist when used by a SPARK and by a BIT.
+
+//	Clear distinction now: SPARK and Soldier use BIT ability templates when the heavy weapon is in the BIT Heavy Weapon Slot.
+//	If the item is not in the heavy weapon slot, the soldier uses regular animations, and SPARK uses arm cannon animations.
+
+//Reload doesn't work when carrying a unit, but I guess that's not stopping the Speed Loader from trying.
 //	Both GREMLIN and BIT grant Active Camo and Aid Protocol and Intrusion Protocol and Entrench Protocol to the SPARK. 
 //	Active Camo is no longer Phantom, just a concealment buff.
 //	BIT is weaker in everything than GREMLIN.
@@ -435,7 +446,7 @@ static private function GiveEntrenchProtocol(XComGameState_Unit UnitState, XComG
 
 	UnitState.BuySoldierProgressionAbility(NewGameState, 0, UnitState.AbilityTree[0].Abilities.Length);
 }*/
-
+/*
 static function GetNumHeavyWeaponSlotsOverride(out int NumHeavySlots, XComGameState_Unit UnitState, XComGameState CheckGameState)
 {
 	if (default.BIT_Grants_HeavyWeaponSlot &&
@@ -444,7 +455,7 @@ static function GetNumHeavyWeaponSlotsOverride(out int NumHeavySlots, XComGameSt
 	{
 		NumHeavySlots++;
 	}
-}
+}*/
 
 static function PatchCharacterTemplates()
 {
@@ -519,7 +530,7 @@ static private function SoldierCosmeticBITUnitCreated(XComGameState_Unit Cosmeti
 {
 	local XComGameState_Item SparkHeavyWeapon, BitHeavyWeapon;
 
-	SparkHeavyWeapon = OwnerUnit.GetItemInSlot(class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot);
+	SparkHeavyWeapon = OwnerUnit.GetItemInSlot(class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot);
 	if (SparkHeavyWeapon != none)
 	{
 		BitHeavyWeapon = SparkHeavyWeapon.GetMyTemplate().CreateInstanceFromTemplate(StartGameState);
@@ -539,17 +550,22 @@ static function PatchAbilityTemplates()
 	local X2AbilityTemplate				Template;
 	local X2Effect_IRI_Rainmaker		Rainmaker;
 	local X2Effect						Effect;
-	local X2Condition_SourceWeaponCat	SourceWeaponCat;
+	//local X2Condition_SourceWeaponCat	SourceWeaponCat;
 	local name							AbilityName;
 	local X2Effect_Knockback			KnockbackEffect;
+	local X2Effect_TransferWeapon		TransferWeapon;
 
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 
+	//	Make using Aid Protocol with BIT transfer the control of the BIT's heavy weapon to the targeted soldier
 	Template = AbilityTemplateManager.FindAbilityTemplate('AidProtocol');
 	if (Template != none)
 	{
-		//	TODO: Add condition to this effect so it applies only if used by a BIT
-		Template.AddTargetEffect(new class'X2Effect_TransferWeapon');
+		TransferWeapon = new class'X2Effect_TransferWeapon';
+		TransferWeapon.DuplicateResponse = eDupe_Ignore;
+		TransferWeapon.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
+		TransferWeapon.bRemoveWhenTargetDies = true;
+		Template.AddTargetEffect(TransferWeapon);
 	}
 
 	//	Rainmaker
@@ -597,7 +613,7 @@ static function PatchAbilityTemplates()
 			}
 		}
 	}
-
+	/*
 	foreach default.AbilitiesRequireBIT(AbilityName)
 	{
 		Template = AbilityTemplateManager.FindAbilityTemplate(AbilityName);
@@ -607,7 +623,7 @@ static function PatchAbilityTemplates()
 			SourceWeaponCat.MatchWeaponCat = 'sparkbit';
 			Template.AbilityShooterConditions.AddItem(SourceWeaponCat);
 		}
-	}
+	}*/
 
 	//	Add proper knockback to cone- and line-targeted abilities. 
 	//	Normally knockback doesn't work properly for them, because the X2Effect_Knockback works relative 
@@ -641,7 +657,7 @@ static private function ReplaceSparkShooterConditionOnAbility(name TemplateName)
 {
 	local X2AbilityTemplateManager			AbilityTemplateManager;
 	local X2AbilityTemplate					Template;
-	local X2Condition_HasWeaponOfCategory	HasWeaponOfCategory;
+	//local X2Condition_HasWeaponOfCategory	HasWeaponOfCategory;
 	local int i;
 
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
@@ -659,9 +675,9 @@ static private function ReplaceSparkShooterConditionOnAbility(name TemplateName)
 			}
 		}
 	}
-	HasWeaponOfCategory = new class'X2Condition_HasWeaponOfCategory';
-	HasWeaponOfCategory.RequireWeaponCategory = 'sparkbit';
-	Template.AbilityShooterConditions.AddItem(HasWeaponOfCategory);
+	//HasWeaponOfCategory = new class'X2Condition_HasWeaponOfCategory';
+	//HasWeaponOfCategory.RequireWeaponCategory = 'sparkbit';
+	//Template.AbilityShooterConditions.AddItem(HasWeaponOfCategory);
 }
 
 static simulated function ProperKnockback_ModifyActivatedAbilityContext(XComGameStateContext Context)
@@ -718,24 +734,22 @@ static function PatchWeaponTemplates()
     local X2ItemTemplateManager         ItemMgr;
 	local X2GrenadeTemplate				GrenadeTemplate;
 	local AbilityIconOverride			IconOverride;
-	local name							AbilityName;
 
     ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
     arrWeaponTemplates = ItemMgr.GetAllWeaponTemplates();
 
     foreach arrWeaponTemplates(WeaponTemplate)
     {
-		//	Add some abilities to BITs.
+		//	Add BIT Anim Sets
         if (WeaponTemplate.WeaponCat == 'sparkbit')
         {
-			foreach default.AbilitiesToGrantToBITs(AbilityName)
-			{
-				if (WeaponTemplate.Abilities.Find(AbilityName) == INDEX_NONE)
-				WeaponTemplate.Abilities.AddItem(AbilityName);
-			}
-
 			AddBITAnimSetsToCharacterTemplate(WeaponTemplate.CosmeticUnitTemplate);
-        }
+			//WeaponTemplate.Abilities.AddItem('IRI_RecallCosmeticUnit');
+        } 
+		//else if (WeaponTemplate.WeaponCat == 'gremlin')
+		//{
+		//	WeaponTemplate.Abilities.AddItem('IRI_RecallCosmeticUnit');
+		//}
 
 		//	Duplicate Launch Grenade icons for my Launch Ordnance abilities.
 		GrenadeTemplate = X2GrenadeTemplate(WeaponTemplate);
@@ -917,8 +931,6 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
     local XGParamTag                    LocTag;
     local bool							OverrideNormalBehavior;
     local bool							DoNotOverrideNormalBehavior;
-	local XComGameState_Item			OtherItemState;
-	local name							TemplateName;
     local X2SoldierClassTemplateManager Manager;
 
     OverrideNormalBehavior = CheckGameState != none;
@@ -968,36 +980,20 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 	}
 		
 	//	If we're trying to equip an Autogun
+	//	EDIT: Allow equipping two autoguns for the purposes of having another one being transferred via Aid Protocol
+	/*
 	if (ItemTemplate.DataName == 'IRI_Heavy_Autogun' || ItemTemplate.DataName == 'IRI_Heavy_Autogun_MK2') 
 	{
-		//	Into Heavy Weapon slot
-		if (Slot == eInvSlot_HeavyWeapon)
+		if (UnitState.HasItemOfTemplateType('IRI_Heavy_Autogun', CheckGameState) || UnitState.HasItemOfTemplateType('IRI_Heavy_Autogun_MK2', CheckGameState))
 		{
-			//	Grab Item State in the Aux Slot
-			OtherItemState = UnitState.GetItemInSlot(class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot, CheckGameState);
-		}	//	Into Aux SLot
-		else if (Slot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot)
-		{
-			//	Grab Item State from the Heavy Weapon slot
-			OtherItemState = UnitState.GetItemInSlot(eInvSlot_HeavyWeapon, CheckGameState);
-		}
-			
-		//	If there's an item in that slot
-		if (OtherItemState != none)
-		{
-			TemplateName = OtherItemState.GetMyTemplateName();
-			//	If it's an Autogun
-			if (TemplateName == 'IRI_Heavy_Autogun' || TemplateName == 'IRI_Heavy_Autogun_MK2')
-			{
-				//	Autogun already equipped, forbid equipping another one.
-				LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
-				LocTag.StrValue0 = OtherItemState.GetMyTemplate().FriendlyName;
-				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strCategoryRestricted));
-				bCanAddItem = 0;
-				return OverrideNormalBehavior;
-			}
-		}
-	}
+			//	Autogun already equipped, forbid equipping another one. Unlike other heavy weapons, having two AutoGuns is redundant.
+			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+			LocTag.StrValue0 = ItemTemplate.FriendlyName;
+			DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strCategoryRestricted));
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}	
+	}*/
 	//	SPARK-only changes past this point.
 	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
 		return DoNotOverrideNormalBehavior;
@@ -1095,14 +1091,16 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 	local X2AbilityTemplate			AbilityTemplate;
 	local StateObjectReference		OrdLauncherRef, KSMRef, BITRef, GremlinRef;
 	local X2AbilityTemplateManager  AbilityTemplateManager;
-	local bool						bChangeHeavyWeapons;
-	local bool						bChangeMelee;
 	local bool						bChangeGrenadesAndRockets;
 	local name						TemplateName;
+	local bool						bUnitIsSpark;
 	local int Index;
 	
+	//	------------------------- SPARK ONLY CHANGES -------------------------------------
 	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
 	{
+		bUnitIsSpark = true;
+
 		//`LOG("Finalize abilities for unit:" @ UnitState.GetFullName(),, 'IRILOG');
 
 		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();		
@@ -1131,17 +1129,10 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 		ItemState = UnitState.GetItemInSlot(class'X2Item_KSM'.default.INVENTORY_SLOT, StartState);
 		if (ItemState != none && ItemState.GetWeaponCategory() == class'X2Item_KSM'.default.WEAPON_CATEGORY)
 		{
-			bChangeMelee = true;
 			KSMRef = ItemState.GetReference();
 		}
-		
-		//	BIT Equipped? Not checking secondary weapon directly in case somebody adds Utility Slot BITs or something
+	
 		BITRef.ObjectID = class'X2Condition_HasWeaponOfCategory'.static.GetBITObjectID(UnitState, StartState);
-		if (default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || BITRef.ObjectID <= 0)
-		{
-			bChangeHeavyWeapons = true;
-		}
-
 		GremlinRef.ObjectID = class'X2Condition_HasWeaponOfCategory'.static.GetGremlinObjectID(UnitState, StartState);
 					
 		//	Cycle through all abilities that are about to be Initialized
@@ -1163,52 +1154,46 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					SetupData.Remove(Index, 1);
 					break;
 				//	=======	Heavy Weapons =======
+				//	Replace heavy weapon abilities with Arm Cannon versions if the heavy weapon is NOT in the BIT-granted heavy weapon slot OR if the mod is configured to always use Arm Cannon animations on sparks.
 				case 'SparkRocketLauncher':
 				case 'MecRocketLauncher':
-					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
-					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+					if (default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState)) break;
 					SetupData[Index].TemplateName = 'IRI_SparkRocketLauncher';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkRocketLauncher');
 					break;
 				case 'SparkShredderGun':
 				case 'MecShredderGun':
-					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
-					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+					if (!default.bAlwaysUseArmCannonAnimationsForHeavyWeapons && !DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState)) break;
 					SetupData[Index].TemplateName = 'IRI_SparkShredderGun';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredderGun');
 					break;
 				case 'SparkShredstormCannon':
 				case 'MecShredstormCannon':
-					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
-					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+					if (!default.bAlwaysUseArmCannonAnimationsForHeavyWeapons && !DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState)) break;
 					SetupData[Index].TemplateName = 'IRI_SparkShredstormCannon';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkShredstormCannon');
 					break;
 				case 'SparkFlamethrower':
 				case 'MecFlamethrower':
-					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
-					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+					if (!default.bAlwaysUseArmCannonAnimationsForHeavyWeapons && !DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState)) break;
 					SetupData[Index].TemplateName = 'IRI_SparkFlamethrower';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrower');
 					break;
 				case 'SparkFlamethrowerMk2':
 				case 'MecFlamethrowerMk2':
-					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
-					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+					if (!default.bAlwaysUseArmCannonAnimationsForHeavyWeapons && !DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState)) break;
 					SetupData[Index].TemplateName = 'IRI_SparkFlamethrowerMk2';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkFlamethrowerMk2');
 					break;
 				case 'SparkBlasterLauncher':
 				case 'MecBlasterLauncher':
-					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
-					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+					if (!default.bAlwaysUseArmCannonAnimationsForHeavyWeapons && !DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState)) break;
 					SetupData[Index].TemplateName = 'IRI_SparkBlasterLauncher';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkBlasterLauncher');
 					break;
 				case 'SparkPlasmaBlaster':
 				case 'MecPlasmaBlaster':
-					if (!bChangeHeavyWeapons && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) break;
-					//`LOG("Replacing:" @ SetupData[Index].TemplateName @ "for unit:" @ UnitState.GetFullName() @ "on item:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ "on ammo:" @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+					if (!default.bAlwaysUseArmCannonAnimationsForHeavyWeapons && !DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState)) break;
 					SetupData[Index].TemplateName = 'IRI_SparkPlasmaBlaster';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_SparkPlasmaBlaster');
 					break;
@@ -1223,6 +1208,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					}
 					else if (BITRef.ObjectID <= 0)	//	Otherwise remove it if there's no BIT
 					{
+						//	TODO: replace Bombard with Arm Cannon version. Might need Perk Fire animation and perk content weapon
 						SetupData.Remove(Index, 1);
 					}
 					break;
@@ -1261,122 +1247,42 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					if (!bChangeGrenadesAndRockets) break;
 					SetupData[Index].TemplateName = 'IRI_Fire_PlasmaEjector_Spark';
 					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_PlasmaEjector_Spark');
-					break;
-				//	=======	Restorative Mist =======
-				case 'IRI_RestorativeMist_Heal':
-					if (BITRef.ObjectID > 0)
-					{
-						SetupData.Remove(Index, 1);
-						//`LOG("Removed restorative mist:" @ SetupData[Index].SourceAmmoRef.ObjectID @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName() @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(BITRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
-					}
 					break;		
-				case 'IRI_RestorativeMist_HealBit':
-					if (BITRef.ObjectID > 0)
-					{
-						//`LOG("Patched restorative mist bit:" @ SetupData[Index].SourceAmmoRef.ObjectID @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceAmmoRef.ObjectID)).GetMyTemplateName() @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID)).GetMyTemplateName() @ XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(BITRef.ObjectID)).GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
-						SetupData[Index].SourceWeaponRef = BITRef;
-					}
-					else
-					{
-						SetupData.Remove(Index, 1);
-					}
-					break;	
-				//	=======	Electro Pulse =======
-				case 'IRI_ElectroPulse':
-					if (BITRef.ObjectID > 0)
-					{
-						SetupData.Remove(Index, 1);
-					}
-					break;		
-				case 'IRI_ElectroPulse_Bit':
-					if (BITRef.ObjectID > 0)
-					{
-						SetupData[Index].SourceWeaponRef = BITRef;
-					}
-					else
-					{
-						SetupData.Remove(Index, 1);
-					}
-					break;	
-				//	=======	Light Auto Cannon =======
-				case 'IRI_Fire_HeavyAutogun':	//	If this is a Heavy Autogun ability, and the BIT is present, and this heavy weapon is not in the Aux Slot
-					if (BITRef.ObjectID > 0 && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef))
-					{
-						//	Attach it to BIT
-						SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_BIT';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_BIT');
-					}
-					else
-					{
-						//	Otherwise, replace it with the "arm cannon" version.
-						SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_Spark');
-					}					
-					break;	
-				case 'IRI_OverwatchShot_HeavyAutogun':	//	Same for its Overwatch Shot
-					if (BITRef.ObjectID > 0 && !DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef))
-					{
-						//	Attach it to BIT
-						SetupData[Index].TemplateName = 'IRI_OverwatchShot_HeavyAutogun_BIT';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_OverwatchShot_HeavyAutogun_BIT');
-					}
-					else
-					{
-						//	Otherwise, replace it with the "arm cannon" version.
-						SetupData[Index].TemplateName = 'IRI_OverwatchShot_HeavyAutogun_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_OverwatchShot_HeavyAutogun_Spark');
-					}					
-					break;	
 				default:
 					//	=======	Melee =======
-					if (!bChangeMelee) break;	//	Move melee abilities to KSM so they can use KSM melee animations
-					if (default.MeleeAbilitiesUseKSM.Find(SetupData[Index].TemplateName) != INDEX_NONE)
+					//	Move melee abilities to KSM so they can take advantage of its animations.
+					if (default.MeleeAbilitiesUseKSM.Find(SetupData[Index].TemplateName) != INDEX_NONE && KSMRef.ObjectID != 0)
 					{
 						SetupData[Index].SourceWeaponRef = KSMRef;
 					}
 					break;
 			}
 		}
-
-		//	Grant Aid Protocol and Intrusion Protocol if SPARK has Gremlin.
+		`LOG("Grant BIT and GREMLIN abilities:" @ default.BIT_GrantsAbilitiesToSPARK.Length @ default.GREMLIN_GrantsAbilitiesToSPARK.Length,, 'WOTCMoreSparkWeapons');
+		//	GRANT GREMLIN ABILITIES
 		if (GremlinRef.ObjectID > 0)
 		{
-			NewSetupData.TemplateName = 'AidProtocol';
-			NewSetupData.Template = AbilityTemplateManager.FindAbilityTemplate('AidProtocol');;
-			NewSetupData.SourceWeaponRef = GremlinRef;
-			SetupData.AddItem(NewSetupData);
-
-			AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate('IntrusionProtocol');
-			NewSetupData.TemplateName = 'IntrusionProtocol';
-			NewSetupData.Template = AbilityTemplate;
-			SetupData.AddItem(NewSetupData);
-
-			foreach AbilityTemplate.AdditionalAbilities(TemplateName)
+			foreach default.GREMLIN_GrantsAbilitiesToSPARK(TemplateName)
 			{
-				NewSetupData.TemplateName = TemplateName;
-				NewSetupData.Template = AbilityTemplateManager.FindAbilityTemplate(TemplateName);
-				SetupData.AddItem(NewSetupData);
+				`LOG("Granting gremlin ability:" @ TemplateName,, 'WOTCMoreSparkWeapons');
+				GrantAbility(TemplateName, AbilityTemplateManager, GremlinRef, SetupData);
 			}
 		}
-		//	Grant Intrusion Protocol if the SPARK has a BIT equipped. (We remove Intrusion Protocol from the class tree so that it doesn't work with other secondary weapons)
+		//	GRANT BIT ABILITIES	
 		if (BITRef.ObjectID > 0)
 		{
-			AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate('IntrusionProtocol');
-			NewSetupData.TemplateName = 'IntrusionProtocol';
-			NewSetupData.Template = AbilityTemplate;
-			NewSetupData.SourceWeaponRef = BITRef;
-			SetupData.AddItem(NewSetupData);
-
-			foreach AbilityTemplate.AdditionalAbilities(TemplateName)
+			foreach default.BIT_GrantsAbilitiesToSPARK(TemplateName)
 			{
-				NewSetupData.TemplateName = TemplateName;
-				NewSetupData.Template = AbilityTemplateManager.FindAbilityTemplate(TemplateName);
-				SetupData.AddItem(NewSetupData);
+				`LOG("Granting BIT ability:" @ TemplateName,, 'WOTCMoreSparkWeapons');
+				GrantAbility(TemplateName, AbilityTemplateManager, BITRef, SetupData);
 			}
 		}
-	}
-	else if (class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState) || UnitState.IsUnitAffectedByEffectName('AidProtocol'))	//	Unit not a SPARK and has a BIT equipped
-	{	//	DEBUG ONLY: Or affected by Aid Prototocl
+	}	
+
+
+	//	------------------------- ALL UNITS CHANGES -------------------------------------
+	if (class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState) || IsUnitValidTransferWeaponTarget(UnitState))	//	Unit not a SPARK and has a BIT equipped
+	{	//	OR Unit is being targeted by a BIT-sourced Aid Protocol so they need to be able to Init their proper heavy weapon abilities 
 
 		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 		for (Index = SetupData.Length - 1; Index >= 0; Index--)
@@ -1384,50 +1290,80 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			switch (SetupData[Index].TemplateName)
 			{
 				//	=======	Heavy Weapons =======
-				case 'RocketLauncher':	//	Remove regular versions of heavy weapon abilitieis that ARE attached to BIT-granted Aux Slot heavy weapon
+				case 'RocketLauncher':	//	Remove regular versions of heavy weapon abilitieis that ARE attached to BIT-granted Slot heavy weapon
 				case 'ShredderGun':
 				case 'ShredstormCannon':
 				case 'Flamethrower':
 				case 'FlamethrowerMk2':
 				case 'BlasterLauncher':
 				case 'PlasmaBlaster':
-					if (DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef))
+					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
 					{
+						`LOG("Finalize abilities:: removing ability:" @ SetupData[Index].TemplateName @ "from unit:" @ UnitState.GetFullName() @ "because it references a BIT heavy weapon",, 'WOTCMoreSparkWeapons');
 						SetupData.Remove(Index, 1);
 					}
 					break;
-				case 'SparkRocketLauncher':	//	Remove Spark versions of heavy weapon abilitieis that are NOT attached to BIT-granted Aux Slot heavy weapon
+				case 'SparkRocketLauncher':	//	Remove Spark versions of heavy weapon abilitieis that are NOT attached to BIT-granted Slot heavy weapon
 				case 'SparkShredderGun':
 				case 'SparkShredstormCannon':
 				case 'SparkFlamethrower':
 				case 'SparkFlamethrowerMk2':
 				case 'SparkBlasterLauncher':
 				case 'SparkPlasmaBlaster':
-					if (!DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef)) 
+					if (!DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState)) 
 					{
+						`LOG("Finalize abilities:: removing ability:" @ SetupData[Index].TemplateName @ "from unit:" @ UnitState.GetFullName() @ "because it DOES NOT reference a BIT heavy weapon:" @ StartState != none,, 'WOTCMoreSparkWeapons');
 						SetupData.Remove(Index, 1);
 					}
 					break;
+				//	HEAVY AUTOGUN
 				case 'IRI_Fire_HeavyAutogun':
-					if (DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef))
+					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
 					{
 						SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_BIT';
 						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_BIT');
 					}
+					else if (bUnitIsSpark)	//	If this unit is a SPARK, and this AutoGun is NOT in the BIT-granted heavy weapon slot, then we replace the ability with the Arm Cannon one.
+					{
+						SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_Spark');
+					}
 					break;
 				case 'IRI_OverwatchShot_HeavyAutogun':
-					if (DoesThisRefAuxSlotItem(SetupData[Index].SourceWeaponRef))
+					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
 					{
 						SetupData[Index].TemplateName = 'IRI_OverwatchShot_HeavyAutogun_BIT';
 						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_OverwatchShot_HeavyAutogun_BIT');
 					}
+					else if (bUnitIsSpark)	//	If this unit is a SPARK, and this AutoGun is NOT in the BIT-granted heavy weapon slot, then we replace the ability with the Arm Cannon one.
+					{
+						SetupData[Index].TemplateName = 'IRI_OverwatchShot_HeavyAutogun_Spark';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_OverwatchShot_HeavyAutogun_Spark');
+					}
 					break;
+				//	=======	Restorative Mist =======
+				case 'IRI_RestorativeMist_Heal':
+					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
+					{
+						SetupData[Index].TemplateName = 'IRI_RestorativeMist_HealBit';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_RestorativeMist_HealBit');
+					}
+					break;
+				//	=======	Electro Pulse =======
+				case 'IRI_ElectroPulse':
+					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
+					{
+						SetupData[Index].TemplateName = 'IRI_ElectroPulse_Bit';
+						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_ElectroPulse_Bit');
+					}
+					break;			
 				default:
 					break;
 			}
 		}
 	}
 
+	//	----------------------------------------------------------
 	//	Grant Speed Loader Reload to weapons that have it equipped.
 	ItemStates = UnitState.GetAllInventoryItems(StartState, true);
 	if (AbilityTemplateManager == none)
@@ -1448,16 +1384,90 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 	}
 }
 
+static private function GrantAbility(name TemplateName, X2AbilityTemplateManager AbilityTemplateManager, StateObjectReference WeaponRef, out array<AbilitySetupData> SetupData)
+{
+	local X2AbilityTemplate			AbilityTemplate;
+	local AbilitySetupData			NewSetupData;
+	local name						AdditionalAbilityName;
+
+	AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate(TemplateName);
+	NewSetupData.TemplateName = TemplateName;
+	NewSetupData.Template = AbilityTemplate;
+	NewSetupData.SourceWeaponRef = WeaponRef;
+	SetupData.AddItem(NewSetupData);
+
+	foreach AbilityTemplate.AdditionalAbilities(AdditionalAbilityName)
+	{
+		NewSetupData.TemplateName = AdditionalAbilityName;
+		NewSetupData.Template = AbilityTemplateManager.FindAbilityTemplate(AdditionalAbilityName);
+		SetupData.AddItem(NewSetupData);
+	}
+}
+
+//	Helper function, checks if unit is affected by Aid Protocol applied by a BIT from another unit.
+static private function bool IsUnitValidTransferWeaponTarget(const XComGameState_Unit UnitState)
+{
+	local XComGameState_Effect	EffectState;
+	local X2WeaponTemplate		WeaponTemplate;
+	local XComGameState_Item	SourceWeapon;
+
+	EffectState = UnitState.GetUnitAffectedByEffectState('AidProtocol');
+
+	//	Exit early if this Aid Protocol was applied by the unit himself
+	if (EffectState == none || EffectState.ApplyEffectParameters.SourceStateObjectRef.ObjectID == UnitState.ObjectID)  
+		return false;
+
+	SourceWeapon = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(EffectState.ApplyEffectParameters.ItemStateObjectRef.ObjectID));
+
+	if (SourceWeapon == none)
+		return false;
+
+	WeaponTemplate = X2WeaponTemplate(SourceWeapon.GetMyTemplate());
+
+	return WeaponTemplate != none && WeaponTemplate.WeaponCat == 'sparkbit';
+}
+
+static function bool DoesThisRefBitHeavyWeapon(const StateObjectReference Ref, const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+    local XComGameState_Item					ItemState;
+	local XComGameState_Effect_TransferWeapon	TransferWeaponState;	
+
+	//	Have to get the freshest Item State to accomodate for Transfer Weapon shenanigans
+	if (CheckGameState != none)
+	{
+		ItemState = XComGameState_Item(CheckGameState.GetGameStateForObjectID(Ref.ObjectID));
+	}
+	else 
+	{
+		ItemState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(Ref.ObjectID));
+	}
+    
+	if (ItemState != none)
+	{
+		`LOG("DoesThisRefBitHeavyWeapon:: inventory slot is:" @ ItemState.InventorySlot @ Ref.ObjectID,, 'WOTCMoreSparkWeapons');
+		if (ItemState.InventorySlot == class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot)
+			return true;
+
+		TransferWeaponState = XComGameState_Effect_TransferWeapon(UnitState.GetUnitAffectedByEffectState(class'X2Effect_TransferWeapon'.default.EffectName));
+
+		if (TransferWeaponState != none)
+		{
+			`LOG("DoesThisRefBitHeavyWeapon:: TransferWeaponState.TransferWeaponRef" @ TransferWeaponState.TransferWeaponRef.ObjectID,, 'WOTCMoreSparkWeapons');
+		}
+		
+		return TransferWeaponState != none && TransferWeaponState.TransferWeaponRef == Ref;
+	}
+
+	return false;
+}
+
 static function bool DoesThisRefAuxSlotItem(const StateObjectReference Ref)
 {
     local XComGameState_Item ItemState;
 
     ItemState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(Ref.ObjectID));
 
-    //`LOG("Checking item:" @ ItemState.GetMyTemplateName() @ "in slot:" @ ItemState.InventorySlot,, 'WOTCMoreSparkWeapons');
-    if (ItemState != none && ItemState.InventorySlot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot) return true;
-
-    return false;
+    return ItemState != none && ItemState.InventorySlot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot;
 }
 
 private static function bool WeaponHasSpeedLoader(const XComGameState_Item ItemState)
@@ -1494,10 +1504,8 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 			
 			if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
 			{
-				//	If this heavy weapon is equipped on a non-SPARK and they have a BIT, replace its firing animations with point finger ones.
-				if (class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState) && 
-					InternalWeaponState.InventorySlot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot &&
-					class'X2StrategyElement_AuxSlot'.default.HeavyWeaponsValidForBITWithSoldiers.Find(WeaponTemplate.DataName) != INDEX_NONE)
+				//	If this heavy weapon is equipped on a non-SPARK in the BIT-granted heavy weapon slot, replace its firing animations with point finger ones.
+				if (InternalWeaponState.InventorySlot == class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot)
 				{
 					Weapon.CustomUnitPawnAnimsets.Length = 0;
 					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
@@ -1509,7 +1517,7 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 					}
 
 					//`LOG("Replacing firing animation name for:" @ WeaponTemplate.DataName @ "on unit:" @ UnitState.GetFullName() @ "to:" @ Weapon.WeaponFireAnimSequenceName,, 'IRITEST');
-
+					//	This will hide the weapon from the soldier's body.
 					Weapon.DefaultSocket = '';
 				}
 				return;
@@ -1550,11 +1558,14 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 								return;
 						}	
 					}
-				//	If this is a Heavy Weapon
 				case 'heavy':
-					//	If it is in the Aux Slot, or if the the SPARK doesn't have a BIT equipped, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
-					if (InternalWeaponState.InventorySlot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot || default.bAlwaysUseArmCannonAnimationsForHeavyWeapons || !class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
+					//	If this Heavy Weapon is not in the slot granted by the BIT, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
+					if (InternalWeaponState.InventorySlot != class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot || default.bAlwaysUseArmCannonAnimationsForHeavyWeapons)
 					{
+						//	Don't do anything to Resto Mist and Electro Pulse in Aux or regular Heavy Weapon slot
+						if (WeaponTemplate.DataName == 'IRI_RestorativeMist_CV' || WeaponTemplate.DataName == 'IRI_ElectroPulse_CV')
+							return; 
+
 						//	Replace the mesh for this heavy weapon with the arm cannon and replace the weapon and pawn animations.
 						Weapon.CustomUnitPawnAnimsets.Length = 0;
 						Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Spark")));
@@ -1569,7 +1580,7 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 
 						//`LOG("Weapon Initialized -> Patched heavy weapon for a SPARK.",, 'IRITEST');
 					}
-					else	//	Blank out the default socket on this heavy weapon so it's not visible on the spark.
+					else	//	If this weapon IS in the BIT-granted heavy weapon slot, then blanket out its default socket so it doesn't appear on the SPARK, clipping ugly through its arm.
 					{
 						Weapon.DefaultSocket = '';
 					}

@@ -1,4 +1,7 @@
 class X2Effect_TransferWeapon extends X2Effect_Persistent;
+
+//	TODO: Sync duration with existing Aid Protocol
+//	TODO: Make this effect applicable only with BIT as source weapon
 /*
 function RegisterForEvents(XComGameState_Effect EffectGameState)
 {
@@ -56,16 +59,15 @@ simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffe
 	TargetUnit = XComGameState_Unit(kNewTargetState);
 	SourceUnit = XComGameState_Unit(GetGameStateForObjectID(NewGameState, class'XComGameState_Unit', ApplyEffectParameters.SourceStateObjectRef));
 
-	//	TODO: Improve this so it doesn't rely on hardcoded slot
-	SourceWeapon = SourceUnit.GetItemInSlot(eInvSlot_AuxiliaryWeapon, NewGameState);
+	SourceWeapon = SourceUnit.GetItemInSlot(class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot, NewGameState);
 	SourceWeapon = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', SourceWeapon.ObjectID));
 	TransferWeaponEffect = XComGameState_Effect_TransferWeapon(NewEffectState);
 
 	BIT_ItemState = XComGameState_Item(GetGameStateForObjectID(NewGameState, class'XComGameState_Item', ApplyEffectParameters.ItemStateObjectRef));
 	
 	if (TargetUnit != none && SourceUnit != none && SourceWeapon != none && TransferWeaponEffect != none && BIT_ItemState != none)
-	{
-		TransferWeaponEffect.ForwardTransfer(SourceUnit, SourceWeapon, TargetUnit, NewGameState);
+	{	
+		TransferWeaponEffect.ForwardTransfer(SourceUnit, SourceWeapon, TargetUnit, BIT_ItemState.GetReference(), NewGameState);
 		BIT_ItemState.AttachedUnitRef = TargetUnit.GetReference();
 	}
 
@@ -74,6 +76,14 @@ simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffe
 
 simulated function OnEffectRemoved(const out EffectAppliedData ApplyEffectParameters, XComGameState NewGameState, bool bCleansed, XComGameState_Effect RemovedEffectState)
 {
+	local XComGameState_Effect_TransferWeapon	TransferWeaponEffect;
+
+	TransferWeaponEffect = XComGameState_Effect_TransferWeapon(RemovedEffectState);
+	if (TransferWeaponEffect != none)
+	{
+		TransferWeaponEffect.BackwardTransfer(NewGameState);
+	}
+
 	super.OnEffectRemoved(ApplyEffectParameters, NewGameState, bCleansed, RemovedEffectState);
 }
 

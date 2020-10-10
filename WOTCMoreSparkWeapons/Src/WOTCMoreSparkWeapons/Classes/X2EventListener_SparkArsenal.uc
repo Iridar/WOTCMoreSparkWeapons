@@ -7,12 +7,8 @@ static function array<X2DataTemplate> CreateTemplates()
 	local array<X2DataTemplate> Templates;
 
 	Templates.AddItem(Create_ListenerTemplate());
-
-	if (default.BLOCK_CLIP_SIZE_INCREASES)
-	{
-		Templates.AddItem(Create_TacticalListenerTemplate());
-	}
-
+	Templates.AddItem(Create_TacticalListenerTemplate());
+	
 	return Templates;
 }
 
@@ -39,9 +35,82 @@ static function CHEventListenerTemplate Create_TacticalListenerTemplate()
 	Template.RegisterInStrategy = false;
 
 	//	Setting high priority to make sure we get the last word.
-	Template.AddCHEvent('OverrideClipSize', OverrideClipSize_ListenerEventFunction, ELD_Immediate, 101);
+	if (default.BLOCK_CLIP_SIZE_INCREASES)
+	{
+		Template.AddCHEvent('OverrideClipSize', OverrideClipSize_ListenerEventFunction, ELD_Immediate, 101);
+	}
+	Template.AddCHEvent('IRI_RecallCosmeticUnit_Event', RecallCosmeticUnit_ListenerEventFunction, ELD_OnStateSubmitted);
 
 	return Template;
+}
+
+static function EventListenerReturn RecallCosmeticUnit_ListenerEventFunction(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
+{
+	local XComGameStateContext_Ability	AbilityContext;
+	local XComGameState_Unit			UnitState;
+	local XComGameState_Item			RecalledItem;
+	local XComGameStateHistory			History;
+	local XComGameState					NewGameState;
+	local XComGameState_Item			NewRecalledItem;
+	local XGUnit						Visualizer;
+	local vector						MoveToLoc;
+	local XComGameState_Unit			CosmeticUnitState;
+	local bool							MoveFromTarget;
+	local TTile							UnitStateDesiredAttachTile;
+
+	History = `XCOMHISTORY;
+	AbilityContext = XComGameStateContext_Ability(GameState.GetContext());
+	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+
+	`LOG("RecallCosmeticUnit_ListenerEventFunction:: running",, 'WOTCMoreSparkWeapons');
+	
+	if (AbilityContext == none || UnitState == none)
+		return ELR_NoInterrupt;
+
+	RecalledItem = class'XComGameState_Effect_TransferWeapon'.static.GetGremlinItemState(UnitState, AbilityContext.InputContext.ItemObject, GameState);
+	if (RecalledItem == none)
+		return ELR_NoInterrupt;
+
+	`LOG("RecallCosmeticUnit_ListenerEventFunction:: unit:" @ UnitState.GetFullName() @ "item:" @ RecalledItem.GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+
+	UnitStateDesiredAttachTile = UnitState.GetDesiredTileForAttachedCosmeticUnit();
+	if (UnitStateDesiredAttachTile != RecalledItem.GetTileLocation())
+	{
+		if (RecalledItem.AttachedUnitRef != UnitState.GetReference())
+		{
+			NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Equipment recalled");					
+			//Update the attached unit for this item
+			NewRecalledItem = XComGameState_Item(NewGameState.ModifyStateObject(RecalledItem.Class, RecalledItem.ObjectID));
+			NewRecalledItem.AttachedUnitRef = UnitState.GetReference();
+
+			`LOG("RecallCosmeticUnit_ListenerEventFunction:: submitting new game state",, 'WOTCMoreSparkWeapons');
+
+			`GAMERULES.SubmitGameState(NewGameState);
+		}
+
+		CosmeticUnitState = XComGameState_Unit(History.GetGameStateForObjectID(RecalledItem.CosmeticUnitRef.ObjectID));
+
+		MoveFromTarget = UnitStateDesiredAttachTile == RecalledItem.GetTileLocation();
+
+		if (MoveFromTarget && AbilityContext.InputContext.TargetLocations.Length > 0)
+		{
+			MoveToLoc = AbilityContext.InputContext.TargetLocations[0];
+			CosmeticUnitState.SetVisibilityLocationFromVector( MoveToLoc );
+
+			`LOG("RecallCosmeticUnit_ListenerEventFunction::MoveFromTarget MoveToLoc" @ MoveToLoc,, 'WOTCMoreSparkWeapons');
+		}
+
+		//  Now move it move it
+		Visualizer = XGUnit(History.GetVisualizer(RecalledItem.CosmeticUnitRef.ObjectID));
+		MoveToLoc = `XWORLD.GetPositionFromTileCoordinates(UnitStateDesiredAttachTile);
+		Visualizer.MoveToLocation(MoveToLoc, CosmeticUnitState);
+
+		`LOG("RecallCosmeticUnit_ListenerEventFunction:: move it move it",, 'WOTCMoreSparkWeapons');
+	}
+
+	`LOG("RecallCosmeticUnit_ListenerEventFunction:: exiting",, 'WOTCMoreSparkWeapons');
+
+	return ELR_NoInterrupt;
 }
 
 //	This will make sure Heavy Cannons cannot benefit from any kind of clipsize boost.

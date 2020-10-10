@@ -23,6 +23,8 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(IRI_DebuffConcealment());
 	Templates.AddItem(Create_IRI_Bombard());
 
+	//Templates.AddItem(Create_RecallCosmeticUnit());
+
 	//Templates.AddItem(PurePassive('IRI_ExperimentalMagazine_Passive', "img:///UILibrary_PerkIcons.UIPerk_standard", false, 'eAbilitySource_Item', false));
 
 	// Separate versions of abilities to fire from the arm cannon with a different cinecam.
@@ -36,6 +38,99 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	return Templates;
 }
+
+//	==============================================================
+//			BIT AND GREMLIN RECALL HELPER
+//	==============================================================
+
+//	Vanilla ItemRecalled listener works only if the ability triggering the ItemRecalled event is actually attached to the GREMLIN/BIT weapon state, 
+//	so it will not work for abilities attached to heavy weapons, like EM Pulse and Resto Mist. 
+/*
+//	Hence the need for this helper ability, which is triggered by a different PostActivationEvent in EMPulse and Resto Mist abilities.
+static function X2AbilityTemplate Create_RecallCosmeticUnit()
+{
+	local X2AbilityTemplate		Template;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_RecallCosmeticUnit');
+
+	SetHidden(Template);
+	SetSelfTarget_WithEventTrigger(Template, 'IRI_RecallCosmeticUnit_Event',, eFilter_None);
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_standard";
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+
+	Template.PostActivationEvents.AddItem('ItemRecalled');
+
+	Template.bSkipPerkActivationActions = true;
+	Template.bStationaryWeapon = true;
+	Template.ConcealmentRule = eConceal_AlwaysEvenWithObjective;
+	Template.Hostility = eHostility_Neutral;
+	Template.bShowActivation = false;
+	Template.bSkipFireAction = true;
+	Template.BuildNewGameStateFn = RecallCosmeticUnit_BuildGameState;
+	//Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	//Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;	//	Not sure that it needs viz function
+	//Template.MergeVisualizationFn = SequentialShot_MergeVisualization;
+	Template.AssociatedPlayTiming = SPT_AfterSequential;
+
+	return Template;
+}*/
+/*
+simulated function XComGameState RecallCosmeticUnit_BuildGameState(XComGameStateContext Context)
+{
+	local XComGameStateContext_Ability	AbilityContext;
+	local XComGameState_Unit			OwnerState;
+	local XComGameState_Item			RecalledItem;
+	local XComGameState_Item			NewRecalledItem;
+	local XComGameState					NewGameState;
+	local XGUnit						Visualizer;
+	local vector						MoveToLoc;
+	local XComGameStateHistory			History;
+	local XComGameState_Unit			CosmeticUnitState;
+	local bool							MoveFromTarget;
+	local TTile							OwnerStateDesiredAttachTile;
+
+	History = `XCOMHISTORY;
+	AbilityContext = XComGameStateContext_Ability(Context);
+
+	RecalledItem = XComGameState_Item(History.GetGameStateForObjectID(AbilityContext.InputContext.ItemObject.ObjectID));
+
+	class'XComGameState_Effect_TransferWeapon'.stiatic.GetGremlinItemState(const XComGameState_Unit UnitState, const StateObjectReference VisualizeWeaponRef, optional XComGameState CheckGameState)
+
+	OwnerState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+	OwnerStateDesiredAttachTile = OwnerState.GetDesiredTileForAttachedCosmeticUnit();
+
+	if (OwnerStateDesiredAttachTile != RecalledItem.GetTileLocation())
+	{
+		if (AttachedUnitRef != RecalledItem.OwnerStateObject)
+		{
+			NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Equipment recalled");					
+			//Update the attached unit for this item
+			NewRecalledItem = XComGameState_Item(NewGameState.ModifyStateObject(self.Class, ObjectID));
+			NewRecalledItem.AttachedUnitRef = OwnerStateObject;
+
+			`GAMERULES.SubmitGameState(NewGameState);
+		}
+
+		CosmeticUnitState = XComGameState_Unit(History.GetGameStateForObjectID(RecalledItem.CosmeticUnitRef.ObjectID));
+
+		MoveFromTarget = (OwnerStateDesiredAttachTile == RecalledItem.GetTileLocation()) && (AbilityContext != none) && (AbilityContext.InputContext.SourceObject.ObjectID == OwnerState.ObjectID);
+
+		if (MoveFromTarget && AbilityContext.InputContext.TargetLocations.Length > 0)
+		{
+			MoveToLoc = AbilityContext.InputContext.TargetLocations[0];
+			CosmeticUnitState.SetVisibilityLocationFromVector( MoveToLoc );
+		}
+
+		//  Now move it move it
+		Visualizer = XGUnit(History.GetVisualizer(CosmeticUnitRef.ObjectID));
+		MoveToLoc = `XWORLD.GetPositionFromTileCoordinates(OwnerStateDesiredAttachTile);
+		Visualizer.MoveToLocation(MoveToLoc, CosmeticUnitState);
+	}
+
+
+}*/
 
 //	==============================================================
 //			SABOT AMMO
@@ -119,6 +214,7 @@ static function SetUpRestorativeMist(X2AbilityTemplate Template, optional bool b
 	local X2Effect_ApplyMedikitHeal				MedikitHeal;
 	local X2Effect_RemoveEffectsByDamageType	RemoveEffects;	
 	local name									HealType;
+	local X2AbilityCost_Ammo					AmmoCost;
 
 	//	Icon
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
@@ -138,7 +234,10 @@ static function SetUpRestorativeMist(X2AbilityTemplate Template, optional bool b
 	Template.AbilityMultiTargetStyle = MultiTargetStyle;
 
 	//	Costs
-	AddCharges(Template, class'X2Item_RestorativeMist_CV'.default.CHARGES);
+	AmmoCost = new class'X2AbilityCost_Ammo';
+	AmmoCost.iAmmo = 1;	
+	Template.AbilityCosts.AddItem(AmmoCost);
+	Template.bUseAmmoAsChargesForHUD = true;
 	AddCooldown(Template, class'X2Item_RestorativeMist_CV'.default.COOLDOWN);
 
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
@@ -200,6 +299,9 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 	Template.AbilityTargetStyle = default.SelfTarget;
 	
 	//	State and Viz
+	Template.CustomFireAnim = 'NO_RestorativeMist';
+	Template.CustomSelfFireAnim = 'NO_RestorativeMist';
+	//Template.bSkipExitCoverWhenFiring = true;
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 
@@ -227,11 +329,11 @@ static function X2DataTemplate Create_RestorativeMist_HealBit()
 	Template.TargetingMethod = class'X2TargetingMethod_GremlinAOE';
 
 	//	 Game State and Viz
-	Template.CustomFireAnim = 'HL_SendGremlin';
-	Template.CustomSelfFireAnim = 'FF_RestorativeMistA';
+	Template.CustomFireAnim = 'FF_RestorativeMist';
+	Template.CustomSelfFireAnim = 'FF_RestorativeMist';
 
 	Template.ActivationSpeech = 'HealingAlly';
-	Template.PostActivationEvents.AddItem('ItemRecalled');
+	Template.PostActivationEvents.AddItem('IRI_RecallCosmeticUnit_Event');
 	Template.bStationaryWeapon = true;
 	Template.BuildNewGameStateFn = SendBITToLocation_BuildGameState;
 	Template.BuildVisualizationFn = RestorativeMist_BIT_BuildVisualization;
@@ -239,43 +341,47 @@ static function X2DataTemplate Create_RestorativeMist_HealBit()
 	return Template;
 }
 
-//	Unmodofied. Can't reference the original class'X2Ability_SpecialistAbilitySet'.static.SendGremlinToLocation_BuildGameState cuz it's not static?
+//	Modified to get the BIT item state from the shooter's inventory inventory as opposed to using source item object in the context.
 simulated function XComGameState SendBITToLocation_BuildGameState( XComGameStateContext Context )
 {
-	local XComGameStateContext_Ability AbilityContext;
-	local XComGameState NewGameState;
-	local XComGameState_Item GremlinItemState;
-	local XComGameState_Unit GremlinUnitState;
+	local XComGameStateContext_Ability	AbilityContext;
+	local XComGameState					NewGameState;
+	local XComGameState_Item			GremlinItemState;
+	local XComGameState_Unit			GremlinUnitState;
+	local XComGameState_Unit			ShooterUnitState;
 	local vector TargetPos;
 
 	AbilityContext = XComGameStateContext_Ability(Context);
 	NewGameState = TypicalAbility_BuildGameState(Context);
 
-	//`LOG("SendBITToLocation_BuildGameState: begin. Source Item:" @ AbilityContext.InputContext.ItemObject.ObjectID,, 'WOTCMoreSparkWeapons');
+	//`LOG("SendBITToLocation_BuildGameState: begin.",, 'WOTCMoreSparkWeapons');
 
-	GremlinItemState = XComGameState_Item(NewGameState.GetGameStateForObjectID(AbilityContext.InputContext.ItemObject.ObjectID));
-	if (GremlinItemState == none)
+	ShooterUnitState = XComGameState_Unit(NewGameState.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+	//`LOG("SendBITToLocation_BuildGameState: shooter:" @ ShooterUnitState.GetFullName(),, 'WOTCMoreSparkWeapons');
+	
+	GremlinItemState = class'XComGameState_Effect_TransferWeapon'.static.GetGremlinItemState(ShooterUnitState, AbilityContext.InputContext.ItemObject, NewGameState);
+	if (GremlinItemState != none)
 	{
-		GremlinItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', AbilityContext.InputContext.ItemObject.ObjectID));
+		GremlinItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', GremlinItemState.ObjectID));
+	
+		//`LOG("SendBITToLocation_BuildGameState: begin. GremlinItemState:" @ GremlinItemState.GetMyTemplateName() @ GremlinItemState.CosmeticUnitRef.ObjectID,, 'WOTCMoreSparkWeapons');
+	
+		GremlinUnitState = XComGameState_Unit(NewGameState.GetGameStateForObjectID(GremlinItemState.CosmeticUnitRef.ObjectID));
+		if (GremlinUnitState == none)
+		{
+			GremlinUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', GremlinItemState.CosmeticUnitRef.ObjectID));
+		}
+
+		GremlinItemState.AttachedUnitRef.ObjectID = 0;
+		TargetPos = AbilityContext.InputContext.TargetLocations[0];
+		GremlinUnitState.SetVisibilityLocationFromVector(TargetPos);
 	}
-	//`LOG("SendBITToLocation_BuildGameState: begin. GremlinItemState:" @ GremlinItemState.GetMyTemplateName() @ GremlinItemState.CosmeticUnitRef.ObjectID,, 'WOTCMoreSparkWeapons');
-
-	GremlinUnitState = XComGameState_Unit(NewGameState.GetGameStateForObjectID(GremlinItemState.CosmeticUnitRef.ObjectID));
-	if (GremlinUnitState == none)
-	{
-		GremlinUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', GremlinItemState.CosmeticUnitRef.ObjectID));
-	}
-
-	GremlinItemState.AttachedUnitRef.ObjectID = 0;
-	TargetPos = AbilityContext.InputContext.TargetLocations[0];
-	GremlinUnitState.SetVisibilityLocationFromVector(TargetPos);
-
 	//`LOG("SendBITToLocation_BuildGameState: end",, 'WOTCMoreSparkWeapons');
 
 	return NewGameState;
 }
 
-simulated function RestorativeMist_BIT_BuildVisualization( XComGameState VisualizeGameState )
+simulated function RestorativeMist_BIT_BuildVisualization(XComGameState VisualizeGameState)
 {
 	local XComGameStateHistory			History;
 	local XComWorldData					WorldData;
@@ -306,20 +412,25 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 	local X2VisualizerInterface TargetVisualizerInterface;
 
 	local XComGameState_Unit SparkUnitState;
-	local int BITObjectID;
 
-	//`LOG("RestorativeMist_BIT_BuildVisualization: begin",, 'WOTCMoreSparkWeapons');
+	local X2Action_Fire						FireAction;
+	local XComGameState_Item				CosmeticHeavyWeapon;
+	local X2Action_ExitCover				ExitCoverAction;
+	local X2Action_MoveTurn					MoveTurnAction;
 
 	History = `XCOMHISTORY;
 	WorldData = `XWORLD;
 
-	Context = XComGameStateContext_Ability( VisualizeGameState.GetContext( ) );
-	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager( ).FindAbilityTemplate( Context.InputContext.AbilityTemplateName );
+	Context = XComGameStateContext_Ability (VisualizeGameState.GetContext());
+	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager().FindAbilityTemplate(Context.InputContext.AbilityTemplateName);
 
+	//`LOG("RestorativeMist_BIT_BuildVisualization: begin ability:" @ AbilityTemplate.DataName,, 'WOTCMoreSparkWeapons');
+	 
 	//****************************************************************************************
 	//Configure the visualization track for the owner of the Gremlin
-	//`LOG("RestorativeMist_BIT_BuildVisualization: begin shooter",, 'WOTCMoreSparkWeapons');
 	SparkUnitState = XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(Context.InputContext.SourceObject.ObjectID));
+
+	//`LOG("RestorativeMist_BIT_BuildVisualization: shooter:" @ SparkUnitState.GetFullName(),, 'WOTCMoreSparkWeapons');
 
 	ActionMetadata = EmptyTrack;
 	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(SparkUnitState.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
@@ -328,7 +439,11 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 
 	//`LOG("RestorativeMist_BIT_BuildVisualization: play animation",, 'WOTCMoreSparkWeapons');
 
-	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context ));
+	MoveTurnAction = X2Action_MoveTurn(class'X2Action_MoveTurn'.static.AddToVisualizationTree(ActionMetadata, Context));
+	MoveTurnAction.m_vFacePoint =  Context.InputContext.TargetLocations[0];
+	MoveTurnAction.UpdateAimTarget = true;
+
+	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context, false, ActionMetadata.LastActionAdded ));
 	PlayAnimation.Params.AnimName = 'HL_SendGremlinA';
 
 	if (AbilityTemplate.ActivationSpeech != '')
@@ -341,13 +456,14 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 
 	//****************************************************************************************
 	//Configure the visualization track for the Gremlin
-	BITObjectID = Context.InputContext.ItemObject.ObjectID;
 
-	//`LOG("RestorativeMist_BIT_BuildVisualization: Gremling:" @ BITObjectID,, 'WOTCMoreSparkWeapons');
+	GremlinItem = class'XComGameState_Effect_TransferWeapon'.static.GetGremlinItemState(SparkUnitState, Context.InputContext.ItemObject, VisualizeGameState);
+	GremlinUnitState = XComGameState_Unit(History.GetGameStateForObjectID(GremlinItem.CosmeticUnitRef.ObjectID));
 
-	GremlinItem = XComGameState_Item( History.GetGameStateForObjectID( BITObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1 ) );
-	GremlinUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.CosmeticUnitRef.ObjectID ) );
-	AttachedUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.AttachedUnitRef.ObjectID ) );
+	//`LOG("RestorativeMist_BIT_BuildVisualization: Gremlin:" @ GremlinItem.GetMyTemplateName() @ GremlinUnitState != none,, 'WOTCMoreSparkWeapons');
+
+	AttachedUnitState = SparkUnitState;	//	Resto Mist and EM Pulse are always used by the unit the BIT is attached to.
+	//AttachedUnitState = XComGameState_Unit( History.GetGameStateForObjectID(GremlinItem.AttachedUnitRef.ObjectID));
 
 	InteractingUnitRef = GremlinItem.CosmeticUnitRef;
 
@@ -366,7 +482,7 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 
 	if (Context.InputContext.TargetLocations.Length > 0)
 	{
-		//`LOG("RestorativeMist_BIT_BuildVisualization: target position",, 'WOTCMoreSparkWeapons');
+		//`LOG("RestorativeMist_BIT_BuildVisualization: target position:" @ Context.InputContext.TargetLocations[0],, 'WOTCMoreSparkWeapons');
 
 		TargetPosition = Context.InputContext.TargetLocations[0];
 		TargetTile = `XWORLD.GetTileCoordinatesFromPosition( TargetPosition );
@@ -408,14 +524,25 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 	PerkStartAction = X2Action_AbilityPerkStart(class'X2Action_AbilityPerkStart'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
 	PerkStartAction.NotifyTargetTracks = true;
 
-	//`LOG("play animation",, 'WOTCMoreSparkWeapons');
-	PlayAnimation = none;
-	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context ));
-	PlayAnimation.Params.AnimName = AbilityTemplate.CustomSelfFireAnim;
+	//`LOG("play gremlin animation",, 'WOTCMoreSparkWeapons');
+	//PlayAnimation = none;
+	//PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
+	CosmeticHeavyWeapon = GremlinUnitState.GetItemInSlot(eInvSlot_HeavyWeapon);
+
+	ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
+	ExitCoverAction.UseWeapon = XGWeapon(History.GetVisualizer(CosmeticHeavyWeapon.ObjectID));
+
+	FireAction = X2Action_Fire(AbilityTemplate.ActionFireClass.static.AddToVisualizationTree(ActionMetadata, Context, false));
+	FireAction.SetFireParameters(Context.IsResultContextHit());
+
+	class'X2Action_EnterCover'.static.AddToVisualizationTree(ActionMetadata, Context, false, FireAction);	
+
+
+	//PlayAnimation.Params.AnimName = AbilityTemplate.CustomSelfFireAnim;
 
 	// build in a delay before we hit the end (which stops activation effects)
 	//`LOG("Delay action",, 'WOTCMoreSparkWeapons');
-	DelayAction = X2Action_WaitForAbilityEffect( class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context ) );
+	DelayAction = X2Action_WaitForAbilityEffect( class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context, false, ActionMetadata.LastActionAdded ) );
 	DelayAction.ChangeTimeoutLength( class'X2Ability_SpecialistAbilitySet'.default.GREMLIN_PERK_EFFECT_WINDOW );
 
 	//`LOG("Perk end",, 'WOTCMoreSparkWeapons');
@@ -436,7 +563,7 @@ simulated function RestorativeMist_BIT_BuildVisualization( XComGameState Visuali
 		ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(InteractingUnitRef.ObjectID);
 		ActionMetadata.VisualizeActor = History.GetVisualizer(InteractingUnitRef.ObjectID);
 
-		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context, false, PlayAnimation);
+		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context, false, FireAction);
 
 		for( j = 0; j < Context.ResultContext.MultiTargetEffectResults[i].Effects.Length; ++j )
 		{
@@ -468,6 +595,7 @@ static function SetUpElectroPulse(X2AbilityTemplate Template)
 	local X2Condition_Augmented					AugmentedCondition;
 	local X2AbilityCost_ActionPoints			ActionPointCost;
 	local X2Effect_ApplyWeaponDamage			DamageEffect;
+	local X2AbilityCost_Ammo					AmmoCost;
 
 	//	Icon Setup
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.MEDIKIT_HEAL_PRIORITY;
@@ -485,7 +613,10 @@ static function SetUpElectroPulse(X2AbilityTemplate Template)
 	Template.AddShooterEffectExclusions();
 
 	//	Costs
-	AddCharges(Template, class'X2Item_ElectroPulse'.default.CHARGES);
+	AmmoCost = new class'X2AbilityCost_Ammo';
+	AmmoCost.iAmmo = 1;	
+	Template.AbilityCosts.AddItem(AmmoCost);
+	Template.bUseAmmoAsChargesForHUD = true;
 	AddCooldown(Template, class'X2Item_ElectroPulse'.default.COOLDOWN);
 
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
@@ -650,15 +781,15 @@ static function X2DataTemplate Create_ElectroPulse_Bit()
 	Template.CustomFireAnim = 'FF_ElectroPulse';
 	Template.CustomSelfFireAnim = 'FF_ElectroPulse';
 	//Template.ActivationSpeech = 'HealingAlly';
-	Template.PostActivationEvents.AddItem('ItemRecalled');
+	Template.PostActivationEvents.AddItem('IRI_RecallCosmeticUnit_Event');
 	Template.bStationaryWeapon = true;
 
 	Template.BuildNewGameStateFn = SendBITToLocation_BuildGameState;
-	Template.BuildVisualizationFn = CapacitorDischarge_BuildVisualization;
+	Template.BuildVisualizationFn = RestorativeMist_BIT_BuildVisualization; //CapacitorDischarge_BuildVisualization;
 
 	return Template;
 }
-
+//	Adjusted to get BIT Object Id from the shooter as opposed to using source item in input context
 simulated function CapacitorDischarge_BuildVisualization( XComGameState VisualizeGameState )
 {
 	local XComGameStateHistory			History;
@@ -669,6 +800,7 @@ simulated function CapacitorDischarge_BuildVisualization( XComGameState Visualiz
 	local XComGameState_Item			GremlinItem;
 	local XComGameState_Unit			AttachedUnitState;
 	local XComGameState_Unit			GremlinUnitState;
+	local XComGameState_Unit			GremlinOwnerUnitState;
 
 	local StateObjectReference          InteractingUnitRef;
 	local StateObjectReference          GremlinOwnerUnitRef;
@@ -687,7 +819,7 @@ simulated function CapacitorDischarge_BuildVisualization( XComGameState Visualiz
 	local X2Action_PlaySoundAndFlyOver SoundAndFlyOver;
 	local X2Action_PlayAnimation		PlayAnimation;
 
-
+	local int GremlinObjectID;
 	local int i, j, EffectIndex;
 	local X2VisualizerInterface TargetVisualizerInterface;
 
@@ -697,7 +829,10 @@ simulated function CapacitorDischarge_BuildVisualization( XComGameState Visualiz
 	Context = XComGameStateContext_Ability( VisualizeGameState.GetContext( ) );
 	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager( ).FindAbilityTemplate( Context.InputContext.AbilityTemplateName );
 
-	GremlinItem = XComGameState_Item( History.GetGameStateForObjectID( Context.InputContext.ItemObject.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1 ) );
+	GremlinOwnerUnitState = XComGameState_Unit( History.GetGameStateForObjectID( Context.InputContext.SourceObject.ObjectID ) );
+	GremlinObjectID = class'X2Condition_HasWeaponOfCategory'.static.GetBITObjectID(GremlinOwnerUnitState, VisualizeGameState);
+
+	GremlinItem = XComGameState_Item( History.GetGameStateForObjectID( GremlinObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1 ) );
 	GremlinUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.CosmeticUnitRef.ObjectID ) );
 	AttachedUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.AttachedUnitRef.ObjectID ) );
 
