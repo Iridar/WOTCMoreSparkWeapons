@@ -1,10 +1,14 @@
 class X2StrategyElement_BITHeavyWeaponSlot extends CHItemSlotSet config(SparkArsenal);
 
+var config bool BIT_Grants_HeavyWeaponSlot;
+
 var localized string strSlotFirstLetter;
 var localized string strSlotLocName;
 
 var config EInventorySlot BITHeavyWeaponSlot;
 var config array<name> HeavyWeaponsValidForBITWithSoldiers;
+
+var config array<name> DisallowWeapon;
 
 // Let's go without restriction for now and hope that mods that add new heavy weapons rely on vanilla animations.
 /*
@@ -29,7 +33,10 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
-	Templates.AddItem(CreateSlotTemplate());
+	if (default.BIT_Grants_HeavyWeaponSlot)
+	{
+		Templates.AddItem(CreateSlotTemplate());
+	}
 
 	return Templates;
 }
@@ -108,6 +115,9 @@ static function bool CanAddItemToSlot(CHItemSlot Slot, XComGameState_Unit UnitSt
 private static function bool IsTemplateValidForSlot(EInventorySlot InvSlot, X2ItemTemplate ItemTemplate, XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
 	local X2WeaponTemplate WeaponTemplate;
+
+	if (default.DisallowWeapon.Find(ItemTemplate.DataName) != INDEX_NONE)
+		return false;
 	
 	//	Soldier-sized units can equip only whitelisted items.
 	//if (UnitState.GetMyTemplate().UnitHeight == 2)

@@ -17,11 +17,15 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_ElectroPulse());
 	Templates.AddItem(Create_ElectroPulse_Bit());
 
+	Templates.AddItem(Create_HeavyStrike_Bit('IRI_HeavyStrike_Bit', 'BIT_Heavy_Strike'));
+
 	Templates.AddItem(Create_EntrenchProtocol());
-	Templates.AddItem(PurePassive('IRI_EntrenchProtocol_Passive', "img:///UILibrary_XPACK_Common.PerkIcons.UIPerk_defensiveprotocol", false, 'eAbilitySource_Item', true));
+	Templates.AddItem(Create_EntrenchProtocol_Passive());
 	Templates.AddItem(IRI_ActiveCamo());
 	Templates.AddItem(IRI_DebuffConcealment());
 	Templates.AddItem(Create_IRI_Bombard());
+
+	Templates.AddItem(PurePassive('IRI_Arsenal_DummyPassive', "img:///UILibrary_DLC3Images.UIPerk_spark_arsenal", false, 'eAbilitySource_Item', true));
 
 	//Templates.AddItem(Create_RecallCosmeticUnit());
 
@@ -37,6 +41,89 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(SparkPlasmaBlaster());
 
 	return Templates;
+}
+
+static function X2DataTemplate Create_HeavyStrike_Bit(name TemplateName, name DamageTag)
+{
+	local X2AbilityTemplate             Template;
+	local X2AbilityTarget_Cursor        CursorTarget;
+	local X2AbilityMultiTarget_Cylinder MultiTarget;
+	local X2Effect_ApplyWeaponDamage	DamageEffect;
+	local X2Effect_ApplyKSMWorldDamage	KSMWorldDamage;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
+
+	//	Icon Setup
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.ARMOR_ACTIVE_PRIORITY;
+	Template.IconImage = "img:///IRIKineticStrikeModule.UI.UI_KineticStrike";
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+	Template.bDisplayInUITooltip = false;
+	Template.bDisplayInUITacticalText = false;
+
+	//	Triggering and Targeting
+	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StandardMelee';
+	Template.DisplayTargetHitChance = true;
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	CursorTarget = new class'X2AbilityTarget_Cursor';
+	CursorTarget.FixedAbilityRange = 14;
+	CursorTarget.bRestrictToWeaponRange = false;
+	Template.AbilityTargetStyle = CursorTarget;
+
+	MultiTarget = new class'X2AbilityMultiTarget_Cylinder';
+	MultiTarget.bIgnoreBlockingCover = true;
+	MultiTarget.bExcludeSelfAsTargetIfWithinRadius = false;
+	MultiTarget.fTargetHeight = 1.5f;
+	MultiTarget.fTargetRadius = 0.75f;
+	Template.AbilityMultiTargetStyle = MultiTarget;
+
+	Template.TargetingMethod = class'X2TargetingMethod_GremlinAOE';
+
+	//	Shooter Conditions
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AddShooterEffectExclusions();
+
+	//	Multi Target Conditions
+	Template.AbilityMultiTargetConditions.AddItem(default.LivingTargetOnlyProperty);
+
+	//	Costs
+	Template.AbilityCosts.AddItem(new class'X2AbilityCost_HeavyWeaponActionPoints');
+
+	//	Deal damage
+	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	DamageEffect.DamageTag = DamageTag;
+	DamageEffect.bIgnoreBaseDamage = true;
+	//DamageEffect.EnvironmentalDamageAmount = 10;
+	Template.AddMultiTargetEffect(DamageEffect);
+
+	KSMWorldDamage = new class'X2Effect_ApplyKSMWorldDamage';
+	KSMWorldDamage.DamageAmount = class'X2Item_KSM'.default.KINETIC_STRIKE_ENVIRONMENTAL_DAMAGE;
+	KSMWorldDamage.bApplyOnHit = true;
+	KSMWorldDamage.bApplyOnMiss = true;
+	KSMWorldDamage.bSkipGroundTiles = true;	// Don't want to set up proper visualization for units falling through floors.
+	Template.AddMultiTargetEffect(KSMWorldDamage);
+
+	//	 Game State and Viz
+	Template.bOverrideMeleeDeath = true;
+	Template.SourceMissSpeech = 'SwordMiss';
+	Template.CustomFireAnim = 'FF_KineticStrike';
+	Template.CustomSelfFireAnim = 'FF_KineticStrike';
+	Template.PostActivationEvents.AddItem('IRI_RecallCosmeticUnit_Event');
+	Template.bStationaryWeapon = true;
+
+	Template.AbilityConfirmSound = "TacticalUI_ActivateAbility";
+	Template.Hostility = eHostility_Offensive;
+	Template.BuildNewGameStateFn = SendBITToLocation_BuildGameState;
+	Template.BuildVisualizationFn = RestorativeMist_BIT_BuildVisualization;
+	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
+
+	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
+	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.MeleeLostSpawnIncreasePerUse;
+	Template.bFrameEvenWhenUnitIsHidden = true;
+
+	return Template;
 }
 
 //	==============================================================
@@ -206,11 +293,10 @@ static function X2AbilityTemplate Create_SpeedLoader_Reload()
 //			RESTORATIVE MIST
 //	==============================================================
 
-static function SetUpRestorativeMist(X2AbilityTemplate Template, optional bool bHealShooter = false)
+static function SetUpRestorativeMist(X2AbilityTemplate Template, optional bool bHealShooter = false, optional bool bForBit)
 {
 	local X2Condition_UnitProperty				UnitPropertyCondition;
 	local X2AbilityMultiTarget_Radius			MultiTargetStyle;
-	local X2AbilityCost_ActionPoints			ActionPointCost;
 	local X2Effect_ApplyMedikitHeal				MedikitHeal;
 	local X2Effect_RemoveEffectsByDamageType	RemoveEffects;	
 	local name									HealType;
@@ -230,7 +316,14 @@ static function SetUpRestorativeMist(X2AbilityTemplate Template, optional bool b
 	MultiTargetStyle = new class'X2AbilityMultiTarget_Radius';
 	MultiTargetStyle.bUseWeaponRadius = false;
 	MultiTargetStyle.bIgnoreBlockingCover = false;
-	MultiTargetStyle.fTargetRadius = class'X2Item_RestorativeMist_CV'.default.HEAL_RADIUS;
+	if (bForBit)
+	{
+		MultiTargetStyle.fTargetRadius = class'X2Item_RestorativeMist_CV'.default.HEAL_RADIUS_BIT;
+	}
+	else
+	{
+		MultiTargetStyle.fTargetRadius = class'X2Item_RestorativeMist_CV'.default.HEAL_RADIUS;
+	}
 	Template.AbilityMultiTargetStyle = MultiTargetStyle;
 
 	//	Costs
@@ -240,10 +333,7 @@ static function SetUpRestorativeMist(X2AbilityTemplate Template, optional bool b
 	Template.bUseAmmoAsChargesForHUD = true;
 	AddCooldown(Template, class'X2Item_RestorativeMist_CV'.default.COOLDOWN);
 
-	ActionPointCost = new class'X2AbilityCost_ActionPoints';
-	ActionPointCost.iNumPoints = 1;
-	ActionPointCost.bConsumeAllPoints = true;
-	Template.AbilityCosts.AddItem(ActionPointCost);
+	Template.AbilityCosts.AddItem(new class'X2AbilityCost_HeavyWeaponActionPoints');
 
 	//	Shooter Conditions
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
@@ -315,14 +405,14 @@ static function X2DataTemplate Create_RestorativeMist_HealBit()
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_RestorativeMist_HealBit');
 
-	SetUpRestorativeMist(Template);
+	SetUpRestorativeMist(Template, false, true);
 
 	//	Icon Setup
 	Template.IconImage = "img:///IRIRestorativeMist.UI.UI_RestorativeMist_BIT";
 
 	//	Triggering and Targeting
 	CursorTarget = new class'X2AbilityTarget_Cursor';
-	CursorTarget.FixedAbilityRange = class'X2Item_RestorativeMist_CV'.default.HEAL_RANGE;
+	CursorTarget.FixedAbilityRange = class'X2Item_RestorativeMist_CV'.default.HEAL_RANGE_BIT;
 	CursorTarget.bRestrictToWeaponRange = false;
 	Template.AbilityTargetStyle = CursorTarget;
 
@@ -396,7 +486,7 @@ simulated function RestorativeMist_BIT_BuildVisualization(XComGameState Visualiz
 
 	local VisualizationActionMetadata			EmptyTrack;
 	local VisualizationActionMetadata			ActionMetadata;
-	local X2Action_WaitForAbilityEffect DelayAction;
+	//local X2Action_WaitForAbilityEffect DelayAction;
 	local X2Action_AbilityPerkStart		PerkStartAction;
 
 	local Vector						TargetPosition;
@@ -525,25 +615,20 @@ simulated function RestorativeMist_BIT_BuildVisualization(XComGameState Visualiz
 	PerkStartAction.NotifyTargetTracks = true;
 
 	//`LOG("play gremlin animation",, 'WOTCMoreSparkWeapons');
-	//PlayAnimation = none;
-	//PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
 	CosmeticHeavyWeapon = GremlinUnitState.GetItemInSlot(eInvSlot_HeavyWeapon);
 
 	ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
 	ExitCoverAction.UseWeapon = XGWeapon(History.GetVisualizer(CosmeticHeavyWeapon.ObjectID));
 
-	FireAction = X2Action_Fire(AbilityTemplate.ActionFireClass.static.AddToVisualizationTree(ActionMetadata, Context, false));
+	FireAction = X2Action_Fire(AbilityTemplate.ActionFireClass.static.AddToVisualizationTree(ActionMetadata, Context, false, ExitCoverAction));
 	FireAction.SetFireParameters(Context.IsResultContextHit());
 
 	class'X2Action_EnterCover'.static.AddToVisualizationTree(ActionMetadata, Context, false, FireAction);	
 
-
-	//PlayAnimation.Params.AnimName = AbilityTemplate.CustomSelfFireAnim;
-
 	// build in a delay before we hit the end (which stops activation effects)
 	//`LOG("Delay action",, 'WOTCMoreSparkWeapons');
-	DelayAction = X2Action_WaitForAbilityEffect( class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context, false, ActionMetadata.LastActionAdded ) );
-	DelayAction.ChangeTimeoutLength( class'X2Ability_SpecialistAbilitySet'.default.GREMLIN_PERK_EFFECT_WINDOW );
+	//DelayAction = X2Action_WaitForAbilityEffect( class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context, false, ActionMetadata.LastActionAdded ) );
+	//DelayAction.ChangeTimeoutLength( class'X2Ability_SpecialistAbilitySet'.default.GREMLIN_PERK_EFFECT_WINDOW );
 
 	//`LOG("Perk end",, 'WOTCMoreSparkWeapons');
 
@@ -563,7 +648,7 @@ simulated function RestorativeMist_BIT_BuildVisualization(XComGameState Visualiz
 		ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(InteractingUnitRef.ObjectID);
 		ActionMetadata.VisualizeActor = History.GetVisualizer(InteractingUnitRef.ObjectID);
 
-		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context, false, FireAction);
+		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context, false);
 
 		for( j = 0; j < Context.ResultContext.MultiTargetEffectResults[i].Effects.Length; ++j )
 		{
@@ -587,13 +672,12 @@ simulated function RestorativeMist_BIT_BuildVisualization(XComGameState Visualiz
 //			ELECTRO PULSE
 //	==============================================================
 
-static function SetUpElectroPulse(X2AbilityTemplate Template)
+static function SetUpElectroPulse(X2AbilityTemplate Template, name DamageTag)
 {
 	local X2Effect_StunCyberus					StunnedEffect;
 	local X2Effect_RemoveEffects				RemoveEffects;
 	local X2Condition_UnitProperty				UnitCondition;
 	local X2Condition_Augmented					AugmentedCondition;
-	local X2AbilityCost_ActionPoints			ActionPointCost;
 	local X2Effect_ApplyWeaponDamage			DamageEffect;
 	local X2AbilityCost_Ammo					AmmoCost;
 
@@ -619,17 +703,22 @@ static function SetUpElectroPulse(X2AbilityTemplate Template)
 	Template.bUseAmmoAsChargesForHUD = true;
 	AddCooldown(Template, class'X2Item_ElectroPulse'.default.COOLDOWN);
 
-	ActionPointCost = new class'X2AbilityCost_ActionPoints';
-	ActionPointCost.iNumPoints = 1;
-	ActionPointCost.bConsumeAllPoints = true;
-	Template.AbilityCosts.AddItem(ActionPointCost);
+	Template.AbilityCosts.AddItem( new class'X2AbilityCost_HeavyWeaponActionPoints');
 
 	//	Deal damage
 	if (class'X2Item_ElectroPulse'.default.DEAL_DAMAGE)
 	{
 		DamageEffect = new class'X2Effect_ApplyWeaponDamage';
-		DamageEffect.bIgnoreBaseDamage = true;
-		DamageEffect.EffectDamageValue = class'X2Item_ElectroPulse'.default.DAMAGE;
+		DamageEffect.DamageTag = DamageTag;
+
+		if (class'X2Item_ElectroPulse'.default.DEAL_DAMAGE_ONLY_TO_ROBOTIC_UNITS)
+		{
+			UnitCondition = new class'X2Condition_UnitProperty';
+			UnitCondition.ExcludeOrganic = true;
+			UnitCondition.IncludeWeakAgainstTechLikeRobot = true;
+			UnitCondition.ExcludeFriendlyToSource = false;
+			DamageEffect.TargetConditions.AddItem(UnitCondition);
+		}
 
 		Template.AddMultiTargetEffect(DamageEffect);
 	}
@@ -728,7 +817,7 @@ static function X2AbilityTemplate Create_ElectroPulse()
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ElectroPulse');
 
-	SetUpElectroPulse(Template);
+	SetUpElectroPulse(Template, 'EMPulse');
 
 	Template.IconImage = "img:///IRIElectroPulse.UI.UI_EMPulse";
 
@@ -758,19 +847,19 @@ static function X2DataTemplate Create_ElectroPulse_Bit()
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ElectroPulse_Bit');
 
-	SetUpElectroPulse(Template);
+	SetUpElectroPulse(Template, 'BIT_EMPulse');
 
 	Template.IconImage = "img:///IRIElectroPulse.UI.UI_EMPulse_BIT";
 
 	CursorTarget = new class'X2AbilityTarget_Cursor';
-	CursorTarget.FixedAbilityRange = class'X2Item_ElectroPulse'.default.PULSE_RANGE;
+	CursorTarget.FixedAbilityRange = class'X2Item_ElectroPulse'.default.BIT_PULSE_RANGE;
 	CursorTarget.bRestrictToWeaponRange = false;
 	Template.AbilityTargetStyle = CursorTarget;
 
 	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
 	RadiusMultiTarget.bIgnoreBlockingCover = true;
 	RadiusMultiTarget.bUseWeaponRadius = false;
-	RadiusMultiTarget.fTargetRadius = class'X2Item_ElectroPulse'.default.PULSE_RADIUS;
+	RadiusMultiTarget.fTargetRadius = class'X2Item_ElectroPulse'.default.BIT_PULSE_RADIUS;
 	RadiusMultiTarget.bExcludeSelfAsTargetIfWithinRadius = true;
 	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
 
@@ -950,7 +1039,6 @@ static function X2AbilityTemplate Create_EntrenchProtocol()
 {
 	local X2AbilityTemplate					Template;
 	local X2AbilityTrigger_EventListener	Trigger;
-	local X2Condition_UnitEffectsApplying	UnitEffects;
 	local X2Condition_UnitValue				UnitValue;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_EntrenchProtocol');
@@ -970,10 +1058,7 @@ static function X2AbilityTemplate Create_EntrenchProtocol()
 	Template.AbilityTriggers.AddItem(Trigger);
 	
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
-
-	UnitEffects = new class'X2Condition_UnitEffectsApplying';
-	UnitEffects.AddRequireEffect('AidProtocol', 'AA_MissingRequiredEffect');
-	Template.AbilityShooterConditions.AddItem(UnitEffects);
+	Template.AbilityShooterConditions.AddItem(new class'X2Condition_SelfCastAidProtocol');
 
 	UnitValue = new class'X2Condition_UnitValue';
 	UnitValue.AddCheckValue('MovesThisTurn', 0);
@@ -994,15 +1079,40 @@ static function X2AbilityTemplate Create_EntrenchProtocol()
 
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
 
-	Template.AdditionalAbilities.AddItem('IRI_EntrenchProtocol_Passive');
+	
 
+	return Template;
+}
+
+static function X2AbilityTemplate Create_EntrenchProtocol_Passive()
+{
+	local X2AbilityTemplate				Template;
+	local X2Effect_PersistentStatChange StatEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_EntrenchProtocol_Passive');
+
+	Template.IconImage = "img:///UILibrary_XPACK_Common.PerkIcons.UIPerk_defensiveprotocol";
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+
+	SetPassive(Template);
+
+	StatEffect = new class'X2Effect_PersistentStatChange';
+	StatEffect.BuildPersistentEffect(1, true);
+	StatEffect.AddPersistentStatChange(eStat_Hacking, class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.ProtocolSuiteHackingBonus, MODOP_Addition);
+	StatEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, true, ,Template.AbilitySourceName);
+	Template.AddTargetEffect(StatEffect);
+
+	Template.SetUIStatMarkup(class'XLocalizedData'.default.TechLabel, eStat_Hacking, class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.ProtocolSuiteHackingBonus);
+
+	Template.AdditionalAbilities.AddItem('IRI_EntrenchProtocol');
+	
 	return Template;
 }
 
 static function X2AbilityTemplate IRI_ActiveCamo()
 {
 	local X2AbilityTemplate			Template;
-	local X2Effect_StayConcealed	Effect;
+	//local X2Effect_StayConcealed	Effect;
 	local X2Effect_Persistent		PersistentEffect;
 	//local X2Effect_RangerStealth    StealthEffect;
 	//local X2AbilityTrigger_EventListener    Trigger;
@@ -1054,10 +1164,10 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	Template.AddTargetEffect(PersistentStatChangeEffect);
 
 	//	Phantom-like - stay concealed if squad breaks concealment.
-	Effect = new class'X2Effect_StayConcealed';
-	Effect.BuildPersistentEffect(1, true, false);
-	Effect.bRemoveWhenTargetConcealmentBroken = true;
-	Template.AddTargetEffect(Effect);
+	//Effect = new class'X2Effect_StayConcealed';
+	//Effect.BuildPersistentEffect(1, true, false);
+	//Effect.bRemoveWhenTargetConcealmentBroken = true;
+	//Template.AddTargetEffect(Effect);
 
 	Template.Hostility = eHostility_Neutral;
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;

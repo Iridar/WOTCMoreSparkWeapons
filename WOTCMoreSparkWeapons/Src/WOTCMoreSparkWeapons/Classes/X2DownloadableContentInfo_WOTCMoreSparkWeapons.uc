@@ -6,75 +6,102 @@ var config(SparkArsenal) array<name> SparkCharacterTemplates;
 var config(SparkArsenal) bool bRocketLaunchersModPresent;
 var config(SparkArsenal) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
 
-var config(SparkArsenal) bool BIT_Grants_HeavyWeaponSlot;
 var config(SparkArsenal) array<name> StartingItemsToAddOnSaveLoad;
 var config(OrdnanceLaunchers) bool bOrdnanceAmplifierUsesBlasterLauncherTargeting;
 
 var config(KineticStrikeModule) array<name> MeleeAbilitiesUseKSM;
 
-//var config(ClassData) array<name> AbilitiesRequireBIT;
+var config(ClassData) array<name> AbilitiesRequireBITorGREMLIN;
 var config(SparkArsenal) array<name> BIT_GrantsAbilitiesToSPARK;
 var config(SparkArsenal) array<name> GREMLIN_GrantsAbilitiesToSPARK;
 
-var config(ClassData) array<name> ClassesToRemoveAbilitiesFrom;
+var config(ClassData) array<name> AffectClasses;
 var config(ClassData) array<name> AbilitiesToRemove;
 var config(ClassData) array<name> AbilitiesToGrant;
+var config(ClassData) int ProtocolSuiteHackingBonus;
 
 var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 var localized string str_ShellsMutuallyExclusiveWithMunitionsMount;
 var localized string str_MunitionsMountMutuallyExclusiveWithShells;
 
+var config(GameData_WeaponData) WeaponDamageValue SPARKBIT_CONVENTIONAL_DAMAGE;
+var config(GameData_WeaponData) WeaponDamageValue SPARKBIT_MAGNETIC_DAMAGE;
+var config(GameData_WeaponData) WeaponDamageValue SPARKBIT_BEAM_DAMAGE;
+
+var config(GameData_WeaponData) int SPARKBIT_CONVENTIONAL_RADIUS;
+var config(GameData_WeaponData) int SPARKBIT_MAGNETIC_RADIUS;
+var config(GameData_WeaponData) int SPARKBIT_BEAM_RADIUS;
+
+var config(GameData_WeaponData) int SPARKBIT_CONVENTIONAL_AID_PROTOCOL_BONUS;
+var config(GameData_WeaponData) int SPARKBIT_MAGNETIC_AID_PROTOCOL_BONUS;
+var config(GameData_WeaponData) int SPARKBIT_BEAM_AID_PROTOCOL_BONUS;
+
+var config(GameData_WeaponData) int SPARKBIT_CONVENTIONAL_HEALING_BONUS;
+var config(GameData_WeaponData) int SPARKBIT_MAGNETIC_HEALING_BONUS;
+var config(GameData_WeaponData) int SPARKBIT_BEAM_HEALING_BONUS;
+
+delegate ModifyTemplate(X2DataTemplate DataTemplate);
+
 //	Changelog 
 /*
-Restorative Mist and EM Pulse are now Heavy Weapons and have been buffed accordingly.
-SPARKs can now equip both BITs and GREMLINs as Secondary Weapons. 
-New passive ability for SPARKs and MEC Troopers: Protocol Suite. When equipped with a BIT or GREMLIN, the unit gains Aid Protocol, Active Camo, Intrusion Protocol and Entrench Protocol.
-Entrench Protocol is a new passive ability which makes Aid Protocol used on self last indefinetely as long as you don't move. It's intended to provide a defensive buff in static combat situations to SPARKs with Heavy Cannons.
-BITs grant a BIT Heavy Weapon slot, but they are worse than GREMLINs in all other aspects, e.g. they provide a smaller Hacking bonus and lower Defense bonus when used for Aid Protocol.
-The generic Heavy Weapon slot granted by the BIT has been replaced with a new special BIT Heavy Weapon slot to clearly differentiate that this Heavy Weapon is equipped on the BIT. 
-When you use Aid Protocol with BIT, if the target of the Aid Protocol is an allied soldier, they will gain control over the weapon in the BIT Heavy Weapon slot for the duration of the Aid Protocol. 
-E.g. if you equip a Shredstorm Cannon on a BIT, then you use Aid Protocol on an allied soldier, that soldier will be able to command the BIT th fire that Shredstorm Cannon. Note that the original owner of the BIT loses control over that Shredstorm Cannon for the duration of the Aid Protocol.
-Specialists and most other popular GREMLIN-using classes can now equip a BIT and use it for their regular GREMLIN skills. They also benefit from the BIT Heavy Weapon slot and can also transfer control of it via Aid Protocol, if they have that ability.
-Again, most of their regular skills will be weaker when used via BIT.
+
+
+GREMLIN Changes:
+- SPARKs can now equip GREMLINs as Secondary Weapons. 
+- GREMLINs now have a Repair animation and can be used with that ability, healing more HP than BITs do.
+
+BIT Changes: 
+- BITs now have animations for all of the vanilla Protocol abilities, and can be used with them. However, BITs are less effective at Protocol duties than GREMLINs across the board: they provide a smaller Hacking bonus and lower Defense bonus when used for Aid Protocol. They also deal less damage with Combat Protocol and Capacitor Discharge, and have a smaller radius for Scanning Protocol.
+- Instead of the generic Heavy Weapon slot, BIT now grants the BIT Heavy Weapon slot to clearly differentiate that this Heavy Weapon is equipped on the BIT. 
+- If BIT Aid Protocol is used on an allied soldier, that allied soldier will gain control over the BIT's Heavy Weapon for the duration of the Aid Protocol. Note that the original owner loses control over the BIT's Heavy Weapon while the BIT is away. For the purposes of the perks that affect Heavy Weapons, such as Salvo, the game will look at the perks of the unit that currently controls the Heavy Weapon.
+- Bonus hacking that was added to BIT by SPARK Arsenal previously has been removed. BITs once again grant only +0/10/20 Hack.
+
+General changes:
+- Configuration files have been reorganized.
+
+Ability changes:
+- New passive ability for SPARKs and MEC Troopers: Protocol Suite. Unit gains +30 Hack, and when equipped with a BIT or GREMLIN, the unit gains Intrusion Protocol, Aid Protocol, Entrench Protocol and Active Camo.
+- Entrench Protocol is a new passive ability which makes Aid Protocol used on self last indefinetely as long as the unit doesn't move. It's mostly intended to provide a defensive buff in static combat situations to SPARKs with Heavy Cannons.
+- Active Camo no longer grants Phantom. It simply improves SPARK / MEC Troopers' detection radius to be on the same level as regular soldiers. Without Active Camo SPARKs and MEC Troopers are still much easier for enemies to notice.
+
+Compatibility with other mods:
+- SPARKs and MEC Troopers can now use the System Infiltration ability if you have that mod.
+- SPARKs and MEC Troopers can now equip Ballistic Shields as Secondary Weapons, if you have that mod. They behave in exact same ways as they do for soldiers.
+- If you use [WOTC] Weapon Upgrade UI Adjustment Tool by RustyDios, Heavy Cannon and Incinerator models will appear further away from the camera on the weapon upgrade screen. 
+
+Item changes:
+- Restorative Mist and EM Pulse are now Heavy Weapons and require that you complete the EXO Suit proving grounds project before you can build them. 
+- They can be equipped in regular Heavy Weapon and BIT Heavy Weapon slots by MEC Troopers, SPARKs and regular soldiers. SPARKs and MEC Troopers can still equip them as Aux Weapons without any additional research.
+- Similar to other Heavy Weapons, control over them can be transferred via Aid Protocol when equipped into BIT Heavy Weapon slot.
+- Heavy Strike Module, Powered Strike Module, EM Pulse and Resto Mist will now interact with Salvo, which makes heavy weapons not end turn.
+- EM Pulse now deals damage to robotic units.
+- EM Pulse and Restorative Mist have larger area of effect when they're not equipped in the BIT Heavy Weapon slot. EM Pulse also deals more damage that way.
+- Heavy Strike Module and Powered Strike Module can now be equipped in the BIT Heavy Weapon slot and used to deliver remote strikes on targeted tiles. They deal much less damage when used that way. (And can't destroy cover?)
+
+Bugfixes:
+- Speed Loader should now display flyover only when actually reloading the weapon.
+
 */
-
 //	Immedaite goals:
+//	better repair animation for gremlin
+//	Make all OPTC patching work with diff templates
+// Bit viz hangs up with Heavy Strike
+//	Make sure Heavy Strike Module cannot be equipped in the BIT Heavy Weapon slot.
+//	Add source weapon condition to heavy strike or again remove it in FinalizeAbilities
 
-//	Set up Transfer Weapon to happen only if the target character template is a soldier and the source weapon category is a BIT
-// Active Camo animation for Gremlin. Aid Protocol animation for BIT
+//	Double check localization, particularly for Resto Mist / EM Pulse
 
-//Reload doesn't work when carrying a unit, but I guess that's not stopping the Speed Loader from trying.
-//	Both GREMLIN and BIT grant Active Camo and Aid Protocol and Intrusion Protocol and Entrench Protocol to the SPARK. 
-//	Active Camo is no longer Phantom, just a concealment buff.
-//	BIT is weaker in everything than GREMLIN.
-//	Soldier targeted by BIT Aid Protocol can fire BIT's heavy weapon. Which basically means temporarily yanking the heavy weapon from the inventory of the BIT owner and giving it to another soldier
-//  Which might get problematic if they are also a BIT owner.
-
-//	Make SPARK Heavy Weapon visualization move the BIT to the unit before firing the heavy weapon. Otherwise things get bugged if the BIT is attached to another unit via Aid Protocol.
-//	Failing that, attaach a condition that prevents these abilities from activating if the Aid Protocol is active.
-//	Rebalance BIT's hacking bonus, otherwise they're good at hacking with Specialists.
-//	Test BIT with GREMLIN abilities
-//	Test GREMLIN with BIT abilities
-
-//	Fix weapon camera on upgrade screen using Rusty's mod
-//	Better Active Camo animation. Autopulser handling.
-//	When 1.21 Highlander becomes stable fix the mess with heavy weappon slot. Make the event listener grant the HW Slot if the unit has any ability from any source from the config array: AbilityUnlocksHeavyWeapon 
-//	Make an exception for Heavy Strike Module
-
-//	Shields: Hunker Down animations. Walk back animation is jank. Bulwark works well. TEST: Bulwark + Shield Wall, what happens when Shield Wall ends?
-//	Swords: make a melee animation.
+//	Reorganize config files
+//	remove logging
 
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
 //	Spray Accelerant, Heat Beam and Arc Cutter canisters?
 
-//	Scan sound
-//	AkEvent'DLC_90_SoundCharacterFX.Intimidate_BUZZ'
-
 //	Canister rounds -> experimental ammo, adds aim bonuses up close, aim penalties at range, +1 crit, -1 Ammo, add shotgun projectile.
 
-//	Rocket Punch. For Tier 2 KSM, maybe?
+//	Rocket Punch with detachable arm. For Tier 2 KSM, maybe?
 //	Maybe do something for HE/HESH and Shrapnel with Sabot Ammo.
 //	Improve descriptions of Sabot Ammo interactions with special cannon shells
 //	Regular cannon shots don't always destroy cover?
@@ -84,6 +111,8 @@ Again, most of their regular skills will be weaker when used via BIT.
 //	Spark transforms into a plane for the Flight abiltiy? Or a strafing run flyby?
 //	Deployment Shield -> Firing or reloading a Heavy Cannon (any weapon?) generates a shield that grants High Cover defense bonus.
 //	Targeting Computer -> Snapshot? Shoot through walls? increase HE shot range? HOLOTARGET!! Turn ending action. SPARK raises hand to the head and "scans" the target.
+//	Scan sound
+//	AkEvent'DLC_90_SoundCharacterFX.Intimidate_BUZZ'
  
 //	Adaptive Aim perk to provide a bonus with artillery cannons? It does not apply to Autogun. 
 //	Display grenades on the Spark's body when 1.22 goes live.
@@ -104,6 +133,9 @@ Again, most of their regular skills will be weaker when used via BIT.
 //	Purifier -> use them as an explosive grenade?
 //	KSM kill animation: https://youtu.be/m8H-FDOLxz0
 
+//	Repair tool that grants the Repair ability? Can target organics to restore their armor? Can be deployed via BIT / GREMLIN?
+//	Repair must be usable without BIT / Gremlin. Bombard must be usable without a BIT (Might need Perk Fire animation and perk content weapon). Make sure Bombard is not available with Gremlin.
+
 //	Ammo Canister -> +1 Heavy Weapon shot, +1 Ordnance Launcher slot?
 //	BIT - Repair Servos (restore 2HP a turn to a maximum of 6 per mission)?
 //	BIT - AOE holotarget?
@@ -116,22 +148,18 @@ Again, most of their regular skills will be weaker when used via BIT.
 //	LOW PRIORITY
 //	Better HSM cinecam? Flametrhower one, maybe?
 //	Photobooth poses?
-//	Hit chance for KSM?
+//	Make KSM attack display hit chance
 //	Different projectile for plasma HE / HESH?
 //  Make the Plasma Heavy Cannon gun form the plasma projectile before firing? 
 //	Textures are too dark in Photobooth. >>it's dark because the material doesn't have Character Mod Lighting ticked in the Usage section of the material
-//	Sparkfall within the context of this mod?
 //	Better heart material for bers heart
 //	KSM Tintable
 //	During KSM kills, delay damage flyover.
 //	Change KSM Exhaust flames so they turn off gradually instead of instantly.
 //	Add more effects to EM Pulse against fully-augmented soldiers, make a "Augment disabled!" flyover. Blind for head (eyes)
-//	Fix BIT EM Pulse visualization - at least make the Spark play finger-pointing animation and make multi target effects visualize at the same time. 
-//	Ideally, make SPARK play EM Charge animation, and then have the energy zap to the BIT. Perhaps, Perk Content tether (or Volt projectile)
-//	Make "weapon disabled" flyover come up sooner when using BITless.
 //	Resto Mist - improve textures and tintable
-//	BIT for Specialists? If so, include Active Camo animation for them.
 //	Fire Sniper Rifle - fix localization (probably via Highlander hook in sniper standard fire alternate localization function)
+//	Swords for SPARKs - would need lots of new animations to look decent.
 
 /*	Investigate logs:
 [0155.04] Log: No animation compression exists for sequence NO_SensorSweepA (AnimSet Bit.Anims.AS_BeamBit)
@@ -421,7 +449,7 @@ static function PatchSoldierClassTemplates()
 
 	Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
 
-	foreach default.ClassesToRemoveAbilitiesFrom(TemplateName)
+	foreach default.AffectClasses(TemplateName)
 	{
 		SoldierClassTemplate = Manager.FindSoldierClassTemplate(TemplateName);
 
@@ -557,21 +585,40 @@ static function PatchAbilityTemplates()
 	local X2AbilityTemplate				Template;
 	local X2Effect_IRI_Rainmaker		Rainmaker;
 	local X2Effect						Effect;
-	//local X2Condition_SourceWeaponCat	SourceWeaponCat;
+	local X2Condition_SourceWeaponCat	SourceWeaponCat;
 	local name							AbilityName;
 	local X2Effect_Knockback			KnockbackEffect;
 	local X2Effect_TransferWeapon		TransferWeapon;
 
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 
+	//	Make Bulwark override the shield generation passive ability on Ballistic Shields. This is necessary for Bulwark to correclty interact with Shield Wall, which also grants High Cover.
+	//	Apparently doesn't work on item granted abilities?
+	Template = AbilityTemplateManager.FindAbilityTemplate('Bulwark');
+	if (Template != none)
+	{
+		Template.OverrideAbilities.AddItem('BallisticShield_GenerateCover');
+	}	
+	//	Mechatronic Warfare
+	Template = AbilityTemplateManager.FindAbilityTemplate('RoboticChassis');
+	if (Template != none)
+	{
+		Template.OverrideAbilities.AddItem('BallisticShield_GenerateCover');
+	}	
+	
+	 
 	//	Make using Aid Protocol with BIT transfer the control of the BIT's heavy weapon to the targeted soldier
 	Template = AbilityTemplateManager.FindAbilityTemplate('AidProtocol');
 	if (Template != none)
 	{
+		SourceWeaponCat = new class'X2Condition_SourceWeaponCat';
+		SourceWeaponCat.MatchWeaponCats.AddItem('sparkbit');
+
 		TransferWeapon = new class'X2Effect_TransferWeapon';
 		TransferWeapon.DuplicateResponse = eDupe_Ignore;
 		TransferWeapon.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
 		TransferWeapon.bRemoveWhenTargetDies = true;
+		TransferWeapon.TargetConditions.AddItem(SourceWeaponCat);
 		Template.AddTargetEffect(TransferWeapon);
 	}
 
@@ -620,17 +667,18 @@ static function PatchAbilityTemplates()
 			}
 		}
 	}
-	/*
-	foreach default.AbilitiesRequireBIT(AbilityName)
+	
+	foreach default.AbilitiesRequireBITorGREMLIN(AbilityName)
 	{
 		Template = AbilityTemplateManager.FindAbilityTemplate(AbilityName);
 		if (Template != none)
 		{
 			SourceWeaponCat = new class'X2Condition_SourceWeaponCat';
-			SourceWeaponCat.MatchWeaponCat = 'sparkbit';
+			SourceWeaponCat.MatchWeaponCats.AddItem('sparkbit');
+			SourceWeaponCat.MatchWeaponCats.AddItem('gremlin');
 			Template.AbilityShooterConditions.AddItem(SourceWeaponCat);
 		}
-	}*/
+	}
 
 	//	Add proper knockback to cone- and line-targeted abilities. 
 	//	Normally knockback doesn't work properly for them, because the X2Effect_Knockback works relative 
@@ -741,6 +789,7 @@ static function PatchWeaponTemplates()
     local X2ItemTemplateManager         ItemMgr;
 	local X2GrenadeTemplate				GrenadeTemplate;
 	local AbilityIconOverride			IconOverride;
+	local X2GremlinTemplate				GremlinTemplate;
 
     ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
     arrWeaponTemplates = ItemMgr.GetAllWeaponTemplates();
@@ -750,8 +799,35 @@ static function PatchWeaponTemplates()
 		//	Add BIT Anim Sets
         if (WeaponTemplate.WeaponCat == 'sparkbit')
         {
-			AddBITAnimSetsToCharacterTemplate(WeaponTemplate.CosmeticUnitTemplate);
+			GremlinTemplate = X2GremlinTemplate(WeaponTemplate);
+			if (GremlinTemplate == none) continue;
+
+			AddBITAnimSetsToCharacterTemplate(GremlinTemplate.CosmeticUnitTemplate);
 			//WeaponTemplate.Abilities.AddItem('IRI_RecallCosmeticUnit');
+
+			switch (GremlinTemplate.WeaponTech)
+			{
+				case 'conventional':
+					GremlinTemplate.BaseDamage = default.SPARKBIT_CONVENTIONAL_DAMAGE;
+					GremlinTemplate.iRadius = default.SPARKBIT_CONVENTIONAL_RADIUS;
+					GremlinTemplate.AidProtocolBonus = default.SPARKBIT_CONVENTIONAL_AID_PROTOCOL_BONUS;
+					GremlinTemplate.HealingBonus = default.SPARKBIT_CONVENTIONAL_HEALING_BONUS;
+					break;
+				case 'magnetic':
+					GremlinTemplate.BaseDamage = default.SPARKBIT_MAGNETIC_DAMAGE;
+					GremlinTemplate.iRadius = default.SPARKBIT_MAGNETIC_RADIUS;
+					GremlinTemplate.AidProtocolBonus = default.SPARKBIT_MAGNETIC_AID_PROTOCOL_BONUS;
+					GremlinTemplate.HealingBonus = default.SPARKBIT_MAGNETIC_HEALING_BONUS;
+					break;
+				case 'beam':
+					GremlinTemplate.BaseDamage = default.SPARKBIT_BEAM_DAMAGE;
+					GremlinTemplate.iRadius = default.SPARKBIT_BEAM_RADIUS;
+					GremlinTemplate.AidProtocolBonus = default.SPARKBIT_BEAM_AID_PROTOCOL_BONUS;
+					GremlinTemplate.HealingBonus = default.SPARKBIT_BEAM_HEALING_BONUS;
+					break;
+				default:
+					break;
+			}
         } 
 		else if (WeaponTemplate.WeaponCat == 'gremlin')
 		{
@@ -1347,7 +1423,15 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 						SetupData.Remove(Index, 1);
 					}
 					break;
-				//	HEAVY AUTOGUN
+				//	=======	Heavy Strike Module =======
+				//case 'IRI_KineticStrike_Soldier':
+				//	if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
+				//	{
+				//		SetupData[Index].TemplateName = 'IRI_HeavyStrike_Bit';
+				//		SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_HeavyStrike_Bit');
+				//	}
+				//	break;
+				//	=======	Heavy Autogun =======
 				case 'IRI_Fire_HeavyAutogun':
 					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
 					{
@@ -1413,6 +1497,19 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			SetupData.AddItem(NewSetupData);
 		}
 	}
+}
+
+static private function name GetWeaponRefTemplateName(StateObjectReference WeaponRef)
+{
+	local XComGameState_Item ItemState;
+
+	ItemState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(WeaponRef.ObjectID));
+
+	if (ItemState != none)
+	{
+		return ItemState.GetMyTemplateName();
+	}
+	return '';
 }
 
 static private function GrantAbility(name TemplateName, X2AbilityTemplateManager AbilityTemplateManager, StateObjectReference WeaponRef, out array<AbilitySetupData> SetupData)
@@ -1710,6 +1807,9 @@ static function bool AbilityTagExpandHandler(string InString, out string OutStri
 	case 'IRI_BEAM_LAUNCHER_GRANT_GRENADE_SLOTS':
 		OutString = SetColor(class'X2StrategyElement_InventorySlots'.default.BEAM_LAUNCHER_GRANT_GRENADE_SLOTS);
 		return true;
+	case 'IRI_PROTOCOL_SUITE_HACKING_BONUS':
+		OutString = SetColor(class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.ProtocolSuiteHackingBonus);
+		return true;
 	case 'IRI_SABOT_AMMO_COUNTER_DEFENSE':
 		OutString = SetColor(int(class'X2Effect_SabotAmmo'.default.CounterDefense * 100) $ "%");
 		return true;
@@ -1792,4 +1892,61 @@ static function string TruncateFloat(float value)
 	}
 
 	return FloatString;
+}
+
+
+
+static private function ModifyTemplateAllDiff(name TemplateName, class TemplateClass, delegate<ModifyTemplate> ModifyTemplateFn)
+{
+    local X2DataTemplate									DataTemplate;
+    local array<X2DataTemplate>								DataTemplates;
+	local X2DownloadableContentInfo_WOTCMoreSparkWeapons	CDO;
+    
+	local X2ItemTemplateManager				ItemMgr;
+	local X2AbilityTemplateManager			AbilityMgr;
+	local X2CharacterTemplateManager		CharMgr;
+	local X2StrategyElementTemplateManager	StratMgr;
+	local X2SoldierClassTemplateManager		ClassMgr;
+
+	if (TemplateClass.IsA('X2ItemTemplate'))
+	{
+		ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+		ItemMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+	}
+    else if (TemplateClass.IsA('X2AbilityTemplate'))
+	{
+		AbilityMgr = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+		AbilityMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+	}
+	else if (TemplateClass.IsA('X2CharacterTemplate'))
+	{
+		CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+		CharMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+	}
+	else if (TemplateClass.IsA('X2StrategyElementTemplate'))
+	{
+		StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
+		StratMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+	}
+	else if (TemplateClass.IsA('X2SoldierClassTemplate'))
+	{
+		ClassMgr = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+		ClassMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+	}
+    
+    CDO = GetCDO();
+    foreach DataTemplates(DataTemplate)
+    {
+        CDO.CallModifyTemplateFn(ModifyTemplateFn, DataTemplate);
+    }
+}
+
+static function X2DownloadableContentInfo_WOTCMoreSparkWeapons GetCDO()
+{
+    return X2DownloadableContentInfo_WOTCMoreSparkWeapons(class'XComEngine'.static.GetClassDefaultObjectByName(default.Class.Name));
+}
+
+protected function CallModifyTemplateFn(delegate<ModifyTemplate> ModifyTemplateFn, X2DataTemplate DataTemplate)
+{
+    ModifyTemplateFn(DataTemplate);
 }

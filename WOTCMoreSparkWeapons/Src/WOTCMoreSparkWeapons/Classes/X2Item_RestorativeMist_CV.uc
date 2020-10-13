@@ -1,9 +1,11 @@
-class X2Item_RestorativeMist_CV extends X2Item config(AuxiliaryWeapons);
+class X2Item_RestorativeMist_CV extends X2Item config(RestorativeMist);
 
 var config bool REQUIRE_SPARK;
 
-var config float HEAL_RANGE;
+var config float HEAL_RANGE_BIT;
+var config float HEAL_RADIUS_BIT;
 var config float HEAL_RADIUS;
+
 var config int	HEAL_HP;
 var config int	BATTLEFIELD_MEDICINE_HEAL_HP;
 var config bool HEALS_ENEMIES;
@@ -41,6 +43,8 @@ var config array<name> BUILD_COST_TYPE;
 var config array<int> BUILD_COST_QUANTITY;
 var config int BLACKMARKET_VALUE;
 
+var config array<name> REWARD_DECKS;
+
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
@@ -75,7 +79,7 @@ static function X2DataTemplate Create_Item()
 	//Template.SetUIStatMarkup(class'XLocalizedData'.default.RangeLabel, , default.HEAL_RANGE);
 	Template.SetUIStatMarkup(class'XLocalizedData'.default.RadiusLabel, , default.HEAL_RADIUS - 1);
 	
-	Template.iRange = default.HEAL_RANGE;
+	//Template.iRange = default.HEAL_RANGE;
 	Template.iRadius = default.HEAL_RADIUS;
 
 	Template.WeaponPanelImage = "_ConventionalRifle";
@@ -88,6 +92,7 @@ static function X2DataTemplate Create_Item()
 	Template.Abilities = default.ABILITIES;
 	
 	Template.WeaponTech = default.WEAPON_TECH;
+	Template.RewardDecks = default.REWARD_DECKS;
 	
 	Template.iTypicalActionCost = default.TYPICAL_ACTION_COST;
 	

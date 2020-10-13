@@ -67,6 +67,12 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Compatibility\XComSPARKUpgrades.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\Compatibility\XComSystemInfiltration.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\Compatibility\XComUI.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\Compatibility\XComUpdateSpark.ini">
       <SubType>Content</SubType>
     </Content>
@@ -88,6 +94,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\XComClassData.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\XComElectroPulse.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\XComGameData_WeaponData.ini">
       <SubType>Content</SubType>
     </Content>
@@ -98,6 +107,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Config\XComOrdnanceLaunchers.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComRestorativeMist.ini">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Config\XComSparkArsenal.ini">
@@ -230,6 +242,9 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_RequiredItem.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_SelfCastAidProtocol.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_SourceWeaponCat.uc">

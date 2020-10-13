@@ -40,12 +40,19 @@ static function X2AbilityTemplate Create_KineticStrike(name TemplateName, option
 		Template.AddMultiTargetEffect(OverrideDeathAction);
 
 		Template.CinescriptCameraType = "Spark_Strike";
+
+		ActionPointCost = new class'X2AbilityCost_ActionPoints';
+		ActionPointCost.iNumPoints = 1;
+		ActionPointCost.bConsumeAllPoints = true;
+		Template.AbilityCosts.AddItem(ActionPointCost);
 	}
 	else
 	{
 		Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.ARMOR_ACTIVE_PRIORITY; //	Same as Heavy Weapons
 
 		Template.CinescriptCameraType = "Soldier_HeavyWeapons";		
+
+		Template.AbilityCosts.AddItem(new class'X2AbilityCost_HeavyWeaponActionPoints');
 		//Template.CinescriptCameraType = "Iridar_HeavyStrikeModule";		
 	}
 	
@@ -77,12 +84,6 @@ static function X2AbilityTemplate Create_KineticStrike(name TemplateName, option
 	
 	//	Multi Target Conditions
 	Template.AbilityMultiTargetConditions.AddItem(default.LivingTargetOnlyProperty);
-	
-	//	Ability Costs
-	ActionPointCost = new class'X2AbilityCost_ActionPoints';
-	ActionPointCost.iNumPoints = 1;
-	ActionPointCost.bConsumeAllPoints = true;
-	Template.AbilityCosts.AddItem(ActionPointCost);
 	
 	//	Multi Target effects
 	WeaponDamageEffect = new class'X2Effect_DLC_3StrikeDamage';

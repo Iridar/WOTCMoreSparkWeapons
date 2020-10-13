@@ -10,20 +10,19 @@ simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffe
 	
 	if (UnitState != none)
 	{
-		`LOG("X2Effect_ExtendAidProtocol applied to unit:" @ UnitState.GetFullName(),, 'IRITEST');
 		AidProtocolEffectState = UnitState.GetUnitAffectedByEffectState('AidProtocol');
-		if (AidProtocolEffectState != none)
+
+		//	Double check for source unit state just in case, though it worked fine without it.
+		if (AidProtocolEffectState != none && AidProtocolEffectState.ApplyEffectParameters.SourceStateObjectRef == ApplyEffectParameters.SourceStateObjectRef)
 		{
-			`LOG("Increasing Aid Protocol duration from turns:" @ AidProtocolEffectState.iTurnsRemaining,, 'IRITEST');
 			AidProtocolEffectState.iTurnsRemaining++;
 
 			AidProtocolAbilityState = XComGameState_Ability(NewGameState.ModifyStateObject(class'XComGameState_Ability', AidProtocolEffectState.ApplyEffectParameters.AbilityStateObjectRef.ObjectID));
-			if (AidProtocolAbilityState != none)
+			if (AidProtocolAbilityState != none && 	AidProtocolAbilityState.GetMyTemplate().AbilityCooldown != none)
 			{
-				AidProtocolAbilityState.iCooldown++;
+				AidProtocolAbilityState.iCooldown = AidProtocolAbilityState.GetMyTemplate().AbilityCooldown.iNumTurns;
 			}
 			
 		}
-		else `LOG("No Aid Protocol effect state!",, 'IRITEST');
 	}
 }

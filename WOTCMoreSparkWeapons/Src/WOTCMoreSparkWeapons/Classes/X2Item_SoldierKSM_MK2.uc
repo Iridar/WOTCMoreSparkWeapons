@@ -1,7 +1,7 @@
 class X2Item_SoldierKSM_MK2 extends X2Item config(KineticStrikeModule);
 
 var config WeaponDamageValue DAMAGE;
-var config array <WeaponDamageValue> EXTRA_DAMAGE;
+var config array<WeaponDamageValue> EXTRA_DAMAGE;
 var config int IENVIRONMENTDAMAGE;
 var config int AIM;
 var config int CRITCHANCE;
@@ -45,8 +45,9 @@ static function array<X2DataTemplate> CreateTemplates()
 
 static function X2DataTemplate Create_Item()
 {
-	local X2WeaponTemplate Template;
-	local ArtifactCost Resources;
+	local X2WeaponTemplate		Template;
+	local ArtifactCost			Resources;
+	local AltGameArchetypeUse	GameArch;
 	local int i;
 	
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'IRI_HeavyStrikeModule_T2');
@@ -135,6 +136,15 @@ static function X2DataTemplate Create_Item()
 	Template.PointsToComplete = 0;
 	Template.CreatorTemplateName = default.CREATOR_TEMPLATE_NAME; // The schematic which creates this item
 	Template.BaseItem = default.BASE_ITEM; // Which item this will be upgraded from
+
+	GameArch.UseGameArchetypeFn = BitHeavyWeaponCheck;
+	GameArch.ArchetypeString = "IRIKineticStrikeModule.Archetypes.WP_KSM_BIT_CV";
+	Template.AltGameArchetypeArray.AddItem(GameArch);
 	
 	return Template;
+}
+
+static private function bool BitHeavyWeaponCheck(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)
+{
+	return UnitState.GetMyTemplate().bIsCosmetic;
 }

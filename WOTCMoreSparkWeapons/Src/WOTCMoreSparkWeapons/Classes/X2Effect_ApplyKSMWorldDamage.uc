@@ -1,6 +1,7 @@
 class X2Effect_ApplyKSMWorldDamage extends X2Effect;
 
 var int DamageAmount;
+var bool bSkipGroundTiles;
 
 //	Similar to X2Effect_ApplyDirectionalWorldDamage, but works even without target/multi target units.
 
@@ -36,9 +37,11 @@ simulated function ApplyEffectToWorld(const out EffectAppliedData ApplyEffectPar
 		TargetTile = WorldData.GetTileCoordinatesFromPosition(TargetLocation);
 
 		//	Raise height of the attack by 1 tile so we don't strike ground tiles.
-		//SourceTile.Z++;
-		//TargetTile.Z = SourceTile.Z;
-		
+		if (bSkipGroundTiles)
+		{
+			SourceTile.Z++;
+			TargetTile.Z = SourceTile.Z;
+		}
 		SourceLocation = WorldData.GetPositionFromTileCoordinates(SourceTile);
 		TargetLocation = WorldData.GetPositionFromTileCoordinates(TargetTile);
 

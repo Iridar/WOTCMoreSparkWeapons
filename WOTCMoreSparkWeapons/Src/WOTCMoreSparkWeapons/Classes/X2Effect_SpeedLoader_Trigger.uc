@@ -12,7 +12,7 @@ function RegisterForEvents(XComGameState_Effect EffectGameState)
 	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(EffectGameState.ApplyEffectParameters.SourceStateObjectRef.ObjectID));
 
 	EventMgr.RegisterForEvent(EffectObj, 'IRI_SpeedLoader_Trigger_Event', TriggerSpeedLoad_Listener, ELD_OnStateSubmitted,, UnitState);
-	EventMgr.RegisterForEvent(EffectObj, 'IRI_SpeedLoader_Trigger_Event', EffectGameState.TriggerAbilityFlyover, ELD_OnStateSubmitted,, UnitState);
+	EventMgr.RegisterForEvent(EffectObj, 'IRI_SpeedLoader_Trigger_Event_Flyover', EffectGameState.TriggerAbilityFlyover, ELD_OnStateSubmitted,, UnitState);
 	
 	//	local X2EventManager EventMgr;
 	//	AbilityState = XComGameState_Ability(`XCOMHISTORY.GetGameStateForObjectID(SourceUnit.FindAbility('ABILITY_NAME').ObjectID));
@@ -55,7 +55,10 @@ static function EventListenerReturn TriggerSpeedLoad_Listener(Object EventData, 
 					AbilityState = XComGameState_Ability(`XCOMHISTORY.GetGameStateForObjectID(AbilityRef.ObjectID));
 					if (AbilityState != none)
 					{
-						AbilityState.AbilityTriggerAgainstSingleTarget(UnitState.GetReference(), false);
+						if (AbilityState.AbilityTriggerAgainstSingleTarget(UnitState.GetReference(), false))
+						{
+							`XEVENTMGR.TriggerEvent('IRI_SpeedLoader_Trigger_Event_Flyover', AbilityState, UnitState, GameState);
+						}
 					}
 				}
 			}
@@ -104,21 +107,12 @@ private static function bool WeaponHasSpeedLoader(const XComGameState_Item ItemS
 
 function bool PostAbilityCostPaid(XComGameState_Effect EffectState, XComGameStateContext_Ability AbilityContext, XComGameState_Ability kAbility, XComGameState_Unit SourceUnit, XComGameState_Item AffectWeapon, XComGameState NewGameState, const array<name> PreCostActionPoints, const array<name> PreCostReservePoints) 
 { 
-	local XComGameState_Ability PassiveAbilityState;
-	local StateObjectReference	AbilityRef;
-
 	//	This is a movement ability and the unit is dashing.
 	if (AbilityContext.InputContext.MovementPaths.Length > 0)
 	{	
 		if (AbilityContext.InputContext.MovementPaths[0].CostIncreases.Length > 0)
 		{
-			AbilityRef = SourceUnit.FindAbility('IRI_SpeedLoader_Passive');
-			if (AbilityRef.ObjectID > 0)
-			{
-				PassiveAbilityState = XComGameState_Ability(`XCOMHISTORY.GetGameStateForObjectID(AbilityRef.ObjectID));
-			}
-
-			`XEVENTMGR.TriggerEvent('IRI_SpeedLoader_Trigger_Event', PassiveAbilityState, SourceUnit, NewGameState);
+			`XEVENTMGR.TriggerEvent('IRI_SpeedLoader_Trigger_Event', SourceUnit, SourceUnit, NewGameState);
 		}
 	}
 	return false; 

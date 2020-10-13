@@ -1,6 +1,6 @@
 class X2Condition_SourceWeaponCat extends X2Condition;
 
-var name MatchWeaponCat;
+var array<name> MatchWeaponCats;
 
 event name CallAbilityMeetsCondition(XComGameState_Ability kAbility, XComGameState_BaseObject kTarget) 
 {
@@ -8,7 +8,7 @@ event name CallAbilityMeetsCondition(XComGameState_Ability kAbility, XComGameSta
 	
 	SourceWeapon = kAbility.GetSourceWeapon();
 
-	if (SourceWeapon != none && SourceWeapon.GetWeaponCategory() == MatchWeaponCat)
+	if (SourceWeapon != none && MatchWeaponCats.Find(SourceWeapon.GetWeaponCategory()) != INDEX_NONE)
 	{
 		return 'AA_Success'; 
 	}
@@ -25,7 +25,7 @@ function bool CanEverBeValid(XComGameState_Unit SourceUnit, bool bStrategyCheck)
 
 	foreach InventoryItems(InventoryItem)
 	{
-		if (InventoryItem.GetWeaponCategory() == MatchWeaponCat)
+		if ( MatchWeaponCats.Find(InventoryItem.GetWeaponCategory()) != INDEX_NONE)
 		{
 			return true;
 		}

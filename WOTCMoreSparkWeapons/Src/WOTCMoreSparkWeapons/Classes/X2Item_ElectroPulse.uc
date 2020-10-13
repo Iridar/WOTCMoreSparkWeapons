@@ -1,8 +1,9 @@
-class X2Item_ElectroPulse extends X2Item config(AuxiliaryWeapons);
+class X2Item_ElectroPulse extends X2Item config(ElectroPulse);
 
 var config bool REQUIRE_SPARK;
 
-var config float PULSE_RANGE;
+var config float BIT_PULSE_RANGE;
+var config float BIT_PULSE_RADIUS;
 var config float PULSE_RADIUS;
 var config int	COOLDOWN;
 var config int HACK_DEFENSE_REDUCTION;
@@ -11,6 +12,7 @@ var config int STUN_CHANCE;
 var config array<name> REMOVE_EFFECTS;
 var config bool DISABLE_WEAPONS;
 var config bool DEAL_DAMAGE;
+var config bool DEAL_DAMAGE_ONLY_TO_ROBOTIC_UNITS;
 
 var config WeaponDamageValue DAMAGE;
 var config array <WeaponDamageValue> EXTRA_DAMAGE;
@@ -43,6 +45,8 @@ var config array<name> REQUIRED_TECHS;
 var config array<name> BUILD_COST_TYPE;
 var config array<int> BUILD_COST_QUANTITY;
 var config int BLACKMARKET_VALUE;
+
+var config array<name> REWARD_DECKS;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -77,7 +81,7 @@ static function X2DataTemplate Create_Item()
 	}
 	Template.SetUIStatMarkup(class'XLocalizedData'.default.RadiusLabel, , default.PULSE_RADIUS - 1);
 	
-	Template.iRange = default.PULSE_RANGE;
+	//Template.iRange = default.PULSE_RANGE;
 	Template.iRadius = default.PULSE_RADIUS;
 	
 	Template.WeaponPanelImage = "_ConventionalRifle";
@@ -94,6 +98,8 @@ static function X2DataTemplate Create_Item()
 			Template.EquipSound = "Beam_Weapon_Equip";
 			break;
 	}
+
+	Template.RewardDecks = default.REWARD_DECKS;
 
 	Template.ItemCat = default.ITEM_CATEGORY;
 	Template.WeaponCat = default.WEAPON_CATEGORY;

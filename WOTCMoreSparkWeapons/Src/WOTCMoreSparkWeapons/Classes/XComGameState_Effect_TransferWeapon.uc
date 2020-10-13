@@ -1,4 +1,4 @@
-class XComGameState_Effect_TransferWeapon extends XComGameState_Effect;
+class XComGameState_Effect_TransferWeapon extends XComGameState_Effect config(SparkArsenal);
 
 //eInvSlot_ExtraRocket1
 //eInvSlot_ExtraBackpack
@@ -13,12 +13,63 @@ var StateObjectReference SourceUnitRef;	//	Reference to the unit that used Aid P
 var StateObjectReference TargetUnitRef;	//	Reference to the target of the Aid Protocol aka the soldier that gets control of the BIT's heavy weapon.
 var StateObjectReference BitWeaponRef;	//	Reference to the BIT Item State that is transferring the weapon
 
+var private bool bValidTarget;
+var config bool ONLY_SOLDIERS_CONTROL_BIT_HEAVY_WEAPON;
+
+struct AbilityChargeCooldownDataStruct
+{
+	var name TemplateName;
+	var int iCooldown;
+	var int iCharges;
+};
+var private array<AbilityChargeCooldownDataStruct> AbilityChargeCooldownDataArray;
+
+private function RecordAbilityChargeCooldownData(const XComGameState_Ability AbilityState)
+{
+	local AbilityChargeCooldownDataStruct AbilityChargeCooldownData;
+
+	AbilityChargeCooldownData.TemplateName = AbilityState.GetMyTemplateName();
+	AbilityChargeCooldownData.iCooldown = AbilityState.iCooldown;
+	AbilityChargeCooldownData.iCharges = AbilityState.iCharges;
+
+	AbilityChargeCooldownDataArray.AddItem(AbilityChargeCooldownData);
+}
+
+private function RestoreAbilityChargeCooldownData(XComGameState_Ability AbilityState)
+{
+	local int i;
+
+	for (i = AbilityChargeCooldownDataArray.Length - 1; i >= 0; i--)
+	{
+		if (AbilityChargeCooldownDataArray[i].TemplateName == AbilityState.GetMyTemplateName())
+		{
+			AbilityState.iCooldown = AbilityChargeCooldownDataArray[i].iCooldown;
+
+			//	If ability was not transferred to another soldier, then we reduce the cooldown by the number of turns this effect was present on the soldier to account for the passed time.
+			if (!bValidTarget)
+			{
+				AbilityState.iCooldown -= FullTurnsTicked;
+			}
+
+			AbilityState.iCharges = AbilityChargeCooldownDataArray[i].iCharges;
+			AbilityChargeCooldownDataArray.Remove(i, 1);
+			return;
+		}
+	}
+}
+
+private function ResetAbilityChargeCooldownData()
+{
+	AbilityChargeCooldownDataArray.Length = 0;
+}
+
 //	##############			INTERFACE FUNCTIONS			##############
 
 simulated function ForwardTransfer(XComGameState_Unit SourceUnit, XComGameState_Item SourceWeapon, XComGameState_Unit TargetUnit, StateObjectReference BitObjRef, XComGameState NewGameState)
 {
 	local XComGameState_Player		PlayerState;
 	local XComGameState_Ability		AbilityState;	
+	local StateObjectReference		AbilityRef;
 	local array<AbilitySetupData>	AbilityData;
 	local X2TacticalGameRuleset		TacticalRules;
 	local XComGameStateHistory		History;
@@ -47,6 +98,7 @@ simulated function ForwardTransfer(XComGameState_Unit SourceUnit, XComGameState_
 			AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(SourceUnit.Abilities[i].ObjectID));
 			if (AbilityState.SourceWeapon == TransferWeaponRef)
 			{
+				RecordAbilityChargeCooldownData(AbilityState);
 				`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: removing ability:" @ AbilityState.GetMyTemplateName() @ "from source unit:" @ SourceUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
 				SourceUnit.Abilities.Remove(i, 1);
 			}
@@ -54,27 +106,42 @@ simulated function ForwardTransfer(XComGameState_Unit SourceUnit, XComGameState_
 
 		SourceUnit.RemoveItemFromInventory(SourceWeapon, NewGameState);
 
-		//	---------------------------------------------------------------------------
-
-		TargetUnit.bIgnoreItemEquipRestrictions = true;
-		TargetUnit.AddItemToInventory(SourceWeapon, TargetSlot, NewGameState);	
-		TargetUnit.bIgnoreItemEquipRestrictions = false;
-
-		//	Initiate abilities associated with the newly added weapon.
-		PlayerState = XComGameState_Player(History.GetGameStateForObjectID(TargetUnit.ControllingPlayer.ObjectID));			
-		AbilityData = TargetUnit.GatherUnitAbilitiesForInit(NewGameState, PlayerState);
-		TacticalRules = `TACTICALRULES;
-		for (i = 0; i < AbilityData.Length; i++)
+		//	Only soldiers receive control over BIT Heavy Weapons.
+		//	The user of the Aid Protocol still must lose control of the weapon or the viz will bug out hard if they try to use it.
+		if (default.ONLY_SOLDIERS_CONTROL_BIT_HEAVY_WEAPON)
 		{
-			if (AbilityData[i].SourceWeaponRef == TransferWeaponRef)
-			{	
-				`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: initializing ability:" @ AbilityData[i].Template.DataName @ "for target unit:" @ TargetUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
-				TacticalRules.InitAbilityForUnit(AbilityData[i].Template, TargetUnit, NewGameState, TransferWeaponRef);
-			}
+			bValidTarget = TargetUnit.IsSoldier();
+		}
+		else
+		{
+			bValidTarget = true;
 		}
 
-		`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: finish transfer of weapon:" @ SourceWeapon.GetMyTemplateName() @ ", it now has ammo:" @ SourceWeapon.Ammo,, 'WOTCMoreSparkWeapons');
-		SourceWeapon.Ammo = iAmmo;
+		//	---------------------------------------------------------------------------
+		if (bValidTarget)
+		{
+			TargetUnit.bIgnoreItemEquipRestrictions = true;
+			TargetUnit.AddItemToInventory(SourceWeapon, TargetSlot, NewGameState);	
+			TargetUnit.bIgnoreItemEquipRestrictions = false;
+
+			//	Initiate abilities associated with the newly added weapon.
+			PlayerState = XComGameState_Player(History.GetGameStateForObjectID(TargetUnit.ControllingPlayer.ObjectID));			
+			AbilityData = TargetUnit.GatherUnitAbilitiesForInit(NewGameState, PlayerState);
+			TacticalRules = `TACTICALRULES;
+			for (i = 0; i < AbilityData.Length; i++)
+			{
+				if (AbilityData[i].SourceWeaponRef == TransferWeaponRef)
+				{	
+					`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: initializing ability:" @ AbilityData[i].Template.DataName @ "for target unit:" @ TargetUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
+					AbilityRef = TacticalRules.InitAbilityForUnit(AbilityData[i].Template, TargetUnit, NewGameState, TransferWeaponRef);
+					AbilityState = XComGameState_Ability(NewGameState.GetGameStateForObjectID(AbilityRef.ObjectID));
+					RestoreAbilityChargeCooldownData(AbilityState);
+				}
+			}
+
+			`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: finish transfer of weapon:" @ SourceWeapon.GetMyTemplateName() @ ", it now has ammo:" @ SourceWeapon.Ammo,, 'WOTCMoreSparkWeapons');
+			SourceWeapon.Ammo = iAmmo;
+		}
 	}
 	else `LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: ERROR, could not find any free slots on the Target Unit:" @ TargetUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
 }
@@ -90,9 +157,9 @@ simulated function BackwardTransfer(XComGameState NewGameState)
 	local array<AbilitySetupData>	AbilityData;
 	local X2TacticalGameRuleset		TacticalRules;
 	local XComGameStateHistory		History;
+	local StateObjectReference		AbilityRef;
 	
 	local int i;
-
 
 	TargetUnit = XComGameState_Unit(GetGameStateForObjectID(NewGameState, class'XComGameState_Unit', TargetUnitRef));
 	SourceUnit = XComGameState_Unit(GetGameStateForObjectID(NewGameState, class'XComGameState_Unit', SourceUnitRef));
@@ -104,19 +171,23 @@ simulated function BackwardTransfer(XComGameState NewGameState)
 		History = `XCOMHISTORY;
 		iAmmo = SourceWeapon.Ammo;
 
-		//	Remove all abilities associated with the weapon being transferred from the unit that is giving it away.
-		for (i = TargetUnit.Abilities.Length - 1; i >= 0; i--)
+		if (bValidTarget)
 		{
-			AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(TargetUnit.Abilities[i].ObjectID));
-			if (AbilityState.SourceWeapon == TransferWeaponRef)
+			ResetAbilityChargeCooldownData();
+			//	Remove all abilities associated with the weapon being transferred from the unit that is giving it away.
+			for (i = TargetUnit.Abilities.Length - 1; i >= 0; i--)
 			{
-				`LOG("XComGameState_Effect_TransferWeapon::BackwardTransfer:: removing ability:" @ AbilityState.GetMyTemplateName() @ "from target unit:" @ TargetUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
-				TargetUnit.Abilities.Remove(i, 1);
+				AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(TargetUnit.Abilities[i].ObjectID));
+				if (AbilityState.SourceWeapon == TransferWeaponRef)
+				{
+					RecordAbilityChargeCooldownData(AbilityState);
+					`LOG("XComGameState_Effect_TransferWeapon::BackwardTransfer:: removing ability:" @ AbilityState.GetMyTemplateName() @ "from target unit:" @ TargetUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
+					TargetUnit.Abilities.Remove(i, 1);
+				}
 			}
+
+			TargetUnit.RemoveItemFromInventory(SourceWeapon, NewGameState);
 		}
-
-		TargetUnit.RemoveItemFromInventory(SourceWeapon, NewGameState);
-
 		//	---------------------------------------------------------------------------
 
 		SourceUnit.bIgnoreItemEquipRestrictions = true;
@@ -132,7 +203,9 @@ simulated function BackwardTransfer(XComGameState NewGameState)
 			if (AbilityData[i].SourceWeaponRef == TransferWeaponRef)
 			{	
 				`LOG("XComGameState_Effect_TransferWeapon::BackwardTransfer:: initializing ability:" @ AbilityData[i].Template.DataName @ "for source unit:" @ SourceUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
-				TacticalRules.InitAbilityForUnit(AbilityData[i].Template, SourceUnit, NewGameState, TransferWeaponRef);
+				AbilityRef = TacticalRules.InitAbilityForUnit(AbilityData[i].Template, SourceUnit, NewGameState, TransferWeaponRef);
+				AbilityState = XComGameState_Ability(NewGameState.GetGameStateForObjectID(AbilityRef.ObjectID));
+				RestoreAbilityChargeCooldownData(AbilityState);
 			}
 		}
 
