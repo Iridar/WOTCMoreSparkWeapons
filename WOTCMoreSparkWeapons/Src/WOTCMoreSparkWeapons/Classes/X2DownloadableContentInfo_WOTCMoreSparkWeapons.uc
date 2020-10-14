@@ -41,6 +41,8 @@ var config(GameData_WeaponData) int SPARKBIT_CONVENTIONAL_HEALING_BONUS;
 var config(GameData_WeaponData) int SPARKBIT_MAGNETIC_HEALING_BONUS;
 var config(GameData_WeaponData) int SPARKBIT_BEAM_HEALING_BONUS;
 
+var config(AutogunHeavyWeapon) bool ONE_AUTOGUN_PER_SOLDIER;
+
 delegate ModifyTemplate(X2DataTemplate DataTemplate);
 
 //	Changelog 
@@ -61,6 +63,7 @@ General changes:
 - Configuration files have been reorganized.
 
 Ability changes:
+- Changes to squaddie abilities of classes affected by this mod will now apply to existing characters. New campaign / RebuildSelectedSoldier is no longer necessary.
 - New passive ability for SPARKs and MEC Troopers: Protocol Suite. Unit gains +30 Hack, and when equipped with a BIT or GREMLIN, the unit gains Intrusion Protocol, Aid Protocol, Entrench Protocol and Active Camo.
 - Entrench Protocol is a new passive ability which makes Aid Protocol used on self last indefinetely as long as the unit doesn't move. It's mostly intended to provide a defensive buff in static combat situations to SPARKs with Heavy Cannons.
 - Active Camo no longer grants Phantom. It simply improves SPARK / MEC Troopers' detection radius to be on the same level as regular soldiers. Without Active Camo SPARKs and MEC Troopers are still much easier for enemies to notice.
@@ -77,23 +80,14 @@ Item changes:
 - Heavy Strike Module, Powered Strike Module, EM Pulse and Resto Mist will now interact with Salvo, which makes heavy weapons not end turn.
 - EM Pulse now deals damage to robotic units.
 - EM Pulse and Restorative Mist have larger area of effect when they're not equipped in the BIT Heavy Weapon slot. EM Pulse also deals more damage that way.
-- Heavy Strike Module and Powered Strike Module can now be equipped in the BIT Heavy Weapon slot and used to deliver remote strikes on targeted tiles. They deal much less damage when used that way. (And can't destroy cover?)
 
 Bugfixes:
 - Speed Loader should now display flyover only when actually reloading the weapon.
+- Additional fix to Lost Towers SPARK starting without their heavy weapon, as the previous one seemed to have stopped working with this update.
 
 */
 //	Immedaite goals:
-//	better repair animation for gremlin
-//	Make all OPTC patching work with diff templates
-// Bit viz hangs up with Heavy Strike
-//	Make sure Heavy Strike Module cannot be equipped in the BIT Heavy Weapon slot.
-//	Add source weapon condition to heavy strike or again remove it in FinalizeAbilities
-
-//	Double check localization, particularly for Resto Mist / EM Pulse
-
-//	Reorganize config files
-//	remove logging
+//	patch existing soldiers of classes, not just class templates
 
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
@@ -205,991 +199,187 @@ HWZ-1 "Arbalest", HWZ-3 "Onager",     HWZ-9 "Scorpion"
 //	shells equippable into ammo slot? -> cannot do that,  would have compatibility issues with regular ammo, wouldn't be able to carry them with special ammo and HotLoadAmmo would try to grab special shells.
 // SPARK Arsenal -> hacking a door without BIT crashes the game? -- Couldn't confirm.
 
-/// Start Issue #260
-/// Called from XComGameState_Item:CanWeaponApplyUpgrade.
-/// Allows weapons to specify whether or not they will accept a given upgrade.
-/// Should be used to answer the question "is this upgrade compatible with this weapon in general?"
-/// For whether or not other upgrades conflict or other "right now" concerns, X2WeaponUpgradeTemplate:CanApplyUpgradeToWeapon already exists
-/// It is suggested you explicitly check for your weapon templates, so as not to accidentally catch someone else's templates.
-/// - e.g. Even if you have a unique weapon category now, someone else may add items to that category later.
-static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2WeaponUpgradeTemplate UpgradeTemplate)
-{
-	local name DisallowedUpgradeName;
+//	===================================================================================================================================
+//														DLC METHODS
+//	===================================================================================================================================
 
-	switch (WeaponState.GetMyTemplateName())
+//	-----------------------------------------------------------------------------------------------------------------------------------
+//														WEAPON INITIALIZED
+//	-----------------------------------------------------------------------------------------------------------------------------------
+static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, optional XComGameState_Item ItemState=none)
+{
+    Local XComGameState_Item	InternalWeaponState, SecondaryWeaponState;
+	local XComGameState_Unit	UnitState;
+	local X2GrenadeTemplate		GrenadeTemplate;
+	local X2WeaponTemplate		WeaponTemplate;
+	local XComContentManager	Content;
+
+    if (ItemState == none) 
+	{	
+		InternalWeaponState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(WeaponArchetype.ObjectID));
+		`redscreen("SPARK Weapons: Weapon Initialized -> Had to reach into history to get Internal Weapon State.-Iridar");
+	}
+	else InternalWeaponState = ItemState;
+
+	if (InternalWeaponState != none)
 	{
-		case 'IRI_ArtilleryCannon_CV':
-		case 'IRI_ArtilleryCannon_MG':
-		case 'IRI_ArtilleryCannon_BM':
-			foreach default.DisallowedWeaponUpgradeNames(DisallowedUpgradeName)
-			{
-				if (InStr(UpgradeTemplate.DataName, DisallowedUpgradeName) > INDEX_NONE)
-				{
-					return false;
-				}
-			}
-			return true;
-		default:
-			return true;
+		UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(InternalWeaponState.OwnerStateObject.ObjectID));
+		WeaponTemplate = X2WeaponTemplate(InternalWeaponState.GetMyTemplate());
+
+		if (UnitState != none && WeaponTemplate != none && !UnitState.GetMyTemplate().bIsCosmetic)
+		{
 			
-	}
-	return true;
-}
-/// End Issue #260
-
-static event OnLoadedSavedGame()
-{
-	OnLoadedSavedGameToStrategy();
-}
-
-static event InstallNewCampaign(XComGameState StartState)
-{
-	AddSparkSquaddieWeapons(StartState);
-}
-
-/// <summary>
-/// This method is run when the player loads a saved game directly into Strategy while this DLC is installed
-/// </summary>
-static event OnLoadedSavedGameToStrategy()
-{
-	local XComGameStateHistory				History;
-	local XComGameState						NewGameState;
-	local XComGameState_HeadquartersXCom	XComHQ;
-	local XComGameState_Item				ItemState;
-	local X2ItemTemplate					ItemTemplate;
-	local name								TemplateName;
-	local X2ItemTemplateManager				ItemMgr;
-	local bool								bChange;
-	local X2StrategyElementTemplateManager	StratMgr;
-
-
-	History = `XCOMHISTORY;	
-	XComHQ = `XCOMHQ;
-	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();	
-
-	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("WOTCMoreSparkWeapons: Add Starting Items");
-	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
-
-	//	Add an instance of the specified item template into HQ inventory
-	foreach default.StartingItemsToAddOnSaveLoad(TemplateName)
-	{
-		ItemTemplate = ItemMgr.FindItemTemplate(TemplateName);
-
-		//	If the item is not in the HQ Inventory already
-		if (ItemTemplate != none && !XComHQ.HasItem(ItemTemplate))
-		{
-			//	If it's a starting item or if the schematic this item is created by is present in the HQ inventory
-			if (ItemTemplate.StartingItem || ItemTemplate.CreatorTemplateName != '' && XComHQ.HasItemByName(ItemTemplate.CreatorTemplateName))
-			{	
-				ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
-				NewGameState.AddStateObject(ItemState);
-				XComHQ.AddItemToHQInventory(ItemState);	
-
-				bChange = true;
-			}
-		}
-	}
-
-	if (!bChange)
-	{
-		bChange = AddSparkSquaddieWeapons(NewGameState);
-	}
-	else 
-	{
-		AddSparkSquaddieWeapons(NewGameState);
-	}
-
-	if (bChange)
-	{
-		History.AddGameStateToHistory(NewGameState);
-	}
-	else
-	{
-		History.CleanupPendingGameState(NewGameState);
-	}
-
-	//	Add Tech Templates
-	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
-	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ArmCannon_Tech');
-	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ImprovedShells_Tech');
-	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ExperimentalShells_Tech');
-		
-}
-
-static private function bool AddSparkSquaddieWeapons(XComGameState AddToGameState)
-{
-	local XComGameStateHistory				History;
-	local XComGameState_HeadquartersXCom	XComHQ;
-	local XComGameState_Item				ItemState;
-	local X2ItemTemplate					ItemTemplate;
-	local name								TemplateName;
-	local X2ItemTemplateManager				ItemMgr;
-	local bool								bChange;
-	local StateObjectReference				SparkRef;
-	local name								SquaddieLoadout;
-	local XComGameState_Unit				UnitState;
-	local InventoryLoadout					Loadout;
-	local int i;
-
-	History = `XCOMHISTORY;	
-	
-	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-
-	foreach AddToGameState.IterateByClassType(class'XComGameState_HeadquartersXCom', XComHQ)
-	{
-		break;
-	}
-	if (XComHQ == none)
-	{
-		XComHQ = `XCOMHQ;
-		XComHQ = XComGameState_HeadquartersXCom(AddToGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
-	}
-	//	Add starting SPARK Equipment if there is a SPARK in the Barracks but their weapons aren't. Can happen when using Starting Spark mod.
-	//	Being comprehensive here. Cycle through all configured character templates.
-	foreach default.SparkCharacterTemplates(TemplateName)
-	{
-		//	If there's a unit of such template in HQ barracks
-		SparkRef = XComHQ.GetSoldierRefOfTemplate(TemplateName);
-		if (SparkRef.ObjectID > 0)
-		{
-			UnitState = XComGameState_Unit(History.GetGameStateForObjectID(SparkRef.ObjectID));
-			if (UnitState != none)
+			if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
 			{
-				//	then find its squaddie loadout
-				SquaddieLoadout = UnitState.GetSoldierClassTemplate().SquaddieLoadout;
-				foreach ItemMgr.Loadouts(Loadout)
+				//	If this heavy weapon is equipped on a non-SPARK in the BIT-granted heavy weapon slot, replace its firing animations with point finger ones.
+				if (InternalWeaponState.InventorySlot == class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot)
 				{
-					if (Loadout.LoadoutName == SquaddieLoadout)
-					{
-						`LOG("Found loadout:" @ SquaddieLoadout,, 'WOTCMoreSparkWeapons');
+					Weapon.CustomUnitPawnAnimsets.Length = 0;
+					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
 
-						//	Cycle through all items in the loadout
-						for (i = 0; i < Loadout.Items.Length; i++)
+					//	Autogun's game archetype already specifies the correct animation name
+					if (WeaponTemplate.DataName != 'IRI_Heavy_Autogun' && WeaponTemplate.DataName != 'IRI_Heavy_Autogun_MK2')
+					{
+						Weapon.WeaponFireAnimSequenceName = name(Weapon.WeaponFireAnimSequenceName $ 'BIT');
+					}
+
+					//`LOG("Replacing firing animation name for:" @ WeaponTemplate.DataName @ "on unit:" @ UnitState.GetFullName() @ "to:" @ Weapon.WeaponFireAnimSequenceName,, 'IRITEST');
+					//	This will hide the weapon from the soldier's body.
+					Weapon.DefaultSocket = '';
+				}
+				return;
+			}
+
+			//	Initial checks complete, this is a weapon equipped on a SPARK.
+			Content = `CONTENT;
+
+			switch (WeaponTemplate.WeaponCat)
+			{
+				//	Ballistic Shields
+				case 'shield':
+					Weapon.DefaultSocket = 'iri_spark_ballistic_shield';
+					Weapon.CustomUnitPawnAnimsets.Length = 0;
+					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+					return;
+				//	Swords
+				//case 'sword':
+				//	Weapon.DefaultSocket = 'iri_spark_sword';
+				//	Weapon.CustomUnitPawnAnimsets.Length = 0;
+				//	Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+				//	return;
+				//	If this is an Ordnance Launcher and the Rocket Launchers mod is present, add Weapon Animations for firing rockets.
+				case 'iri_ordnance_launcher': 
+					if (default.bRocketLaunchersModPresent)
+					{
+						switch (WeaponTemplate.WeaponTech)
 						{
-							ItemTemplate = ItemMgr.FindItemTemplate(Loadout.Items[i].Item);
-							
-							//	If there's no particular item in HQ Inventory
-							if (ItemTemplate != none && !XComHQ.HasItem(ItemTemplate))
-							{
-								//	Add it.
-								//	On a side note, not enjoying fixing other people's shit within the context of my mods.
-								ItemState = ItemTemplate.CreateInstanceFromTemplate(AddToGameState);
-								AddToGameState.AddStateObject(ItemState);
-								XComHQ.AddItemToHQInventory(ItemState);	
+							case 'magnetic':
+								SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_MG_Rockets")));
+								return;
+							case 'beam':
+								SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_BM_Rockets")));
+								return;
+							case 'conventional':
+							default:
+								SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_CV_Rockets")));
+								return;
+						}	
+					}
+				case 'heavy':
+					//	If this Heavy Weapon is not in the slot granted by the BIT, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
+					if (InternalWeaponState.InventorySlot != class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot || default.bAlwaysUseArmCannonAnimationsForHeavyWeapons)
+					{
+						//	Don't do anything to Resto Mist and Electro Pulse in Aux or regular Heavy Weapon slot
+						if (WeaponTemplate.DataName == 'IRI_RestorativeMist_CV' || WeaponTemplate.DataName == 'IRI_ElectroPulse_CV')
+							return; 
 
-								bChange = true;
-							}
+						//	Replace the mesh for this heavy weapon with the arm cannon and replace the weapon and pawn animations.
+						Weapon.CustomUnitPawnAnimsets.Length = 0;
+						Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Spark")));
+						SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("IRISparkHeavyWeapons.Meshes.SM_SparkHeavyWeapon"));
+						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Weapon")));
+
+						//	Bandaid patch to play a different animation with a different weapon charging sound.
+						if (WeaponTemplate.DataName == 'IRI_Heavy_Autogun_MK2')
+						{
+							Weapon.WeaponFireAnimSequenceName = 'FF_FireLAC_MK2';
 						}
-						//	Exit "cycle through loadouts" cycle.
-						break;
+
+						//`LOG("Weapon Initialized -> Patched heavy weapon for a SPARK.",, 'IRITEST');
 					}
-				}
-			}
-		}
-	}
-
-	return bChange;
-}
-
-static function AddProvingGroundsProjectIfItsNotPresent(X2StrategyElementTemplateManager StratMgr, name ProjectName)
-{
-	local XComGameState		NewGameState;
-	local X2TechTemplate	TechTemplate;
-
-	if (!IsResearchInHistory(ProjectName))
-	{
-		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Adding Research Templates");
-
-		TechTemplate = X2TechTemplate(StratMgr.FindStrategyElementTemplate(ProjectName));
-		NewGameState.CreateNewStateObject(class'XComGameState_Tech', TechTemplate);
-
-		`XCOMHISTORY.AddGameStateToHistory(NewGameState);
-	}
-}
-
-static function bool IsResearchInHistory(name ResearchName)
-{
-	// Check if we've already injected the tech templates
-	local XComGameState_Tech	TechState;
-	local XComGameStateHistory	History;
-	
-	History = `XCOMHISTORY;
-
-	foreach History.IterateByClassType(class'XComGameState_Tech', TechState)
-	{
-		if ( TechState.GetMyTemplateName() == ResearchName )
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-static event OnPostTemplatesCreated()
-{
-	PatchSoldierClassTemplates();
-	PatchCharacterTemplates();
-	CopyLocalizationForAbilities();
-	PatchAbilityTemplates();
-	PatchWeaponTemplates();
-	class'KSMHelper'.static.AddDeathAnimSetsToCharacterTemplates();
-	class'X2Item_ArtilleryCannon_CV'.static.UpdateMods();
-	class'X2Item_ArtilleryCannon_MG'.static.UpdateMods();
-	class'X2Item_ArtilleryCannon_BM'.static.UpdateMods();
-	class'X2Item_SparkArsenal'.static.PatchWeaponUpgrades();
-}
-
-static function PatchSoldierClassTemplates()
-{		
-	local X2SoldierClassTemplateManager Manager;
-	local X2SoldierClassTemplate		SoldierClassTemplate;
-	local name							TemplateName;
-	local SoldierClassAbilitySlot		NewSlot;
-	local int i;
-
-	Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
-
-	foreach default.AffectClasses(TemplateName)
-	{
-		SoldierClassTemplate = Manager.FindSoldierClassTemplate(TemplateName);
-
-		//	Requires unprotecting X2SoldierClassTemplate::SoldierRanks
-		if (SoldierClassTemplate != none && SoldierClassTemplate.SoldierRanks.Length > 0)
-		{
-			for (i = SoldierClassTemplate.SoldierRanks[0].AbilitySlots.Length - 1; i >= 0; i--)
-			{
-				if (default.AbilitiesToRemove.Find(SoldierClassTemplate.SoldierRanks[0].AbilitySlots[i].AbilityType.AbilityName) != INDEX_NONE)
-				{
-					SoldierClassTemplate.SoldierRanks[0].AbilitySlots.Remove(i, 1);
-				}
-			}
-			foreach default.AbilitiesToGrant(TemplateName)
-			{
-				NewSlot.AbilityType.AbilityName = TemplateName;
-				SoldierClassTemplate.SoldierRanks[0].AbilitySlots.AddItem(NewSlot);
-			}
-		}		
-	}	 
-}
-/*
-static private function GiveEntrenchProtocol(XComGameState_Unit UnitState, XComGameState NewGameState)
-{	
-	local SoldierClassAbilityType AbilityStruct;
-
-	AbilityStruct.AbilityName = 'IRI_EntrenchProtocol';
-	UnitState.AbilityTree[0].Abilities.AddItem(AbilityStruct);
-
-	UnitState.BuySoldierProgressionAbility(NewGameState, 0, UnitState.AbilityTree[0].Abilities.Length);
-}*/
-/*
-static function GetNumHeavyWeaponSlotsOverride(out int NumHeavySlots, XComGameState_Unit UnitState, XComGameState CheckGameState)
-{
-	if (default.BIT_Grants_HeavyWeaponSlot &&
-		default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && 
-		class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
-	{
-		NumHeavySlots++;
-	}
-}*/
-
-static function PatchCharacterTemplates()
-{
-    local X2CharacterTemplateManager    CharMgr;
-    local X2CharacterTemplate           CharTemplate;
-	local name							CharTemplateName;
-	local array<X2DataTemplate>			DifficultyVariants;
-	local X2DataTemplate				DifficultyVariant;
-	local X2DataTemplate				DataTemplate;
-	local XComContentManager			Content;
-	
-    CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
-	Content = `CONTENT;
-
-	foreach default.SparkCharacterTemplates(CharTemplateName)
-	{
-		CharMgr.FindDataTemplateAllDifficulties(CharTemplateName, DifficultyVariants);
-		foreach DifficultyVariants(DifficultyVariant)
-		{
-			CharTemplate = X2CharacterTemplate(DifficultyVariant);
-
-			if (CharTemplate != none)
-			{
-				//	Remove Active Camo from char templates. We'll add it to BIT instead.
-				CharTemplate.Abilities.RemoveItem('ActiveCamo');
-				//	Add an ability that debuffs detection radius when concealed
-				CharTemplate.Abilities.AddItem('IRI_SparkDebuffConcealment');
-
-				//	Always attach Lockon Matinee cuz it's also used by Bombard
-				CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
-			
-				CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideSpark");
-				CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideHighSpark");
-
-				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_LAC_Spark")));
-
-				//	The loadout contains the item required for SPARKs to hack; a replacement for the regular XPad.
-				CharTemplate.RequiredLoadout = 'RequiredSpark';
-				//	Animations don't work when given through weapon archetype, for some reason.
-				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_Hack")));	
-				
-				//	These hunker down animations are used by Ballistic Shields' Shield Wall ability, but they'll work for any effect named HunkerDown
-				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_HunkerDown")));			
-			}
-		}
-
-		//	Cycle through all "humanoid" character templates that are used by the game to create player-controllable soldiers
-		foreach CharMgr.IterateTemplates(DataTemplate, none)
-		{
-			CharMgr.FindDataTemplateAllDifficulties(DataTemplate.DataName, DifficultyVariants);
-			foreach DifficultyVariants(DifficultyVariant)
-			{
-				CharTemplate = X2CharacterTemplate(DifficultyVariant);
-
-				if (CharTemplate != none && CharTemplate.bIsSoldier && CharTemplate.UnitHeight == 2 && CharTemplate.UnitSize == 1 && CharTemplate.OnCosmeticUnitCreatedFn == none)
-				{
-					//	This will copy the Heavy Weapon in the Aux Weapon slot to BIT's heavy weapon slot.
-					CharTemplate.OnCosmeticUnitCreatedFn = SoldierCosmeticBITUnitCreated;
-
-					//	Add AnimSet with Active Camo
-					CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_ActiveCamo_Soldier")));
-
-					//	Add AnimSet with firing Heavy Weapon animations 
-					CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Soldier_BIT")));
-				}
-			}
-		}
-	}
-}
-
-static private function SoldierCosmeticBITUnitCreated(XComGameState_Unit CosmeticUnit, XComGameState_Unit OwnerUnit, XComGameState_Item SourceItem, XComGameState StartGameState)
-{
-	local XComGameState_Item SparkHeavyWeapon, BitHeavyWeapon;
-
-	SparkHeavyWeapon = OwnerUnit.GetItemInSlot(class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot);
-	if (SparkHeavyWeapon != none)
-	{
-		BitHeavyWeapon = SparkHeavyWeapon.GetMyTemplate().CreateInstanceFromTemplate(StartGameState);
-		CosmeticUnit.bIgnoreItemEquipRestrictions = true;
-		CosmeticUnit.AddItemToInventory(BitHeavyWeapon, eInvSlot_HeavyWeapon, StartGameState);
-		CosmeticUnit.bIgnoreItemEquipRestrictions = false;
-
-		XGUnit(CosmeticUnit.GetVisualizer()).ApplyLoadoutFromGameState(CosmeticUnit, StartGameState);
-	}
-}
-
-
-static function PatchAbilityTemplates()
-{
-	local X2AbilityTemplateManager		AbilityTemplateManager;
-	local X2DataTemplate				DataTemplate;
-	local X2AbilityTemplate				Template;
-	local X2Effect_IRI_Rainmaker		Rainmaker;
-	local X2Effect						Effect;
-	local X2Condition_SourceWeaponCat	SourceWeaponCat;
-	local name							AbilityName;
-	local X2Effect_Knockback			KnockbackEffect;
-	local X2Effect_TransferWeapon		TransferWeapon;
-
-	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
-
-	//	Make Bulwark override the shield generation passive ability on Ballistic Shields. This is necessary for Bulwark to correclty interact with Shield Wall, which also grants High Cover.
-	//	Apparently doesn't work on item granted abilities?
-	Template = AbilityTemplateManager.FindAbilityTemplate('Bulwark');
-	if (Template != none)
-	{
-		Template.OverrideAbilities.AddItem('BallisticShield_GenerateCover');
-	}	
-	//	Mechatronic Warfare
-	Template = AbilityTemplateManager.FindAbilityTemplate('RoboticChassis');
-	if (Template != none)
-	{
-		Template.OverrideAbilities.AddItem('BallisticShield_GenerateCover');
-	}	
-	
-	 
-	//	Make using Aid Protocol with BIT transfer the control of the BIT's heavy weapon to the targeted soldier
-	Template = AbilityTemplateManager.FindAbilityTemplate('AidProtocol');
-	if (Template != none)
-	{
-		SourceWeaponCat = new class'X2Condition_SourceWeaponCat';
-		SourceWeaponCat.MatchWeaponCats.AddItem('sparkbit');
-
-		TransferWeapon = new class'X2Effect_TransferWeapon';
-		TransferWeapon.DuplicateResponse = eDupe_Ignore;
-		TransferWeapon.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
-		TransferWeapon.bRemoveWhenTargetDies = true;
-		TransferWeapon.TargetConditions.AddItem(SourceWeaponCat);
-		Template.AddTargetEffect(TransferWeapon);
-	}
-
-	//	Rainmaker
-	//	Get the Rainmaker ability template so we can use it for the purposes of our effect's localization.
-	Template = AbilityTemplateManager.FindAbilityTemplate('Rainmaker');
-	if (Template != none)
-	{
-		Rainmaker = new class'X2Effect_IRI_Rainmaker';
-		Rainmaker.BuildPersistentEffect(1, true);
-		Rainmaker.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, false, ,Template.AbilitySourceName);
-
-		//	Cycle through all abilities, if any of them add the Rainmaker effect, add our effect in parallel.
-		//	Resource intensive, but comprehensive.
-		foreach AbilityTemplateManager.IterateTemplates(DataTemplate, none)
-		{
-			Template = X2AbilityTemplate(DataTemplate);
-			if (Template != none)
-			{
-				foreach Template.AbilityShooterEffects(Effect)
-				{
-					if (X2Effect_DLC_3Rainmaker(Effect) != none)
+					else	//	If this weapon IS in the BIT-granted heavy weapon slot, then blanket out its default socket so it doesn't appear on the SPARK, clipping ugly through its arm.
 					{
-						Template.AddShooterEffect(Rainmaker);
-						break;
+						Weapon.DefaultSocket = '';
 					}
-				}
-			
-				foreach Template.AbilityTargetEffects(Effect)
-				{
-					if (X2Effect_DLC_3Rainmaker(Effect) != none)
-					{
-						Template.AddShooterEffect(Rainmaker);
-						break;
-					}
-				}
-
-				foreach Template.AbilityMultiTargetEffects(Effect)
-				{
-					if (X2Effect_DLC_3Rainmaker(Effect) != none)
-					{
-						Template.AddMultiTargetEffect(Rainmaker);
-						break;
-					}
-				}
-			}
-		}
-	}
-	
-	foreach default.AbilitiesRequireBITorGREMLIN(AbilityName)
-	{
-		Template = AbilityTemplateManager.FindAbilityTemplate(AbilityName);
-		if (Template != none)
-		{
-			SourceWeaponCat = new class'X2Condition_SourceWeaponCat';
-			SourceWeaponCat.MatchWeaponCats.AddItem('sparkbit');
-			SourceWeaponCat.MatchWeaponCats.AddItem('gremlin');
-			Template.AbilityShooterConditions.AddItem(SourceWeaponCat);
-		}
-	}
-
-	//	Add proper knockback to cone- and line-targeted abilities. 
-	//	Normally knockback doesn't work properly for them, because the X2Effect_Knockback works relative 
-	//	the target location specified in the input context, and targeting methods used by these abilities 
-	//	will have the very end of the cone/line as the target location.
-	//	This ModifyContextFn will replace that target location.
-	KnockbackEffect = new class'X2Effect_Knockback';
-	KnockbackEffect.KnockbackDistance = 2;
-	foreach default.AbilitiesToAddProperKnockback(AbilityName)
-	{
-		Template = AbilityTemplateManager.FindAbilityTemplate(AbilityName);
-		if (Template != none && Template.ModifyNewContextFn == none)
-		{
-			Template.AddMultiTargetEffect(KnockbackEffect);
-
-			Template.ModifyNewContextFn = ProperKnockback_ModifyActivatedAbilityContext;
-		}
-	}
-
-	//	Have to nuke conditions on these abilities so that regular soldiers can fire heavy weapon through BIT
-	ReplaceSparkShooterConditionOnAbility('SparkRocketLauncher');
-	ReplaceSparkShooterConditionOnAbility('SparkShredderGun');
-	ReplaceSparkShooterConditionOnAbility('SparkShredstormCannon');
-	ReplaceSparkShooterConditionOnAbility('SparkFlamethrower');
-	ReplaceSparkShooterConditionOnAbility('SparkFlamethrowerMk2');
-	ReplaceSparkShooterConditionOnAbility('SparkBlasterLauncher');
-	ReplaceSparkShooterConditionOnAbility('SparkPlasmaBlaster');
-}	
-
-static private function ReplaceSparkShooterConditionOnAbility(name TemplateName)
-{
-	local X2AbilityTemplateManager			AbilityTemplateManager;
-	local X2AbilityTemplate					Template;
-	//local X2Condition_HasWeaponOfCategory	HasWeaponOfCategory;
-	local int i;
-
-	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
-
-	Template = AbilityTemplateManager.FindAbilityTemplate(TemplateName);
-	if (Template != none)
-	{
-		for (i = Template.AbilityShooterConditions.Length - 1; i >= 0; i--)
-		{
-			if (X2Condition_UnitProperty(Template.AbilityShooterConditions[i]) != none && 
-				X2Condition_UnitProperty(Template.AbilityShooterConditions[i]).RequireSoldierClasses.Length > 0)
-			{
-				`LOG("Removed conditions from ability:" @ TemplateName,, 'IRITEST');
-				Template.AbilityShooterConditions.Remove(i, 1);
-			}
-		}
-	}
-	//HasWeaponOfCategory = new class'X2Condition_HasWeaponOfCategory';
-	//HasWeaponOfCategory.RequireWeaponCategory = 'sparkbit';
-	//Template.AbilityShooterConditions.AddItem(HasWeaponOfCategory);
-}
-
-static simulated function ProperKnockback_ModifyActivatedAbilityContext(XComGameStateContext Context)
-{
-	local XComWorldData					World;
-	local XComGameStateContext_Ability	AbilityContext;
-	local XComGameState_Unit			UnitState;
-	local TTile							ShooterTileLocation, TargetTileLocation;
-	local vector						ShooterLocation;
-	local XComGameStateHistory			History;
-	local vector						ClosestLocation, TestLocation;
-	local float							ClosestDistance, TestDistance;
-	local int i;
-
-	History = `XCOMHISTORY;
-	World = `XWORLD;
-	AbilityContext = XComGameStateContext_Ability(Context);
-
-	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
-	ShooterTileLocation = UnitState.TileLocation;
-	ShooterTileLocation.Z += UnitState.UnitHeight - 1;
-	ShooterLocation = World.GetPositionFromTileCoordinates(ShooterTileLocation);
-	
-	ClosestLocation = AbilityContext.InputContext.TargetLocations[0];
-	ClosestDistance = VSize(ClosestLocation - ShooterLocation);
-
-	for (i = 0; i < AbilityContext.InputContext.MultiTargets.Length; i++)
-	{
-		if (AbilityContext.IsResultContextMultiHit(i))
-		{
-			UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID));
-
-			TargetTileLocation = UnitState.TileLocation;
-			TargetTileLocation.Z += UnitState.UnitHeight - 1;
-			TestLocation = World.GetPositionFromTileCoordinates(TargetTileLocation);
-
-			TestDistance = VSize(TestLocation - ShooterLocation);
-			if (TestDistance < ClosestDistance)
-			{
-				ClosestDistance = TestDistance;
-				ClosestLocation = TestLocation;
-			}
-		}
-	}
-
-	AbilityContext.InputContext.TargetLocations[0] = ClosestLocation;
-}
-
-
-static function PatchWeaponTemplates()
-{
-	local X2WeaponTemplate              WeaponTemplate;
-    local array<X2WeaponTemplate>       arrWeaponTemplates;
-    local X2ItemTemplateManager         ItemMgr;
-	local X2GrenadeTemplate				GrenadeTemplate;
-	local AbilityIconOverride			IconOverride;
-	local X2GremlinTemplate				GremlinTemplate;
-
-    ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-    arrWeaponTemplates = ItemMgr.GetAllWeaponTemplates();
-
-    foreach arrWeaponTemplates(WeaponTemplate)
-    {
-		//	Add BIT Anim Sets
-        if (WeaponTemplate.WeaponCat == 'sparkbit')
-        {
-			GremlinTemplate = X2GremlinTemplate(WeaponTemplate);
-			if (GremlinTemplate == none) continue;
-
-			AddBITAnimSetsToCharacterTemplate(GremlinTemplate.CosmeticUnitTemplate);
-			//WeaponTemplate.Abilities.AddItem('IRI_RecallCosmeticUnit');
-
-			switch (GremlinTemplate.WeaponTech)
-			{
-				case 'conventional':
-					GremlinTemplate.BaseDamage = default.SPARKBIT_CONVENTIONAL_DAMAGE;
-					GremlinTemplate.iRadius = default.SPARKBIT_CONVENTIONAL_RADIUS;
-					GremlinTemplate.AidProtocolBonus = default.SPARKBIT_CONVENTIONAL_AID_PROTOCOL_BONUS;
-					GremlinTemplate.HealingBonus = default.SPARKBIT_CONVENTIONAL_HEALING_BONUS;
-					break;
-				case 'magnetic':
-					GremlinTemplate.BaseDamage = default.SPARKBIT_MAGNETIC_DAMAGE;
-					GremlinTemplate.iRadius = default.SPARKBIT_MAGNETIC_RADIUS;
-					GremlinTemplate.AidProtocolBonus = default.SPARKBIT_MAGNETIC_AID_PROTOCOL_BONUS;
-					GremlinTemplate.HealingBonus = default.SPARKBIT_MAGNETIC_HEALING_BONUS;
-					break;
-				case 'beam':
-					GremlinTemplate.BaseDamage = default.SPARKBIT_BEAM_DAMAGE;
-					GremlinTemplate.iRadius = default.SPARKBIT_BEAM_RADIUS;
-					GremlinTemplate.AidProtocolBonus = default.SPARKBIT_BEAM_AID_PROTOCOL_BONUS;
-					GremlinTemplate.HealingBonus = default.SPARKBIT_BEAM_HEALING_BONUS;
-					break;
+					return;
 				default:
 					break;
 			}
-        } 
-		else if (WeaponTemplate.WeaponCat == 'gremlin')
-		{
-			//	WeaponTemplate.Abilities.AddItem('IRI_RecallCosmeticUnit');
-			AddGREMLINAnimSetsToCharacterTemplate(WeaponTemplate.CosmeticUnitTemplate);
-		}
 
-		//	Duplicate Launch Grenade icons for my Launch Ordnance abilities.
-		GrenadeTemplate = X2GrenadeTemplate(WeaponTemplate);
-		if (GrenadeTemplate != none)
-		{
-			foreach GrenadeTemplate.AbilityIconOverrides(IconOverride)
+			//	If the rocket launchers mod is installed
+			if (default.bRocketLaunchersModPresent)
 			{
-				if (IconOverride.AbilityName == 'LaunchGrenade')
+				//	And this weapon is a rocket
+				GrenadeTemplate = X2GrenadeTemplate(InternalWeaponState.GetMyTemplate());
+				if (GrenadeTemplate != none && GrenadeTemplate.WeaponCat == 'rocket')
 				{
-					if (default.bOrdnanceAmplifierUsesBlasterLauncherTargeting)
+					//	Check if the Secondary Weapon is an Ordnance Launcher
+					SecondaryWeaponState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon);
+					if (SecondaryWeaponState != none)
 					{
-						GrenadeTemplate.AddAbilityIconOverride('IRI_BlastOrdnance', IconOverride.OverrideIcon);
+						WeaponTemplate = X2WeaponTemplate(SecondaryWeaponState.GetMyTemplate());
 					}
-					GrenadeTemplate.AddAbilityIconOverride('IRI_LaunchOrdnance', IconOverride.OverrideIcon);
+					if (WeaponTemplate != none && WeaponTemplate.WeaponCat == 'iri_ordnance_launcher')
+					{
+						//	Replace the rocket's Pawn Animations with the ones made for the Ordnance Launcher.
+						Weapon.CustomUnitPawnAnimsets.Length = 0;
+						//	Firing animations
+						//	Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRIOrdnanceLauncher.Anims.AS_OrdnanceLauncher")));
+
+						//	Give Rocket and stuff. Take Rocket is added to character templates in Rocket Launchers mod, because eveery spark must be able to Take Rockets before their Weapon is initialized.
+						Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket")));
+
+						//	Attach additional Anim Sets based on the tier of the launcher.
+						switch (WeaponTemplate.WeaponTech)
+						{
+							case 'magnetic':
+								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_MG")));
+								break;
+							case 'beam':
+								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_BM")));
+								break;
+							case 'conventional':
+							//	Basic anims are enough for conventional.
+							default:
+								break;
+						}	
+						//	T3 Lockon rocket gets its own firing animation with a different Play Socket Animation notify to play a different "rocket flying in the sky" cosmetic PFX.
+						if (GrenadeTemplate.DataName == 'IRI_X2Rocket_Lockon_T3')
+						{	
+							switch (WeaponTemplate.WeaponTech)
+							{
+								case 'magnetic':
+									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_MG")));
+									break;
+								case 'beam':
+									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_BM")));
+									break;
+								case 'conventional':
+									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3")));
+								default:
+									break;
+							}
+						}
+					}
 				}
 			}
 		}
-    }
-
-	//	Add missing stat markup for the bonus hacking from BIT
-	WeaponTemplate = X2WeaponTemplate(ItemMgr.FindItemTemplate('SparkBit_CV'));
-	if (WeaponTemplate != none)
-	{
-		WeaponTemplate.SetUIStatMarkup(class'XLocalizedData'.default.TechBonusLabel, eStat_Hacking, class'X2Item_DLC_Day90Weapons'.default.SPARKBIT_CONVENTIONAL_HACKBONUS, true);
-	}
-	WeaponTemplate = X2WeaponTemplate(ItemMgr.FindItemTemplate('SparkBit_MG'));
-	if (WeaponTemplate != none)
-	{
-		WeaponTemplate.SetUIStatMarkup(class'XLocalizedData'.default.TechBonusLabel, eStat_Hacking, class'X2Item_DLC_Day90Weapons'.default.SPARKBIT_MAGNETIC_HACKBONUS, true);
-	}
-	WeaponTemplate = X2WeaponTemplate(ItemMgr.FindItemTemplate('SparkBit_BM'));
-	if (WeaponTemplate != none)
-	{
-		WeaponTemplate.SetUIStatMarkup(class'XLocalizedData'.default.TechBonusLabel, eStat_Hacking, class'X2Item_DLC_Day90Weapons'.default.SPARKBIT_BEAM_HACKBONUS, true);
-	}
+	}		
 }
 
-static function AddBITAnimSetsToCharacterTemplate(string TemplateName)
-{
-    local X2CharacterTemplateManager    CharMgr;
-    local X2CharacterTemplate           CharTemplate;
-	local array<X2DataTemplate>			DifficultyVariants;
-	local X2DataTemplate				DifficultyVariant;
-	local XComContentManager			Content;
-	
-    CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
-	
-	CharMgr.FindDataTemplateAllDifficulties(name(TemplateName), DifficultyVariants);
-	foreach DifficultyVariants(DifficultyVariant)
-	{
-		CharTemplate = X2CharacterTemplate(DifficultyVariant);
-
-		if (CharTemplate != none)
-		{
-			Content = `CONTENT;
-			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIRestorativeMist.Anims.AS_RestoMist_BIT")));
-			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIElectroPulse.Anims.AS_ElectroPulse_BIT")));
-			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_LAC_Bit")));
-			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Bit")));			
-		}
-	}
-}
-static function AddGREMLINAnimSetsToCharacterTemplate(string TemplateName)
-{
-    local X2CharacterTemplateManager    CharMgr;
-    local X2CharacterTemplate           CharTemplate;
-	local array<X2DataTemplate>			DifficultyVariants;
-	local X2DataTemplate				DifficultyVariant;
-	local XComContentManager			Content;
-	
-    CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
-	
-	CharMgr.FindDataTemplateAllDifficulties(name(TemplateName), DifficultyVariants);
-	foreach DifficultyVariants(DifficultyVariant)
-	{
-		CharTemplate = X2CharacterTemplate(DifficultyVariant);
-
-		if (CharTemplate != none)
-		{
-			Content = `CONTENT;
-			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Gremlin")));	
-		}
-	}
-}
-
-static function CopyLocalizationForAbilities()
-{
-    local X2AbilityTemplateManager  AbilityTemplateManager;
-
-    //  Get the Ability Template Manager.
-    AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
-
-	CopyLocalization(AbilityTemplateManager, 'IRI_SparkRocketLauncher', 'SparkRocketLauncher');
-	CopyLocalization(AbilityTemplateManager, 'IRI_SparkShredderGun', 'SparkShredderGun');
-	CopyLocalization(AbilityTemplateManager, 'IRI_SparkShredstormCannon', 'SparkShredstormCannon');
-	CopyLocalization(AbilityTemplateManager, 'IRI_SparkFlamethrower', 'SparkFlamethrower');
-	CopyLocalization(AbilityTemplateManager, 'IRI_SparkFlamethrowerMk2', 'SparkFlamethrowerMk2');
-	CopyLocalization(AbilityTemplateManager, 'IRI_SparkBlasterLauncher', 'SparkBlasterLauncher');
-	CopyLocalization(AbilityTemplateManager, 'IRI_SparkPlasmaBlaster', 'SparkPlasmaBlaster');
-	
-	CopyLocalization(AbilityTemplateManager, 'IRI_Bombard', 'Bombard');
-}
-
-static function CopyLocalization(X2AbilityTemplateManager AbilityTemplateManager, name TemplateName, name DonorTemplateName)
-{
-	local X2AbilityTemplate Template;
-	local X2AbilityTemplate DonorTemplate;
-
-	Template = AbilityTemplateManager.FindAbilityTemplate(TemplateName);
-	DonorTemplate = AbilityTemplateManager.FindAbilityTemplate(DonorTemplateName);
-
-	if (Template != none && DonorTemplate != none)
-	{
-		Template.LocFriendlyName = DonorTemplate.LocFriendlyName;
-		Template.LocHelpText = DonorTemplate.LocHelpText;                   
-		Template.LocLongDescription = DonorTemplate.LocLongDescription;
-		Template.LocPromotionPopupText = DonorTemplate.LocPromotionPopupText;
-		Template.LocFlyOverText = DonorTemplate.LocFlyOverText;
-		Template.LocMissMessage = DonorTemplate.LocMissMessage;
-		Template.LocHitMessage = DonorTemplate.LocHitMessage;
-		Template.LocFriendlyNameWhenConcealed = DonorTemplate.LocFriendlyNameWhenConcealed;      
-		Template.LocLongDescriptionWhenConcealed = DonorTemplate.LocLongDescriptionWhenConcealed;   
-		Template.LocDefaultSoldierClass = DonorTemplate.LocDefaultSoldierClass;
-		Template.LocDefaultPrimaryWeapon = DonorTemplate.LocDefaultPrimaryWeapon;
-		Template.LocDefaultSecondaryWeapon = DonorTemplate.LocDefaultSecondaryWeapon;
-	}
-}
-
-static function string DLCAppendSockets(XComUnitPawn Pawn)
-{
-	local XComGameState_Unit UnitState;
-
-	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Pawn.ObjectID));
-	if (UnitState == none)
-		return "";
-
-	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
-	{
-		return "IRIOrdnanceLauncher.Meshes.Spark_Sockets";
-	}
-	if (UnitState.IsSoldier())
-	{
-		if (UnitState.kAppearance.iGender == eGender_Male)
-		{
-			return "IRIKineticStrikeModule.Meshes.SM_SoldierSockets_M";
-		}
-		else
-		{
-			return "IRIKineticStrikeModule.Meshes.SM_SoldierSockets_F";
-		}
-	}
-	return "";
-}
-//	Shield animations need to be added here to replace the Walk Back animation on the Avenger. They also contain a Deflect animation.
-static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameState_Unit UnitState, XComUnitPawn Pawn)
-{
-	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && UnitHasBallisticShieldEquipped(UnitState))
-	{
-		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_BallisticShield")));
-	}
-}
-
-static private function bool UnitHasBallisticShieldEquipped(const XComGameState_Unit UnitState)
-{
-	local XComGameState_Item SecondaryWeapon;
-
-	SecondaryWeapon = UnitState.GetSecondaryWeapon();
-
-	return SecondaryWeapon != none && SecondaryWeapon.GetWeaponCategory() == 'shield';
-}
-
-static function OverrideItemImage(out array<string> imagePath, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, XComGameState_Unit UnitState)
-{
-	local XComGameState_HeadquartersXCom XComHQ;
-
-	if (ItemTemplate.DataName == 'IRI_RestorativeMist_CV')
-	{
-		XComHQ = XComGameState_HeadquartersXCom(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom', true));
-
-		if (XComHQ != None && XComHQ.IsTechResearched('BattlefieldMedicine'))
-		{
-			imagePath.Length = 0;
-			imagePath.AddItem("img:///IRIRestorativeMist.UI.Inv_RestorativeMist_Nano");
-			//`LOG("Adding resto mist icon.",, 'IRITEST');
-		}
-	}
-}
-
-/*
-static function GetNumUtilitySlotsOverride(out int NumUtilitySlots, XComGameState_Item EquippedArmor, XComGameState_Unit UnitState, XComGameState CheckGameState)
-{
-	//	If this is a SPARK or a MEC and doesn't have utility slots at all, add one.
-	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && NumUtilitySlots == 0)
-	{
-		NumUtilitySlots++;
-	}
-}
-*/
-
-static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, int Quantity, XComGameState_Unit UnitState, optional XComGameState CheckGameState, optional out string DisabledReason, optional XComGameState_Item ItemState) 
-{
-    local XGParamTag                    LocTag;
-    local bool							OverrideNormalBehavior;
-    local bool							DoNotOverrideNormalBehavior;
-    local X2SoldierClassTemplateManager Manager;
-
-    OverrideNormalBehavior = CheckGameState != none;
-    DoNotOverrideNormalBehavior = CheckGameState == none;
-
-    if(DisabledReason != "")
-        return DoNotOverrideNormalBehavior;
-
-	
-	if (IsItemSpecialShell(ItemTemplate.DataName))
-	{	
-		//	Can't equip Munitions Mount and special shells at the same time.
-		if (DoesUnitHaveMunitionsMount(UnitState, CheckGameState))
-		{
-			DisabledReason = default.str_ShellsMutuallyExclusiveWithMunitionsMount;
-			bCanAddItem = 0;
-			return OverrideNormalBehavior;
-		}//	Also can't equip MM and Shells on non-SPARKS.
-		else if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
-		{
-			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
-			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
-			LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
-			DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
-			bCanAddItem = 0;
-			return OverrideNormalBehavior;
-		}
-	}
-
-	if (IsItemMunitionsMount(ItemTemplate.DataName))
-	{	
-		if (DoesUnitHaveSpecialShells(UnitState, CheckGameState))
-		{
-			DisabledReason = default.str_MunitionsMountMutuallyExclusiveWithShells;
-			bCanAddItem = 0;
-			return OverrideNormalBehavior;
-		}
-		else if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
-		{
-			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
-			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
-			LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
-			DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
-			bCanAddItem = 0;
-			return OverrideNormalBehavior;
-		}
-	}
-		
-	//	If we're trying to equip an Autogun
-	//	EDIT: Allow equipping two autoguns for the purposes of having another one being transferred via Aid Protocol
-	/*
-	if (ItemTemplate.DataName == 'IRI_Heavy_Autogun' || ItemTemplate.DataName == 'IRI_Heavy_Autogun_MK2') 
-	{
-		if (UnitState.HasItemOfTemplateType('IRI_Heavy_Autogun', CheckGameState) || UnitState.HasItemOfTemplateType('IRI_Heavy_Autogun_MK2', CheckGameState))
-		{
-			//	Autogun already equipped, forbid equipping another one. Unlike other heavy weapons, having two AutoGuns is redundant.
-			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
-			LocTag.StrValue0 = ItemTemplate.FriendlyName;
-			DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strCategoryRestricted));
-			bCanAddItem = 0;
-			return OverrideNormalBehavior;
-		}	
-	}*/
-	//	SPARK-only changes past this point.
-	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
-		return DoNotOverrideNormalBehavior;
-
-	//	Complains about "missing allowed soldier class" without this. WTF?!
-	if (IsItemCanister(ItemTemplate))
-	{
-		bCanAddItem = 1;
-		return OverrideNormalBehavior;
-	}
-	//	Can't equip Heavy Strike Module on SPARK.
-	if (ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T1' || ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T2')
-	{
-		Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
-		LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
-		LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
-		DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
-		bCanAddItem = 0;
-		return OverrideNormalBehavior;
-	}
-    return DoNotOverrideNormalBehavior;
-}
-
-private static function bool DoesUnitHaveMunitionsMount(const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
-{
-	local XComGameState_Item ItemState;
-
-	ItemState = UnitState.GetItemInSlot(class'X2Item_Shells_T1'.default.INVENTORY_SLOT, CheckGameState);
-
-	if (ItemState != none && ItemState.GetMyTemplateName() == 'IRI_Shells_T1')
-	{
-		return true;
-	}
-
-	if (class'X2Item_Shells_T1'.default.INVENTORY_SLOT != class'X2Item_Shells_T2'.default.INVENTORY_SLOT)
-	{
-		ItemState = UnitState.GetItemInSlot(class'X2Item_Shells_T2'.default.INVENTORY_SLOT, CheckGameState);
-
-		return ItemState != none && ItemState.GetMyTemplateName() == 'IRI_Shells_T2';
-	}
-	return false;
-}
-
-private static function bool IsItemSpecialShell(const name TemplateName)
-{
-	switch (TemplateName)
-	{
-		case 'IRI_Shell_HEAT':
-		case 'IRI_Shell_HE':
-		case 'IRI_Shell_Shrapnel':
-		case 'IRI_Shell_HEDP':
-		case 'IRI_Shell_HESH':
-		case 'IRI_Shell_Flechette':
-			return true;
-		default:
-			return false;
-	}
-}
-
-private static function bool IsItemMunitionsMount(const name TemplateName)
-{
-	switch (TemplateName)
-	{
-		case 'IRI_Shells_T1':
-		case 'IRI_Shells_T2':
-			return true;
-		default:
-			return false;
-	}
-}
-
-private static function bool DoesUnitHaveSpecialShells(const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
-{
-	local XComGameState_Item ItemState;
-
-	ItemState = UnitState.GetItemInSlot(class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot, CheckGameState);
-
-	return ItemState != none && IsItemSpecialShell(ItemState.GetMyTemplateName());
-}
-
-private static function bool IsItemCanister(const X2ItemTemplate ItemTemplate)
-{
-	local X2WeaponTemplate	WeaponTemplate;
-
-	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
-
-	return WeaponTemplate != none && WeaponTemplate.WeaponCat =='canister';
-}
-
+//	-----------------------------------------------------------------------------------------------------------------------------------
+//														FINALIZE ABILITIES FOR INIT
+//	-----------------------------------------------------------------------------------------------------------------------------------
 static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
 {
 	local AbilitySetupData			NewSetupData;
@@ -1365,7 +555,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 					break;
 			}
 		}
-		`LOG("Grant BIT and GREMLIN abilities:" @ default.BIT_GrantsAbilitiesToSPARK.Length @ default.GREMLIN_GrantsAbilitiesToSPARK.Length,, 'WOTCMoreSparkWeapons');
+		//`LOG("Grant BIT and GREMLIN abilities:" @ default.BIT_GrantsAbilitiesToSPARK.Length @ default.GREMLIN_GrantsAbilitiesToSPARK.Length,, 'WOTCMoreSparkWeapons');
 		//	GRANT GREMLIN ABILITIES
 		if (GremlinRef.ObjectID > 0)
 		{
@@ -1380,7 +570,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 		{
 			foreach default.BIT_GrantsAbilitiesToSPARK(TemplateName)
 			{
-				`LOG("Granting BIT ability:" @ TemplateName,, 'WOTCMoreSparkWeapons');
+				//`LOG("Granting BIT ability:" @ TemplateName,, 'WOTCMoreSparkWeapons');
 				GrantAbility(TemplateName, AbilityTemplateManager, BITRef, SetupData);
 			}
 		}
@@ -1406,7 +596,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 				case 'PlasmaBlaster':
 					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
 					{
-						`LOG("Finalize abilities:: removing ability:" @ SetupData[Index].TemplateName @ "from unit:" @ UnitState.GetFullName() @ "because it references a BIT heavy weapon",, 'WOTCMoreSparkWeapons');
+						//`LOG("Finalize abilities:: removing ability:" @ SetupData[Index].TemplateName @ "from unit:" @ UnitState.GetFullName() @ "because it references a BIT heavy weapon",, 'WOTCMoreSparkWeapons');
 						SetupData.Remove(Index, 1);
 					}
 					break;
@@ -1419,7 +609,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 				case 'SparkPlasmaBlaster':
 					if (!DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState)) 
 					{
-						`LOG("Finalize abilities:: removing ability:" @ SetupData[Index].TemplateName @ "from unit:" @ UnitState.GetFullName() @ "because it DOES NOT reference a BIT heavy weapon:" @ StartState != none,, 'WOTCMoreSparkWeapons');
+						//`LOG("Finalize abilities:: removing ability:" @ SetupData[Index].TemplateName @ "from unit:" @ UnitState.GetFullName() @ "because it DOES NOT reference a BIT heavy weapon:" @ StartState != none,, 'WOTCMoreSparkWeapons');
 						SetupData.Remove(Index, 1);
 					}
 					break;
@@ -1498,20 +688,6 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 		}
 	}
 }
-
-static private function name GetWeaponRefTemplateName(StateObjectReference WeaponRef)
-{
-	local XComGameState_Item ItemState;
-
-	ItemState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(WeaponRef.ObjectID));
-
-	if (ItemState != none)
-	{
-		return ItemState.GetMyTemplateName();
-	}
-	return '';
-}
-
 static private function GrantAbility(name TemplateName, X2AbilityTemplateManager AbilityTemplateManager, StateObjectReference WeaponRef, out array<AbilitySetupData> SetupData)
 {
 	local X2AbilityTemplate			AbilityTemplate;
@@ -1555,7 +731,7 @@ static private function bool IsUnitValidTransferWeaponTarget(const XComGameState
 	return WeaponTemplate != none && WeaponTemplate.WeaponCat == 'sparkbit';
 }
 
-static function bool DoesThisRefBitHeavyWeapon(const StateObjectReference Ref, const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+static private function bool DoesThisRefBitHeavyWeapon(const StateObjectReference Ref, const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
     local XComGameState_Item					ItemState;
 	local XComGameState_Effect_TransferWeapon	TransferWeaponState;	
@@ -1572,16 +748,16 @@ static function bool DoesThisRefBitHeavyWeapon(const StateObjectReference Ref, c
     
 	if (ItemState != none)
 	{
-		`LOG("DoesThisRefBitHeavyWeapon:: inventory slot is:" @ ItemState.InventorySlot @ Ref.ObjectID,, 'WOTCMoreSparkWeapons');
+		//`LOG("DoesThisRefBitHeavyWeapon:: inventory slot is:" @ ItemState.InventorySlot @ Ref.ObjectID,, 'WOTCMoreSparkWeapons');
 		if (ItemState.InventorySlot == class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot)
 			return true;
 
 		TransferWeaponState = XComGameState_Effect_TransferWeapon(UnitState.GetUnitAffectedByEffectState(class'X2Effect_TransferWeapon'.default.EffectName));
 
-		if (TransferWeaponState != none)
-		{
-			`LOG("DoesThisRefBitHeavyWeapon:: TransferWeaponState.TransferWeaponRef" @ TransferWeaponState.TransferWeaponRef.ObjectID,, 'WOTCMoreSparkWeapons');
-		}
+		//if (TransferWeaponState != none)
+		//{
+		//	`LOG("DoesThisRefBitHeavyWeapon:: TransferWeaponState.TransferWeaponRef" @ TransferWeaponState.TransferWeaponRef.ObjectID,, 'WOTCMoreSparkWeapons');
+		//}
 		
 		return TransferWeaponState != none && TransferWeaponState.TransferWeaponRef == Ref;
 	}
@@ -1589,7 +765,7 @@ static function bool DoesThisRefBitHeavyWeapon(const StateObjectReference Ref, c
 	return false;
 }
 
-static function bool DoesThisRefAuxSlotItem(const StateObjectReference Ref)
+static private function bool DoesThisRefAuxSlotItem(const StateObjectReference Ref)
 {
     local XComGameState_Item ItemState;
 
@@ -1606,191 +782,1055 @@ private static function bool WeaponHasSpeedLoader(const XComGameState_Item ItemS
 
 	return UpgradeNames.Find('IRI_SpeedLoader_Upgrade') != INDEX_NONE;
 }
-
-static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, optional XComGameState_Item ItemState=none)
+//	-----------------------------------------------------------------------------------------------------------------------------------
+//														CAN ADD ITEM TO INVENTORY
+//	-----------------------------------------------------------------------------------------------------------------------------------
+static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, int Quantity, XComGameState_Unit UnitState, optional XComGameState CheckGameState, optional out string DisabledReason, optional XComGameState_Item ItemState) 
 {
-    Local XComGameState_Item	InternalWeaponState, SecondaryWeaponState;
-	local XComGameState_Unit	UnitState;
-	local X2GrenadeTemplate		GrenadeTemplate;
-	local X2WeaponTemplate		WeaponTemplate;
-	local XComContentManager	Content;
+    local XGParamTag                    LocTag;
+    local bool							OverrideNormalBehavior;
+    local bool							DoNotOverrideNormalBehavior;
+    local X2SoldierClassTemplateManager Manager;
 
-    if (ItemState == none) 
+    OverrideNormalBehavior = CheckGameState != none;
+    DoNotOverrideNormalBehavior = CheckGameState == none;
+
+    if(DisabledReason != "")
+        return DoNotOverrideNormalBehavior;
+
+	
+	if (IsItemSpecialShell(ItemTemplate.DataName))
 	{	
-		InternalWeaponState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(WeaponArchetype.ObjectID));
-		`redscreen("SPARK Weapons: Weapon Initialized -> Had to reach into history to get Internal Weapon State.-Iridar");
-	}
-	else InternalWeaponState = ItemState;
-
-	if (InternalWeaponState != none)
-	{
-		UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(InternalWeaponState.OwnerStateObject.ObjectID));
-		WeaponTemplate = X2WeaponTemplate(InternalWeaponState.GetMyTemplate());
-
-		if (UnitState != none && WeaponTemplate != none && !UnitState.GetMyTemplate().bIsCosmetic)
+		//	Can't equip Munitions Mount and special shells at the same time.
+		if (DoesUnitHaveMunitionsMount(UnitState, CheckGameState))
 		{
-			
-			if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+			DisabledReason = default.str_ShellsMutuallyExclusiveWithMunitionsMount;
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}//	Also can't equip MM and Shells on non-SPARKS.
+		else if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+		{
+			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+			LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
+			DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}
+	}
+
+	if (IsItemMunitionsMount(ItemTemplate.DataName))
+	{	
+		if (DoesUnitHaveSpecialShells(UnitState, CheckGameState))
+		{
+			DisabledReason = default.str_MunitionsMountMutuallyExclusiveWithShells;
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}
+		else if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+		{
+			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+			LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
+			DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}
+	}
+		
+	//	If we're trying to equip an Autogun
+	//	EDIT: Allow equipping two autoguns for the purposes of having another one being transferred via Aid Protocol
+	if (default.ONE_AUTOGUN_PER_SOLDIER && (ItemTemplate.DataName == 'IRI_Heavy_Autogun' || ItemTemplate.DataName == 'IRI_Heavy_Autogun_MK2')) 
+	{
+		if (UnitState.HasItemOfTemplateType('IRI_Heavy_Autogun', CheckGameState) || UnitState.HasItemOfTemplateType('IRI_Heavy_Autogun_MK2', CheckGameState))
+		{
+			//	Autogun already equipped, forbid equipping another one. Unlike other heavy weapons, having two AutoGuns is redundant.
+			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+			LocTag.StrValue0 = ItemTemplate.FriendlyName;
+			DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strCategoryRestricted));
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}	
+	}
+	//	SPARK-only changes past this point.
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+		return DoNotOverrideNormalBehavior;
+
+	//	Complains about "missing allowed soldier class" without this. WTF?!
+	if (IsItemCanister(ItemTemplate))
+	{
+		bCanAddItem = 1;
+		return OverrideNormalBehavior;
+	}
+	//	Can't equip Heavy Strike Module on SPARK.
+	if (ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T1' || ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T2')
+	{
+		Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+		LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
+		LocTag.StrValue0 = Manager.FindSoldierClassTemplate(UnitState.GetSoldierClassTemplateName()).DisplayName;
+		DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(`XEXPAND.ExpandString(class'UIArmory_Loadout'.default.m_strUnavailableToClass));
+		bCanAddItem = 0;
+		return OverrideNormalBehavior;
+	}
+    return DoNotOverrideNormalBehavior;
+}
+
+private static function bool DoesUnitHaveMunitionsMount(const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	local XComGameState_Item ItemState;
+
+	ItemState = UnitState.GetItemInSlot(class'X2Item_Shells_T1'.default.INVENTORY_SLOT, CheckGameState);
+
+	if (ItemState != none && ItemState.GetMyTemplateName() == 'IRI_Shells_T1')
+	{
+		return true;
+	}
+
+	if (class'X2Item_Shells_T1'.default.INVENTORY_SLOT != class'X2Item_Shells_T2'.default.INVENTORY_SLOT)
+	{
+		ItemState = UnitState.GetItemInSlot(class'X2Item_Shells_T2'.default.INVENTORY_SLOT, CheckGameState);
+
+		return ItemState != none && ItemState.GetMyTemplateName() == 'IRI_Shells_T2';
+	}
+	return false;
+}
+
+private static function bool IsItemSpecialShell(const name TemplateName)
+{
+	switch (TemplateName)
+	{
+		case 'IRI_Shell_HEAT':
+		case 'IRI_Shell_HE':
+		case 'IRI_Shell_Shrapnel':
+		case 'IRI_Shell_HEDP':
+		case 'IRI_Shell_HESH':
+		case 'IRI_Shell_Flechette':
+			return true;
+		default:
+			return false;
+	}
+}
+
+private static function bool IsItemMunitionsMount(const name TemplateName)
+{
+	switch (TemplateName)
+	{
+		case 'IRI_Shells_T1':
+		case 'IRI_Shells_T2':
+			return true;
+		default:
+			return false;
+	}
+}
+
+private static function bool DoesUnitHaveSpecialShells(const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	local XComGameState_Item ItemState;
+
+	ItemState = UnitState.GetItemInSlot(class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot, CheckGameState);
+
+	return ItemState != none && IsItemSpecialShell(ItemState.GetMyTemplateName());
+}
+
+private static function bool IsItemCanister(const X2ItemTemplate ItemTemplate)
+{
+	local X2WeaponTemplate	WeaponTemplate;
+
+	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
+
+	return WeaponTemplate != none && WeaponTemplate.WeaponCat =='canister';
+}
+
+//	-----------------------------------------------------------------------------------------------------------------------------------
+//														DLC APPEND SOCKETS
+//	-----------------------------------------------------------------------------------------------------------------------------------
+static function string DLCAppendSockets(XComUnitPawn Pawn)
+{
+	local XComGameState_Unit UnitState;
+
+	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Pawn.ObjectID));
+	if (UnitState == none)
+		return "";
+
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
+	{
+		return "IRIOrdnanceLauncher.Meshes.Spark_Sockets";
+	}
+	if (UnitState.IsSoldier())
+	{
+		if (UnitState.kAppearance.iGender == eGender_Male)
+		{
+			return "IRIKineticStrikeModule.Meshes.SM_SoldierSockets_M";
+		}
+		else
+		{
+			return "IRIKineticStrikeModule.Meshes.SM_SoldierSockets_F";
+		}
+	}
+	return "";
+}
+//	-----------------------------------------------------------------------------------------------------------------------------------
+//														UPDATE ANIMATIONS
+//	-----------------------------------------------------------------------------------------------------------------------------------
+static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameState_Unit UnitState, XComUnitPawn Pawn)
+{
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && UnitHasBallisticShieldEquipped(UnitState))
+	{
+		//	Shield animations need to be added here to replace the Walk Back animation on the Avenger. They also contain a Deflect animation.
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_BallisticShield")));
+	}
+}
+static private function bool UnitHasBallisticShieldEquipped(const XComGameState_Unit UnitState)
+{
+	local XComGameState_Item SecondaryWeapon;
+
+	SecondaryWeapon = UnitState.GetSecondaryWeapon();
+
+	return SecondaryWeapon != none && SecondaryWeapon.GetWeaponCategory() == 'shield';
+}
+
+//	-----------------------------------------------------------------------------------------------------------------------------------
+//														MISC
+//	-----------------------------------------------------------------------------------------------------------------------------------
+static function OverrideItemImage(out array<string> imagePath, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, XComGameState_Unit UnitState)
+{
+	local XComGameState_HeadquartersXCom XComHQ;
+
+	if (ItemTemplate.DataName == 'IRI_RestorativeMist_CV')
+	{
+		XComHQ = XComGameState_HeadquartersXCom(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom', true));
+
+		if (XComHQ != None && XComHQ.IsTechResearched('BattlefieldMedicine'))
+		{
+			imagePath.Length = 0;
+			imagePath.AddItem("img:///IRIRestorativeMist.UI.Inv_RestorativeMist_Nano");
+			//`LOG("Adding resto mist icon.",, 'IRITEST');
+		}
+	}
+}
+
+static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2WeaponUpgradeTemplate UpgradeTemplate)
+{
+	local name DisallowedUpgradeName;
+
+	switch (WeaponState.GetMyTemplateName())
+	{
+		case 'IRI_ArtilleryCannon_CV':
+		case 'IRI_ArtilleryCannon_MG':
+		case 'IRI_ArtilleryCannon_BM':
+			foreach default.DisallowedWeaponUpgradeNames(DisallowedUpgradeName)
 			{
-				//	If this heavy weapon is equipped on a non-SPARK in the BIT-granted heavy weapon slot, replace its firing animations with point finger ones.
-				if (InternalWeaponState.InventorySlot == class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot)
+				if (InStr(UpgradeTemplate.DataName, DisallowedUpgradeName) > INDEX_NONE)
 				{
-					Weapon.CustomUnitPawnAnimsets.Length = 0;
-					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
-
-					//	Autogun's game archetype already specifies the correct animation name
-					if (WeaponTemplate.DataName != 'IRI_Heavy_Autogun' && WeaponTemplate.DataName != 'IRI_Heavy_Autogun_MK2')
-					{
-						Weapon.WeaponFireAnimSequenceName = name(Weapon.WeaponFireAnimSequenceName $ 'BIT');
-					}
-
-					//`LOG("Replacing firing animation name for:" @ WeaponTemplate.DataName @ "on unit:" @ UnitState.GetFullName() @ "to:" @ Weapon.WeaponFireAnimSequenceName,, 'IRITEST');
-					//	This will hide the weapon from the soldier's body.
-					Weapon.DefaultSocket = '';
+					return false;
 				}
-				return;
 			}
+			return true;
+		default:
+			return true;
+			
+	}
+	return true;
+}
 
-			//	Initial checks complete, this is a weapon equipped on a SPARK.
-			Content = `CONTENT;
+//	===================================================================================================================================
+//														ON LOADED SAVE GAME
+//	===================================================================================================================================
+static event OnLoadedSavedGame()
+{
+	OnLoadedSavedGameToStrategy();
+}
 
-			switch (WeaponTemplate.WeaponCat)
-			{
-				//	Ballistic Shields
-				case 'shield':
-					Weapon.DefaultSocket = 'iri_spark_ballistic_shield';
-					Weapon.CustomUnitPawnAnimsets.Length = 0;
-					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
-					return;
-				//	Swords
-				//case 'sword':
-				//	Weapon.DefaultSocket = 'iri_spark_sword';
-				//	Weapon.CustomUnitPawnAnimsets.Length = 0;
-				//	Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
-				//	return;
-				//	If this is an Ordnance Launcher and the Rocket Launchers mod is present, add Weapon Animations for firing rockets.
-				case 'iri_ordnance_launcher': 
-					if (default.bRocketLaunchersModPresent)
-					{
-						switch (WeaponTemplate.WeaponTech)
-						{
-							case 'magnetic':
-								SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_MG_Rockets")));
-								return;
-							case 'beam':
-								SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_BM_Rockets")));
-								return;
-							case 'conventional':
-							default:
-								SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_CV_Rockets")));
-								return;
-						}	
-					}
-				case 'heavy':
-					//	If this Heavy Weapon is not in the slot granted by the BIT, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
-					if (InternalWeaponState.InventorySlot != class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot || default.bAlwaysUseArmCannonAnimationsForHeavyWeapons)
-					{
-						//	Don't do anything to Resto Mist and Electro Pulse in Aux or regular Heavy Weapon slot
-						if (WeaponTemplate.DataName == 'IRI_RestorativeMist_CV' || WeaponTemplate.DataName == 'IRI_ElectroPulse_CV')
-							return; 
+static event InstallNewCampaign(XComGameState StartState)
+{
+	AddSparkSquaddieWeapons(StartState);
+}
 
-						//	Replace the mesh for this heavy weapon with the arm cannon and replace the weapon and pawn animations.
-						Weapon.CustomUnitPawnAnimsets.Length = 0;
-						Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Spark")));
-						SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("IRISparkHeavyWeapons.Meshes.SM_SparkHeavyWeapon"));
-						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Weapon")));
+static event OnLoadedSavedGameToStrategy()
+{
+	local XComGameStateHistory				History;
+	local XComGameState						NewGameState;
+	local XComGameState_HeadquartersXCom	XComHQ;
+	local XComGameState_Item				ItemState;
+	local X2ItemTemplate					ItemTemplate;
+	local name								TemplateName;
+	local X2ItemTemplateManager				ItemMgr;
+	local bool								bChange;
+	local X2StrategyElementTemplateManager	StratMgr;
+	local StateObjectReference				UnitRef;
+	local XComGameState_Unit				UnitState;
+	local array<name>						GrantAbilities;
+	local SoldierClassAbilityType			AbilityStruct;
+	local int RemoveIndex;
+	local int i;
 
-						//	Bandaid patch to play a different animation with a different weapon charging sound.
-						if (WeaponTemplate.DataName == 'IRI_Heavy_Autogun_MK2')
-						{
-							Weapon.WeaponFireAnimSequenceName = 'FF_FireLAC_MK2';
-						}
 
-						//`LOG("Weapon Initialized -> Patched heavy weapon for a SPARK.",, 'IRITEST');
-					}
-					else	//	If this weapon IS in the BIT-granted heavy weapon slot, then blanket out its default socket so it doesn't appear on the SPARK, clipping ugly through its arm.
-					{
-						Weapon.DefaultSocket = '';
-					}
-					return;
-				default:
-					break;
+	History = `XCOMHISTORY;	
+	XComHQ = `XCOMHQ;
+	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();	
+
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("WOTCMoreSparkWeapons: Add Starting Items");
+	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+
+	//	-------------------------------------------------------------------------
+	//	ADD STARTING ITEMS TO HQ INVENTORY
+
+	//	Add an instance of the specified item template into HQ inventory
+	foreach default.StartingItemsToAddOnSaveLoad(TemplateName)
+	{
+		ItemTemplate = ItemMgr.FindItemTemplate(TemplateName);
+
+		//	If the item is not in the HQ Inventory already
+		if (ItemTemplate != none && !XComHQ.HasItem(ItemTemplate))
+		{
+			//	If it's a starting item or if the schematic this item is created by is present in the HQ inventory
+			if (ItemTemplate.StartingItem || ItemTemplate.CreatorTemplateName != '' && XComHQ.HasItemByName(ItemTemplate.CreatorTemplateName))
+			{	
+				ItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+				NewGameState.AddStateObject(ItemState);
+				XComHQ.AddItemToHQInventory(ItemState);	
+
+				bChange = true;
 			}
+		}
+	}
 
-			//	If the rocket launchers mod is installed
-			if (default.bRocketLaunchersModPresent)
+	//	-------------------------------------------------------------------------
+	//	ADD SPARK SQUADDIE ITEMS TO HQ INVENTORY, if necessary
+
+	if (AddSparkSquaddieWeapons(NewGameState))
+	{
+		bChange = true;
+	}
+
+	//	-------------------------------------------------------------------------
+	//	CHANGE ABILITIES OF EXISTING SPARK AND MEC TROOPERS, if necessary
+	
+	foreach XComHQ.Crew(UnitRef)
+	{
+		UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UnitRef.ObjectID));
+		if (UnitState.IsSoldier() && default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
+		{
+			GrantAbilities = default.AbilitiesToGrant;
+			for (i = UnitState.AbilityTree[0].Abilities.Length - 1; i >= 0; i--)
 			{
-				//	And this weapon is a rocket
-				GrenadeTemplate = X2GrenadeTemplate(InternalWeaponState.GetMyTemplate());
-				if (GrenadeTemplate != none && GrenadeTemplate.WeaponCat == 'rocket')
+				if (default.AbilitiesToRemove.Find(UnitState.AbilityTree[0].Abilities[i].AbilityName) != INDEX_NONE)
 				{
-					//	Check if the Secondary Weapon is an Ordnance Launcher
-					SecondaryWeaponState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon);
-					if (SecondaryWeaponState != none)
-					{
-						WeaponTemplate = X2WeaponTemplate(SecondaryWeaponState.GetMyTemplate());
+					UnitState.AbilityTree[0].Abilities.Remove(i, 1);
+				}
+				else 
+				{
+					RemoveIndex = GrantAbilities.Find(UnitState.AbilityTree[0].Abilities[i].AbilityName);
+					if (RemoveIndex != INDEX_NONE)
+					{	
+						GrantAbilities.Remove(RemoveIndex, 1);
 					}
-					if (WeaponTemplate != none && WeaponTemplate.WeaponCat == 'iri_ordnance_launcher')
+				}
+			}
+
+			for (i = 0; i < GrantAbilities.Length; i++)
+			{
+				AbilityStruct.AbilityName = GrantAbilities[i];
+				UnitState.AbilityTree[0].Abilities.AddItem(AbilityStruct);
+				UnitState.BuySoldierProgressionAbility(NewGameState, 0, UnitState.AbilityTree[0].Abilities.Length);
+			}
+		}
+	}
+
+	if (bChange)
+	{
+		History.AddGameStateToHistory(NewGameState);
+	}
+	else
+	{
+		History.CleanupPendingGameState(NewGameState);
+	}
+
+	//	Add Tech Templates
+	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
+	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ArmCannon_Tech');
+	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ImprovedShells_Tech');
+	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ExperimentalShells_Tech');
+		
+}
+
+static private function bool AddSparkSquaddieWeapons(XComGameState AddToGameState)
+{
+	local XComGameStateHistory				History;
+	local XComGameState_HeadquartersXCom	XComHQ;
+	local XComGameState_Item				ItemState;
+	local X2ItemTemplate					ItemTemplate;
+	local name								TemplateName;
+	local X2ItemTemplateManager				ItemMgr;
+	local bool								bChange;
+	local StateObjectReference				SparkRef;
+	local name								SquaddieLoadout;
+	local XComGameState_Unit				UnitState;
+	local InventoryLoadout					Loadout;
+	local int i;
+
+	History = `XCOMHISTORY;	
+	
+	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+
+	foreach AddToGameState.IterateByClassType(class'XComGameState_HeadquartersXCom', XComHQ)
+	{
+		break;
+	}
+	if (XComHQ == none)
+	{
+		XComHQ = `XCOMHQ;
+		XComHQ = XComGameState_HeadquartersXCom(AddToGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+	}
+	//	Add starting SPARK Equipment if there is a SPARK in the Barracks but their weapons aren't. Can happen when using Starting Spark mod.
+	//	Being comprehensive here. Cycle through all configured character templates.
+	foreach default.SparkCharacterTemplates(TemplateName)
+	{
+		//	If there's a unit of such template in HQ barracks
+		SparkRef = XComHQ.GetSoldierRefOfTemplate(TemplateName);
+		if (SparkRef.ObjectID > 0)
+		{
+			UnitState = XComGameState_Unit(History.GetGameStateForObjectID(SparkRef.ObjectID));
+			if (UnitState != none)
+			{
+				//	then find its squaddie loadout
+				SquaddieLoadout = UnitState.GetSoldierClassTemplate().SquaddieLoadout;
+				foreach ItemMgr.Loadouts(Loadout)
+				{
+					if (Loadout.LoadoutName == SquaddieLoadout)
 					{
-						//	Replace the rocket's Pawn Animations with the ones made for the Ordnance Launcher.
-						Weapon.CustomUnitPawnAnimsets.Length = 0;
-						//	Firing animations
-						//	Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRIOrdnanceLauncher.Anims.AS_OrdnanceLauncher")));
+						//`LOG("Found loadout:" @ SquaddieLoadout,, 'WOTCMoreSparkWeapons');
 
-						//	Give Rocket and stuff. Take Rocket is added to character templates in Rocket Launchers mod, because eveery spark must be able to Take Rockets before their Weapon is initialized.
-						Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket")));
-
-						//	Attach additional Anim Sets based on the tier of the launcher.
-						switch (WeaponTemplate.WeaponTech)
+						//	Cycle through all items in the loadout
+						for (i = 0; i < Loadout.Items.Length; i++)
 						{
-							case 'magnetic':
-								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_MG")));
-								break;
-							case 'beam':
-								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_BM")));
-								break;
-							case 'conventional':
-							//	Basic anims are enough for conventional.
-							default:
-								break;
-						}	
-						//	T3 Lockon rocket gets its own firing animation with a different Play Socket Animation notify to play a different "rocket flying in the sky" cosmetic PFX.
-						if (GrenadeTemplate.DataName == 'IRI_X2Rocket_Lockon_T3')
-						{	
-							switch (WeaponTemplate.WeaponTech)
+							ItemTemplate = ItemMgr.FindItemTemplate(Loadout.Items[i].Item);
+							
+							//	If there's no particular item in HQ Inventory
+							if (ItemTemplate != none && !XComHQ.HasItem(ItemTemplate))
 							{
-								case 'magnetic':
-									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_MG")));
-									break;
-								case 'beam':
-									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_BM")));
-									break;
-								case 'conventional':
-									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3")));
-								default:
-									break;
+								//	Add it.
+								//	On a side note, not enjoying fixing other people's shit within the context of my mods.
+								ItemState = ItemTemplate.CreateInstanceFromTemplate(AddToGameState);
+								AddToGameState.AddStateObject(ItemState);
+								XComHQ.AddItemToHQInventory(ItemState);	
+
+								bChange = true;
 							}
 						}
+						//	Exit "cycle through loadouts" cycle.
+						break;
 					}
 				}
 			}
 		}
-	}		
+	}
+
+	return bChange;
 }
 
-/*ca
-static private function bool HasShieldEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+static private function AddProvingGroundsProjectIfItsNotPresent(X2StrategyElementTemplateManager StratMgr, name ProjectName)
 {
-	local XComGameState_Item ItemState;
+	local XComGameState		NewGameState;
+	local X2TechTemplate	TechTemplate;
 
-	ItemState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
-	if (ItemState != none)
+	if (!IsResearchInHistory(ProjectName))
 	{
-		return ItemState.GetWeaponCategory() == 'shield';
+		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Adding Research Templates");
+
+		TechTemplate = X2TechTemplate(StratMgr.FindStrategyElementTemplate(ProjectName));
+		NewGameState.CreateNewStateObject(class'XComGameState_Tech', TechTemplate);
+
+		`XCOMHISTORY.AddGameStateToHistory(NewGameState);
+	}
+}
+
+static private function bool IsResearchInHistory(name ResearchName)
+{
+	// Check if we've already injected the tech templates
+	local XComGameState_Tech	TechState;
+	local XComGameStateHistory	History;
+	
+	History = `XCOMHISTORY;
+
+	foreach History.IterateByClassType(class'XComGameState_Tech', TechState)
+	{
+		if ( TechState.GetMyTemplateName() == ResearchName )
+		{
+			return true;
+		}
 	}
 	return false;
 }
-*/
+
+//	----------------------------------------------------------------------------------------------------------------------------------
+
+static event OnPostTemplatesCreated()
+{
+	PatchSoldierClassTemplates();
+	PatchCharacterTemplates();
+	PatchAbilityTemplates();
+	PatchWeaponTemplates();
+	class'KSMHelper'.static.AddDeathAnimSetsToCharacterTemplates();
+	class'X2Item_ArtilleryCannon_CV'.static.UpdateMods();
+	class'X2Item_ArtilleryCannon_MG'.static.UpdateMods();
+	class'X2Item_ArtilleryCannon_BM'.static.UpdateMods();
+	class'X2Item_SparkArsenal'.static.PatchWeaponUpgrades();
+}
+
+//	===================================================================================================================================
+//														PATCH SOLDIER CLASS TEMPLATES
+//	===================================================================================================================================
+static private function PatchSoldierClassTemplates()
+{		
+	local name TemplateName;
+
+	foreach default.AffectClasses(TemplateName)
+	{
+		ModifyTemplateAllDiff(TemplateName, class'X2SoldierClassTemplate', PatchSoldierClassTemplate);
+	}	 
+}
+static private function PatchSoldierClassTemplate(X2DataTemplate DataTemplate)
+{
+	local X2SoldierClassTemplate	SoldierClassTemplate;
+	local SoldierClassAbilitySlot	NewSlot;
+	local name						AbilityTemplateName;
+	local int i;
+
+	SoldierClassTemplate = X2SoldierClassTemplate(DataTemplate);
+
+	//	Requires unprotecting X2SoldierClassTemplate::SoldierRanks
+	if (SoldierClassTemplate != none && SoldierClassTemplate.SoldierRanks.Length > 0)
+	{
+		for (i = SoldierClassTemplate.SoldierRanks[0].AbilitySlots.Length - 1; i >= 0; i--)
+		{
+			if (default.AbilitiesToRemove.Find(SoldierClassTemplate.SoldierRanks[0].AbilitySlots[i].AbilityType.AbilityName) != INDEX_NONE)
+			{
+				SoldierClassTemplate.SoldierRanks[0].AbilitySlots.Remove(i, 1);
+			}
+		}
+		foreach default.AbilitiesToGrant(AbilityTemplateName)
+		{
+			NewSlot.AbilityType.AbilityName = AbilityTemplateName;
+			SoldierClassTemplate.SoldierRanks[0].AbilitySlots.AddItem(NewSlot);
+		}
+	}		
+}
+
+//	===================================================================================================================================
+//														PATCH CHARACTER TEMPLATES
+//	===================================================================================================================================
+static private function PatchCharacterTemplates()
+{
+    local X2CharacterTemplateManager    CharMgr;
+    local X2CharacterTemplate           CharTemplate;
+	local name							CharTemplateName;
+	local array<X2DataTemplate>			DifficultyVariants;
+	local X2DataTemplate				DifficultyVariant;
+	local X2DataTemplate				DataTemplate;
+	local XComContentManager			Content;
+	
+    CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+	Content = `CONTENT;
+
+	foreach default.SparkCharacterTemplates(CharTemplateName)
+	{
+		CharMgr.FindDataTemplateAllDifficulties(CharTemplateName, DifficultyVariants);
+		foreach DifficultyVariants(DifficultyVariant)
+		{
+			CharTemplate = X2CharacterTemplate(DifficultyVariant);
+
+			if (CharTemplate != none)
+			{
+				//	Remove Active Camo from char templates. We'll add it to BIT instead.
+				CharTemplate.Abilities.RemoveItem('ActiveCamo');
+				//	Add an ability that debuffs detection radius when concealed
+				CharTemplate.Abilities.AddItem('IRI_SparkDebuffConcealment');
+
+				if (class'X2StrategyElement_BITHeavyWeaponSlot'.default.BIT_Grants_HeavyWeaponSlot)
+				{
+					CharTemplate.Abilities.AddItem('IRI_GiveHeavyWeapon');				
+				}
+				//	Always attach Lockon Matinee cuz it's also used by Bombard
+				CharTemplate.strMatineePackages.AddItem("CIN_IRI_Lockon");
+			
+				CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideSpark");
+				CharTemplate.strMatineePackages.AddItem("CIN_IRI_QuickWideHighSpark");
+
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_LAC_Spark")));
+
+				//	The loadout contains the item required for SPARKs to hack; a replacement for the regular XPad.
+				CharTemplate.RequiredLoadout = 'RequiredSpark';
+				//	Animations don't work when given through weapon archetype, for some reason.
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_Hack")));	
+				
+				//	These hunker down animations are used by Ballistic Shields' Shield Wall ability, but they'll work for any effect named HunkerDown
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Spark_HunkerDown")));			
+			}
+		}
+
+		//	Cycle through all "humanoid" character templates that are used by the game to create player-controllable soldiers
+		foreach CharMgr.IterateTemplates(DataTemplate, none)
+		{
+			CharMgr.FindDataTemplateAllDifficulties(DataTemplate.DataName, DifficultyVariants);
+			foreach DifficultyVariants(DifficultyVariant)
+			{
+				CharTemplate = X2CharacterTemplate(DifficultyVariant);
+
+				if (CharTemplate != none && CharTemplate.bIsSoldier && CharTemplate.UnitHeight == 2 && CharTemplate.UnitSize == 1 && CharTemplate.OnCosmeticUnitCreatedFn == none)
+				{
+					//	This will copy the Heavy Weapon in the Aux Weapon slot to BIT's heavy weapon slot.
+					CharTemplate.OnCosmeticUnitCreatedFn = SoldierCosmeticBITUnitCreated;
+
+					//	Add AnimSet with Active Camo
+					CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_ActiveCamo_Soldier")));
+
+					//	Add AnimSet with firing Heavy Weapon animations 
+					CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Soldier_BIT")));
+				}
+			}
+		}
+	}
+}
+
+static private function SoldierCosmeticBITUnitCreated(XComGameState_Unit CosmeticUnit, XComGameState_Unit OwnerUnit, XComGameState_Item SourceItem, XComGameState StartGameState)
+{
+	local XComGameState_Item SparkHeavyWeapon, BitHeavyWeapon;
+
+	SparkHeavyWeapon = OwnerUnit.GetItemInSlot(class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot);
+	if (SparkHeavyWeapon != none)
+	{
+		BitHeavyWeapon = SparkHeavyWeapon.GetMyTemplate().CreateInstanceFromTemplate(StartGameState);
+		CosmeticUnit.bIgnoreItemEquipRestrictions = true;
+		CosmeticUnit.AddItemToInventory(BitHeavyWeapon, eInvSlot_HeavyWeapon, StartGameState);
+		CosmeticUnit.bIgnoreItemEquipRestrictions = false;
+
+		XGUnit(CosmeticUnit.GetVisualizer()).ApplyLoadoutFromGameState(CosmeticUnit, StartGameState);
+	}
+}
+
+//	===================================================================================================================================
+//														PATCH ABILITY TEMPLATES
+//	===================================================================================================================================
+static private function PatchAbilityTemplates()
+{	
+	local X2AbilityTemplateManager  AbilityTemplateManager;
+	local name AbilityName;
+
+	//	Make Bulwark override the shield generation passive ability on Ballistic Shields. This is necessary for Bulwark to correclty interact with Shield Wall, which also grants High Cover.
+	ModifyTemplateAllDiff('Bulwark', class'X2AbilityTemplate', PatchBulwarkTemplate);
+	ModifyTemplateAllDiff('RoboticChassis', class'X2AbilityTemplate', PatchBulwarkTemplate); //	Mechatronic Warfare
+
+	//	Make using Aid Protocol with BIT transfer the control of the BIT's heavy weapon to the targeted soldier
+	ModifyTemplateAllDiff('AidProtocol', class'X2AbilityTemplate', PatchAidProtocolTemplate);
+
+	foreach default.AbilitiesToAddProperKnockback(AbilityName)
+	{
+		ModifyTemplateAllDiff(AbilityName, class'X2AbilityTemplate', GiveProperKnockbackToAbility);
+	}
+
+	foreach default.AbilitiesRequireBITorGREMLIN(AbilityName)
+	{
+		ModifyTemplateAllDiff(AbilityName, class'X2AbilityTemplate', AddGremlinOrBitRequiredCondition);
+	}
+
+	//	Have to nuke conditions on these abilities so that regular soldiers can fire heavy weapon through BIT
+	ModifyTemplateAllDiff('SparkRocketLauncher',	class'X2AbilityTemplate',		ReplaceSparkShooterConditionOnAbility);
+	ModifyTemplateAllDiff('SparkShredderGun',		class'X2AbilityTemplate',			ReplaceSparkShooterConditionOnAbility);
+	ModifyTemplateAllDiff('SparkShredstormCannon',	class'X2AbilityTemplate',	ReplaceSparkShooterConditionOnAbility);
+	ModifyTemplateAllDiff('SparkFlamethrower',		class'X2AbilityTemplate',		ReplaceSparkShooterConditionOnAbility);
+	ModifyTemplateAllDiff('SparkFlamethrowerMk2',	class'X2AbilityTemplate',		ReplaceSparkShooterConditionOnAbility);
+	ModifyTemplateAllDiff('SparkBlasterLauncher',	class'X2AbilityTemplate',		ReplaceSparkShooterConditionOnAbility);
+	ModifyTemplateAllDiff('SparkPlasmaBlaster',		class'X2AbilityTemplate',		ReplaceSparkShooterConditionOnAbility);
+	
+	IterateTemplatesAllDiff(class'X2AbilityTemplate', AddNewRainmakerEffect);
+
+    //  Get the Ability Template Manager.
+    AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+
+	CopyLocalization(AbilityTemplateManager, 'IRI_SparkRocketLauncher', 'SparkRocketLauncher');
+	CopyLocalization(AbilityTemplateManager, 'IRI_SparkShredderGun', 'SparkShredderGun');
+	CopyLocalization(AbilityTemplateManager, 'IRI_SparkShredstormCannon', 'SparkShredstormCannon');
+	CopyLocalization(AbilityTemplateManager, 'IRI_SparkFlamethrower', 'SparkFlamethrower');
+	CopyLocalization(AbilityTemplateManager, 'IRI_SparkFlamethrowerMk2', 'SparkFlamethrowerMk2');
+	CopyLocalization(AbilityTemplateManager, 'IRI_SparkBlasterLauncher', 'SparkBlasterLauncher');
+	CopyLocalization(AbilityTemplateManager, 'IRI_SparkPlasmaBlaster', 'SparkPlasmaBlaster');
+	CopyLocalization(AbilityTemplateManager, 'IRI_Bombard', 'Bombard');
+}	
+
+static private function PatchBulwarkTemplate(X2DataTemplate DataTemplate)
+{
+	local X2AbilityTemplate Template;
+
+	Template = X2AbilityTemplate(DataTemplate);
+	if (Template != none)
+	{
+		Template.OverrideAbilities.AddItem('BallisticShield_GenerateCover');
+	}	
+}
+
+static private function PatchAidProtocolTemplate(X2DataTemplate DataTemplate)
+{
+	local X2AbilityTemplate				Template;
+	local X2Condition_SourceWeaponCat	SourceWeaponCat;
+	local X2Effect_TransferWeapon		TransferWeapon;
+
+	Template = X2AbilityTemplate(DataTemplate);
+	if (Template != none)
+	{
+		TransferWeapon = new class'X2Effect_TransferWeapon';
+		TransferWeapon.DuplicateResponse = eDupe_Ignore;
+		TransferWeapon.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
+		TransferWeapon.bRemoveWhenTargetDies = true;
+
+		SourceWeaponCat = new class'X2Condition_SourceWeaponCat';
+		SourceWeaponCat.MatchWeaponCats.AddItem('sparkbit');
+		TransferWeapon.TargetConditions.AddItem(SourceWeaponCat);
+
+		Template.AddTargetEffect(TransferWeapon);
+	}
+}
+
+static private function GiveProperKnockbackToAbility(X2DataTemplate DataTemplate)
+{
+	local X2AbilityTemplate		Template;
+	local X2Effect_Knockback	KnockbackEffect;
+
+	//	Add proper knockback to cone- and line-targeted abilities. 
+	//	Normally knockback doesn't work properly for them, because the X2Effect_Knockback works relative 
+	//	the target location specified in the input context, and targeting methods used by these abilities 
+	//	will have the very end of the cone/line as the target location.
+	//	This ModifyContextFn will replace that target location.
+
+	Template = X2AbilityTemplate(DataTemplate);
+	if (Template != none && Template.ModifyNewContextFn == none)
+	{
+		KnockbackEffect = new class'X2Effect_Knockback';
+		KnockbackEffect.KnockbackDistance = 2;
+		Template.AddMultiTargetEffect(KnockbackEffect);
+		Template.ModifyNewContextFn = ProperKnockback_ModifyActivatedAbilityContext;
+	}
+}
+
+static private function AddGremlinOrBitRequiredCondition(X2DataTemplate DataTemplate)
+{
+	local X2AbilityTemplate				Template;
+	local X2Condition_SourceWeaponCat	SourceWeaponCat;
+
+	Template = X2AbilityTemplate(DataTemplate);
+	if (Template != none)
+	{
+		SourceWeaponCat = new class'X2Condition_SourceWeaponCat';
+		SourceWeaponCat.MatchWeaponCats.AddItem('sparkbit');
+		SourceWeaponCat.MatchWeaponCats.AddItem('gremlin');
+		Template.AbilityShooterConditions.AddItem(SourceWeaponCat);
+	}
+}
+
+static private function AddNewRainmakerEffect(X2DataTemplate DataTemplate)
+{
+	local X2AbilityTemplate				Template;
+	local X2AbilityTemplate				RainmakerTemplate;
+	local X2Effect_IRI_Rainmaker		Rainmaker;
+	local X2Effect						Effect;
+	local X2AbilityTemplateManager		AbilityTemplateManager;
+	local bool							bApplyShooterEffect;
+	local bool							bApplyTargetEffect;
+	local bool							bApplyMultiTargetEffect;
+
+	//	Cycle through all abilities, if any of them add the Rainmaker effect, add our effect in parallel.
+	//	Resource intensive, but comprehensive.
+
+	Template = X2AbilityTemplate(DataTemplate);
+	if (Template != none)
+	{
+		foreach Template.AbilityShooterEffects(Effect)
+		{
+			if (X2Effect_DLC_3Rainmaker(Effect) != none)
+			{
+				bApplyShooterEffect = true;
+				break;
+			}
+		}
+		foreach Template.AbilityTargetEffects(Effect)
+		{
+			if (X2Effect_DLC_3Rainmaker(Effect) != none)
+			{
+				bApplyTargetEffect = true;
+				break;
+			}
+		}
+		foreach Template.AbilityMultiTargetEffects(Effect)
+		{
+			if (X2Effect_DLC_3Rainmaker(Effect) != none)
+			{
+				bApplyMultiTargetEffect = true;
+				break;
+			}
+		}
+
+		if (!bApplyShooterEffect && !bApplyTargetEffect && !bApplyMultiTargetEffect)
+			return;
+	
+		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+
+		//	Get the Rainmaker ability template so we can use it for the purposes of our effect's localization.
+		RainmakerTemplate = AbilityTemplateManager.FindAbilityTemplate('Rainmaker');
+		if (RainmakerTemplate != none)
+		{
+			Rainmaker = new class'X2Effect_IRI_Rainmaker';
+			Rainmaker.BuildPersistentEffect(1, true);
+			Rainmaker.SetDisplayInfo(ePerkBuff_Passive, RainmakerTemplate.LocFriendlyName, RainmakerTemplate.LocLongDescription, RainmakerTemplate.IconImage, false,, RainmakerTemplate.AbilitySourceName);
+
+			if (bApplyShooterEffect)
+			{
+				Template.AddShooterEffect(Rainmaker);
+			}
+			if (bApplyTargetEffect)
+			{
+				Template.AddShooterEffect(Rainmaker);
+			}
+			if (bApplyMultiTargetEffect)
+			{
+				Template.AddMultiTargetEffect(Rainmaker);
+			}
+		}
+	}
+}
+
+static private function ReplaceSparkShooterConditionOnAbility(X2DataTemplate DataTemplate)
+{
+	local X2AbilityTemplate					Template;
+	//local X2Condition_HasWeaponOfCategory	HasWeaponOfCategory;
+	local int i;
+
+	Template = X2AbilityTemplate(DataTemplate);
+	if (Template != none)
+	{
+		for (i = Template.AbilityShooterConditions.Length - 1; i >= 0; i--)
+		{
+			if (X2Condition_UnitProperty(Template.AbilityShooterConditions[i]) != none && 
+				X2Condition_UnitProperty(Template.AbilityShooterConditions[i]).RequireSoldierClasses.Length > 0)
+			{
+				Template.AbilityShooterConditions.Remove(i, 1);
+			}
+		}
+	}
+	//HasWeaponOfCategory = new class'X2Condition_HasWeaponOfCategory';
+	//HasWeaponOfCategory.RequireWeaponCategory = 'sparkbit';
+	//Template.AbilityShooterConditions.AddItem(HasWeaponOfCategory);
+}
+
+static simulated function ProperKnockback_ModifyActivatedAbilityContext(XComGameStateContext Context)
+{
+	local XComWorldData					World;
+	local XComGameStateContext_Ability	AbilityContext;
+	local XComGameState_Unit			UnitState;
+	local TTile							ShooterTileLocation, TargetTileLocation;
+	local vector						ShooterLocation;
+	local XComGameStateHistory			History;
+	local vector						ClosestLocation, TestLocation;
+	local float							ClosestDistance, TestDistance;
+	local int i;
+
+	History = `XCOMHISTORY;
+	World = `XWORLD;
+	AbilityContext = XComGameStateContext_Ability(Context);
+
+	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+	ShooterTileLocation = UnitState.TileLocation;
+	ShooterTileLocation.Z += UnitState.UnitHeight - 1;
+	ShooterLocation = World.GetPositionFromTileCoordinates(ShooterTileLocation);
+	
+	ClosestLocation = AbilityContext.InputContext.TargetLocations[0];
+	ClosestDistance = VSize(ClosestLocation - ShooterLocation);
+
+	for (i = 0; i < AbilityContext.InputContext.MultiTargets.Length; i++)
+	{
+		if (AbilityContext.IsResultContextMultiHit(i))
+		{
+			UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.MultiTargets[i].ObjectID));
+
+			TargetTileLocation = UnitState.TileLocation;
+			TargetTileLocation.Z += UnitState.UnitHeight - 1;
+			TestLocation = World.GetPositionFromTileCoordinates(TargetTileLocation);
+
+			TestDistance = VSize(TestLocation - ShooterLocation);
+			if (TestDistance < ClosestDistance)
+			{
+				ClosestDistance = TestDistance;
+				ClosestLocation = TestLocation;
+			}
+		}
+	}
+
+	AbilityContext.InputContext.TargetLocations[0] = ClosestLocation;
+}
+
+static private function CopyLocalization(X2AbilityTemplateManager AbilityTemplateManager, name TemplateName, name DonorTemplateName)
+{
+	local X2AbilityTemplate Template;
+	local X2AbilityTemplate DonorTemplate;
+
+	Template = AbilityTemplateManager.FindAbilityTemplate(TemplateName);
+	DonorTemplate = AbilityTemplateManager.FindAbilityTemplate(DonorTemplateName);
+
+	if (Template != none && DonorTemplate != none)
+	{
+		Template.LocFriendlyName = DonorTemplate.LocFriendlyName;
+		Template.LocHelpText = DonorTemplate.LocHelpText;                   
+		Template.LocLongDescription = DonorTemplate.LocLongDescription;
+		Template.LocPromotionPopupText = DonorTemplate.LocPromotionPopupText;
+		Template.LocFlyOverText = DonorTemplate.LocFlyOverText;
+		Template.LocMissMessage = DonorTemplate.LocMissMessage;
+		Template.LocHitMessage = DonorTemplate.LocHitMessage;
+		Template.LocFriendlyNameWhenConcealed = DonorTemplate.LocFriendlyNameWhenConcealed;      
+		Template.LocLongDescriptionWhenConcealed = DonorTemplate.LocLongDescriptionWhenConcealed;   
+		Template.LocDefaultSoldierClass = DonorTemplate.LocDefaultSoldierClass;
+		Template.LocDefaultPrimaryWeapon = DonorTemplate.LocDefaultPrimaryWeapon;
+		Template.LocDefaultSecondaryWeapon = DonorTemplate.LocDefaultSecondaryWeapon;
+	}
+}
+//	===================================================================================================================================
+//														PATCH WEAPON TEMPLATES
+//	===================================================================================================================================
+
+static private function PatchWeaponTemplates()
+{
+	IterateTemplatesAllDiff(class'X2ItemTemplate', PatchGremlinAndBIT_Templates);
+}
+
+static private function PatchGremlinAndBIT_Templates(X2DataTemplate DataTemplate)
+{
+	local X2GremlinTemplate		GremlinTemplate;
+	local X2GrenadeTemplate		GrenadeTemplate;
+	local AbilityIconOverride	IconOverride;
+
+	GremlinTemplate = X2GremlinTemplate(DataTemplate);
+	
+	if (GremlinTemplate != none)
+	{
+		switch (GremlinTemplate.WeaponCat)
+		{
+			case 'sparkbit':
+				AddBITAnimSetsToCharacterTemplate(GremlinTemplate.CosmeticUnitTemplate);
+				//WeaponTemplate.Abilities.AddItem('IRI_RecallCosmeticUnit');
+
+				switch (GremlinTemplate.WeaponTech)
+				{
+					case 'conventional':
+						GremlinTemplate.BaseDamage = default.SPARKBIT_CONVENTIONAL_DAMAGE;
+						GremlinTemplate.iRadius = default.SPARKBIT_CONVENTIONAL_RADIUS;
+						GremlinTemplate.AidProtocolBonus = default.SPARKBIT_CONVENTIONAL_AID_PROTOCOL_BONUS;
+						GremlinTemplate.HealingBonus = default.SPARKBIT_CONVENTIONAL_HEALING_BONUS;
+						break;
+					case 'magnetic':
+						GremlinTemplate.BaseDamage = default.SPARKBIT_MAGNETIC_DAMAGE;
+						GremlinTemplate.iRadius = default.SPARKBIT_MAGNETIC_RADIUS;
+						GremlinTemplate.AidProtocolBonus = default.SPARKBIT_MAGNETIC_AID_PROTOCOL_BONUS;
+						GremlinTemplate.HealingBonus = default.SPARKBIT_MAGNETIC_HEALING_BONUS;
+						break;
+					case 'beam':
+						GremlinTemplate.BaseDamage = default.SPARKBIT_BEAM_DAMAGE;
+						GremlinTemplate.iRadius = default.SPARKBIT_BEAM_RADIUS;
+						GremlinTemplate.AidProtocolBonus = default.SPARKBIT_BEAM_AID_PROTOCOL_BONUS;
+						GremlinTemplate.HealingBonus = default.SPARKBIT_BEAM_HEALING_BONUS;
+						break;
+					default:
+						break;
+				}
+				switch (GremlinTemplate.DataName)
+				{
+					//	Add missing stat markup for the bonus hacking from BIT
+					case 'SparkBit_CV':
+						GremlinTemplate.SetUIStatMarkup(class'XLocalizedData'.default.TechBonusLabel, eStat_Hacking, class'X2Item_DLC_Day90Weapons'.default.SPARKBIT_CONVENTIONAL_HACKBONUS, true);
+						return;
+					case 'SparkBit_MG':
+						GremlinTemplate.SetUIStatMarkup(class'XLocalizedData'.default.TechBonusLabel, eStat_Hacking, class'X2Item_DLC_Day90Weapons'.default.SPARKBIT_MAGNETIC_HACKBONUS, true);
+						return;
+					case 'SparkBit_BM':
+						GremlinTemplate.SetUIStatMarkup(class'XLocalizedData'.default.TechBonusLabel, eStat_Hacking, class'X2Item_DLC_Day90Weapons'.default.SPARKBIT_BEAM_HACKBONUS, true);
+						return;
+					default:
+						return;
+				}
+				return;
+			case 'gremlin':
+				AddGREMLINAnimSetsToCharacterTemplate(GremlinTemplate.CosmeticUnitTemplate);
+				return;
+			default:
+				return;
+		}
+	}
+
+	GrenadeTemplate = X2GrenadeTemplate(DataTemplate);
+	if (GrenadeTemplate != none)
+	{
+		foreach GrenadeTemplate.AbilityIconOverrides(IconOverride)
+		{
+			if (IconOverride.AbilityName == 'LaunchGrenade')
+			{
+				if (default.bOrdnanceAmplifierUsesBlasterLauncherTargeting)
+				{
+					GrenadeTemplate.AddAbilityIconOverride('IRI_BlastOrdnance', IconOverride.OverrideIcon);
+				}
+				GrenadeTemplate.AddAbilityIconOverride('IRI_LaunchOrdnance', IconOverride.OverrideIcon);
+			}
+		}
+	}
+}
+
+static private function AddBITAnimSetsToCharacterTemplate(string TemplateName)
+{
+    local X2CharacterTemplateManager    CharMgr;
+    local X2CharacterTemplate           CharTemplate;
+	local array<X2DataTemplate>			DifficultyVariants;
+	local X2DataTemplate				DifficultyVariant;
+	local XComContentManager			Content;
+	
+    CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+	Content = `CONTENT;
+	
+	CharMgr.FindDataTemplateAllDifficulties(name(TemplateName), DifficultyVariants);
+	foreach DifficultyVariants(DifficultyVariant)
+	{
+		CharTemplate = X2CharacterTemplate(DifficultyVariant);
+
+		if (CharTemplate != none)
+		{
+			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIRestorativeMist.Anims.AS_RestoMist_BIT")));
+			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRIElectroPulse.Anims.AS_ElectroPulse_BIT")));
+			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_LAC_Bit")));
+			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Bit")));			
+		}
+	}
+}
+static private function AddGREMLINAnimSetsToCharacterTemplate(string TemplateName)
+{
+    local X2CharacterTemplateManager    CharMgr;
+    local X2CharacterTemplate           CharTemplate;
+	local array<X2DataTemplate>			DifficultyVariants;
+	local X2DataTemplate				DifficultyVariant;
+	local XComContentManager			Content;
+	
+    CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+	Content = `CONTENT;
+
+	CharMgr.FindDataTemplateAllDifficulties(name(TemplateName), DifficultyVariants);
+	foreach DifficultyVariants(DifficultyVariant)
+	{
+		CharTemplate = X2CharacterTemplate(DifficultyVariant);
+
+		if (CharTemplate != none)
+		{
+			CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkArsenal.Anims.AS_Gremlin")));	
+		}
+	}
+}
+
+//	===================================================================================================================================
+//														ABILITY TAG EXPAND HANDLER
+//	===================================================================================================================================
 static function bool AbilityTagExpandHandler(string InString, out string OutString)
 {
 	local name TagText;
@@ -1839,26 +1879,26 @@ static function bool AbilityTagExpandHandler(string InString, out string OutStri
 }
 
 
-static function string SetColor(coerce string Value)
+static private function string SetColor(coerce string Value)
 {	
 	return "<font color='#1ad1cf'>" $ Value $ "</font>";
 }
 
-static function string AddSign(int Value)
+static private function string AddSign(int Value)
 {
 	if (Value > 0) return "+" $ Value;
 
 	return string(Value);
 }
 
-static function string AddSignFloat(float Value)
+static private function string AddSignFloat(float Value)
 {
 	if (Value > 0) return "+" $ TruncateFloat(Value);
 
 	return string(Value);
 }
 
-static function string TruncateFloat(float value)
+static private function string TruncateFloat(float value)
 {
 	local string FloatString, TempString;
 	local int i;
@@ -1894,45 +1934,131 @@ static function string TruncateFloat(float value)
 	return FloatString;
 }
 
+//	===================================================================================================================================
+//														TEMPLATE PATCHING HELPERS
+//	===================================================================================================================================
 
-
+static private function IterateTemplatesAllDiff(class TemplateClass, delegate<ModifyTemplate> ModifyTemplateFn)
+{
+    local X2DataTemplate                                    IterateTemplate;
+    local X2DataTemplate                                    DataTemplate;
+    local array<X2DataTemplate>                             DataTemplates;
+    local X2DownloadableContentInfo_WOTCMoreSparkWeapons    CDO;
+    
+    local X2ItemTemplateManager             ItemMgr;
+    local X2AbilityTemplateManager          AbilityMgr;
+    local X2CharacterTemplateManager        CharMgr;
+    local X2StrategyElementTemplateManager  StratMgr;
+    local X2SoldierClassTemplateManager     ClassMgr;
+ 
+    if (ClassIsChildOf(TemplateClass, class'X2ItemTemplate'))
+    {
+        CDO = GetCDO();
+        ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+ 
+        foreach ItemMgr.IterateTemplates(IterateTemplate)
+        {
+            ItemMgr.FindDataTemplateAllDifficulties(IterateTemplate.DataName, DataTemplates);
+            foreach DataTemplates(DataTemplate)
+            {   
+                CDO.CallModifyTemplateFn(ModifyTemplateFn, DataTemplate);
+            }
+        }
+    }
+    else if (ClassIsChildOf(TemplateClass, class'X2AbilityTemplate'))
+    {
+        CDO = GetCDO();
+        AbilityMgr = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+ 
+        foreach AbilityMgr.IterateTemplates(IterateTemplate)
+        {
+            AbilityMgr.FindDataTemplateAllDifficulties(IterateTemplate.DataName, DataTemplates);
+            foreach DataTemplates(DataTemplate)
+            {
+                CDO.CallModifyTemplateFn(ModifyTemplateFn, DataTemplate);
+            }
+        }
+    }
+    else if (ClassIsChildOf(TemplateClass, class'X2CharacterTemplate'))
+    {
+        CDO = GetCDO();
+        CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+        foreach CharMgr.IterateTemplates(IterateTemplate)
+        {
+            CharMgr.FindDataTemplateAllDifficulties(IterateTemplate.DataName, DataTemplates);
+            foreach DataTemplates(DataTemplate)
+            {
+                CDO.CallModifyTemplateFn(ModifyTemplateFn, DataTemplate);
+            }
+        }
+    }
+    else if (ClassIsChildOf(TemplateClass, class'X2StrategyElementTemplate'))
+    {
+        CDO = GetCDO();
+        StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
+        foreach StratMgr.IterateTemplates(IterateTemplate)
+        {
+            StratMgr.FindDataTemplateAllDifficulties(IterateTemplate.DataName, DataTemplates);
+            foreach DataTemplates(DataTemplate)
+            {
+                CDO.CallModifyTemplateFn(ModifyTemplateFn, DataTemplate);
+            }
+        }
+    }
+    else if (ClassIsChildOf(TemplateClass, class'X2SoldierClassTemplate'))
+    {
+        
+        CDO = GetCDO();
+        ClassMgr = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+        foreach ClassMgr.IterateTemplates(IterateTemplate)
+        {
+            ClassMgr.FindDataTemplateAllDifficulties(IterateTemplate.DataName, DataTemplates);
+            foreach DataTemplates(DataTemplate)
+            {
+                CDO.CallModifyTemplateFn(ModifyTemplateFn, DataTemplate);
+            }
+        }
+    }    
+}
+ 
 static private function ModifyTemplateAllDiff(name TemplateName, class TemplateClass, delegate<ModifyTemplate> ModifyTemplateFn)
 {
-    local X2DataTemplate									DataTemplate;
-    local array<X2DataTemplate>								DataTemplates;
-	local X2DownloadableContentInfo_WOTCMoreSparkWeapons	CDO;
+    local X2DataTemplate                                    DataTemplate;
+    local array<X2DataTemplate>                             DataTemplates;
+    local X2DownloadableContentInfo_WOTCMoreSparkWeapons    CDO;
     
-	local X2ItemTemplateManager				ItemMgr;
-	local X2AbilityTemplateManager			AbilityMgr;
-	local X2CharacterTemplateManager		CharMgr;
-	local X2StrategyElementTemplateManager	StratMgr;
-	local X2SoldierClassTemplateManager		ClassMgr;
-
-	if (TemplateClass.IsA('X2ItemTemplate'))
-	{
-		ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-		ItemMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
-	}
-    else if (TemplateClass.IsA('X2AbilityTemplate'))
-	{
-		AbilityMgr = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
-		AbilityMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
-	}
-	else if (TemplateClass.IsA('X2CharacterTemplate'))
-	{
-		CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
-		CharMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
-	}
-	else if (TemplateClass.IsA('X2StrategyElementTemplate'))
-	{
-		StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
-		StratMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
-	}
-	else if (TemplateClass.IsA('X2SoldierClassTemplate'))
-	{
-		ClassMgr = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
-		ClassMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
-	}
+    local X2ItemTemplateManager             ItemMgr;
+    local X2AbilityTemplateManager          AbilityMgr;
+    local X2CharacterTemplateManager        CharMgr;
+    local X2StrategyElementTemplateManager  StratMgr;
+    local X2SoldierClassTemplateManager     ClassMgr;
+ 
+    if (ClassIsChildOf(TemplateClass, class'X2ItemTemplate'))
+    {
+        ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+        ItemMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+    }
+    else if (ClassIsChildOf(TemplateClass, class'X2AbilityTemplate'))
+    {
+        AbilityMgr = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+        AbilityMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+    }
+    else if (ClassIsChildOf(TemplateClass, class'X2CharacterTemplate'))
+    {
+        CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+        CharMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+    }
+    else if (ClassIsChildOf(TemplateClass, class'X2StrategyElementTemplate'))
+    {
+        StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
+        StratMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+    }
+    else if (ClassIsChildOf(TemplateClass, class'X2SoldierClassTemplate'))
+    {
+        ClassMgr = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
+        ClassMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+    }
+    else return;
     
     CDO = GetCDO();
     foreach DataTemplates(DataTemplate)
@@ -1940,13 +2066,51 @@ static private function ModifyTemplateAllDiff(name TemplateName, class TemplateC
         CDO.CallModifyTemplateFn(ModifyTemplateFn, DataTemplate);
     }
 }
-
-static function X2DownloadableContentInfo_WOTCMoreSparkWeapons GetCDO()
+ 
+static private function X2DownloadableContentInfo_WOTCMoreSparkWeapons GetCDO()
 {
     return X2DownloadableContentInfo_WOTCMoreSparkWeapons(class'XComEngine'.static.GetClassDefaultObjectByName(default.Class.Name));
 }
-
+ 
 protected function CallModifyTemplateFn(delegate<ModifyTemplate> ModifyTemplateFn, X2DataTemplate DataTemplate)
 {
     ModifyTemplateFn(DataTemplate);
 }
+
+//	===================================================================================================================================
+//														TRASH BIN
+//	===================================================================================================================================
+static private function name GetWeaponRefTemplateName(StateObjectReference WeaponRef)
+{
+	local XComGameState_Item ItemState;
+
+	ItemState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(WeaponRef.ObjectID));
+
+	if (ItemState != none)
+	{
+		return ItemState.GetMyTemplateName();
+	}
+	return '';
+}
+
+/*
+static function GetNumUtilitySlotsOverride(out int NumUtilitySlots, XComGameState_Item EquippedArmor, XComGameState_Unit UnitState, XComGameState CheckGameState)
+{
+	//	If this is a SPARK or a MEC and doesn't have utility slots at all, add one.
+	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && NumUtilitySlots == 0)
+	{
+		NumUtilitySlots++;
+	}
+}
+*/
+
+/*
+static function GetNumHeavyWeaponSlotsOverride(out int NumHeavySlots, XComGameState_Unit UnitState, XComGameState CheckGameState)
+{
+	if (default.BIT_Grants_HeavyWeaponSlot &&
+		default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && 
+		class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
+	{
+		NumHeavySlots++;
+	}
+}*/

@@ -7,6 +7,8 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
+	Templates.AddItem(Create_GiveHeavyWeapon());
+
 	Templates.AddItem(Create_Ammo_Sabot_Ability());
 	Templates.AddItem(Create_SpeedLoader_Passive());
 	Templates.AddItem(Create_SpeedLoader_Reload());
@@ -17,7 +19,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_ElectroPulse());
 	Templates.AddItem(Create_ElectroPulse_Bit());
 
-	Templates.AddItem(Create_HeavyStrike_Bit('IRI_HeavyStrike_Bit', 'BIT_Heavy_Strike'));
+	//Templates.AddItem(Create_HeavyStrike_Bit('IRI_HeavyStrike_Bit', 'BIT_Heavy_Strike'));
 
 	Templates.AddItem(Create_EntrenchProtocol());
 	Templates.AddItem(Create_EntrenchProtocol_Passive());
@@ -43,6 +45,39 @@ static function array<X2DataTemplate> CreateTemplates()
 	return Templates;
 }
 
+static function X2AbilityTemplate Create_GiveHeavyWeapon()
+{
+	local X2AbilityTemplate					Template;
+	local X2Effect_GiveItem					GiveItem;
+	local X2Condition_HasWeaponOfCategory	HasWeaponCondition;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_GiveHeavyWeapon');
+	SetHidden(Template);
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+
+	HasWeaponCondition = new class'X2Condition_HasWeaponOfCategory';
+	HasWeaponCondition.RequireWeaponCategory = 'sparkbit';
+	Template.AbilityShooterConditions.AddItem(HasWeaponCondition);
+
+	GiveItem = new class'X2Effect_GiveItem';
+	GiveItem.ItemToGive = class'X2Item_HeavyWeapons'.default.FreeHeavyWeaponToEquip;
+	GiveItem.InventorySlot = class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot;
+	GiveItem.bUseInventorySlot = true;
+	//GiveItem.bOverrideInventoryRestrictions = true;
+	Template.AddShooterEffect(GiveItem);
+
+	Template.Hostility = eHostility_Neutral;
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = none;
+
+	return Template;
+}
+/*
 static function X2DataTemplate Create_HeavyStrike_Bit(name TemplateName, name DamageTag)
 {
 	local X2AbilityTemplate             Template;
@@ -115,7 +150,7 @@ static function X2DataTemplate Create_HeavyStrike_Bit(name TemplateName, name Da
 	Template.AbilityConfirmSound = "TacticalUI_ActivateAbility";
 	Template.Hostility = eHostility_Offensive;
 	Template.BuildNewGameStateFn = SendBITToLocation_BuildGameState;
-	Template.BuildVisualizationFn = RestorativeMist_BIT_BuildVisualization;
+	Template.BuildVisualizationFn = BITStrike_BuildVisualization;
 	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
 
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
@@ -124,7 +159,7 @@ static function X2DataTemplate Create_HeavyStrike_Bit(name TemplateName, name Da
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
 	return Template;
-}
+}*/
 
 //	==============================================================
 //			BIT AND GREMLIN RECALL HELPER
@@ -473,35 +508,35 @@ simulated function XComGameState SendBITToLocation_BuildGameState( XComGameState
 
 simulated function RestorativeMist_BIT_BuildVisualization(XComGameState VisualizeGameState)
 {
-	local XComGameStateHistory			History;
-	local XComWorldData					WorldData;
-	local XComGameStateContext_Ability  Context;
-	local X2AbilityTemplate             AbilityTemplate;
+	local XComGameStateHistory				History;
+	local XComWorldData						WorldData;
+	local XComGameStateContext_Ability		Context;
+	local X2AbilityTemplate					AbilityTemplate;
 
-	local XComGameState_Item			GremlinItem;
-	local XComGameState_Unit			AttachedUnitState;
-	local XComGameState_Unit			GremlinUnitState;
+	local XComGameState_Item				GremlinItem;
+	local XComGameState_Unit				AttachedUnitState;
+	local XComGameState_Unit				GremlinUnitState;
 
-	local StateObjectReference          InteractingUnitRef;
+	local StateObjectReference				InteractingUnitRef;
 
-	local VisualizationActionMetadata			EmptyTrack;
-	local VisualizationActionMetadata			ActionMetadata;
-	//local X2Action_WaitForAbilityEffect DelayAction;
-	local X2Action_AbilityPerkStart		PerkStartAction;
+	local VisualizationActionMetadata		EmptyTrack;
+	local VisualizationActionMetadata		ActionMetadata;
+	//local X2Action_WaitForAbilityEffect	DelayAction;
+	local X2Action_AbilityPerkStart			PerkStartAction;
 
-	local Vector						TargetPosition;
-	local TTile							TargetTile;
-	local PathingInputData              PathData;
-	local array<PathPoint> Path;
-	local PathingResultData	ResultData;
+	local Vector							TargetPosition;
+	local TTile								TargetTile;
+	local PathingInputData					PathData;
+	local array<PathPoint>					Path;
+	local PathingResultData					ResultData;
 
-	local X2Action_PlaySoundAndFlyOver SoundAndFlyOver;
-	local X2Action_PlayAnimation		PlayAnimation;
+	local X2Action_PlaySoundAndFlyOver		SoundAndFlyOver;
+	local X2Action_PlayAnimation			PlayAnimation;
 
 	local int i, j, EffectIndex;
-	local X2VisualizerInterface TargetVisualizerInterface;
+	local X2VisualizerInterface				TargetVisualizerInterface;
 
-	local XComGameState_Unit SparkUnitState;
+	local XComGameState_Unit				SparkUnitState;
 
 	local X2Action_Fire						FireAction;
 	local XComGameState_Item				CosmeticHeavyWeapon;
@@ -575,7 +610,7 @@ simulated function RestorativeMist_BIT_BuildVisualization(XComGameState Visualiz
 		//`LOG("RestorativeMist_BIT_BuildVisualization: target position:" @ Context.InputContext.TargetLocations[0],, 'WOTCMoreSparkWeapons');
 
 		TargetPosition = Context.InputContext.TargetLocations[0];
-		TargetTile = `XWORLD.GetTileCoordinatesFromPosition( TargetPosition );
+		TargetTile = WorldData.GetTileCoordinatesFromPosition( TargetPosition );
 
 		if (WorldData.IsTileFullyOccupied( TargetTile ))
 		{
@@ -874,165 +909,9 @@ static function X2DataTemplate Create_ElectroPulse_Bit()
 	Template.bStationaryWeapon = true;
 
 	Template.BuildNewGameStateFn = SendBITToLocation_BuildGameState;
-	Template.BuildVisualizationFn = RestorativeMist_BIT_BuildVisualization; //CapacitorDischarge_BuildVisualization;
+	Template.BuildVisualizationFn = RestorativeMist_BIT_BuildVisualization;
 
 	return Template;
-}
-//	Adjusted to get BIT Object Id from the shooter as opposed to using source item in input context
-simulated function CapacitorDischarge_BuildVisualization( XComGameState VisualizeGameState )
-{
-	local XComGameStateHistory			History;
-	local XComWorldData					WorldData;
-	local XComGameStateContext_Ability  Context;
-	local X2AbilityTemplate             AbilityTemplate;
-
-	local XComGameState_Item			GremlinItem;
-	local XComGameState_Unit			AttachedUnitState;
-	local XComGameState_Unit			GremlinUnitState;
-	local XComGameState_Unit			GremlinOwnerUnitState;
-
-	local StateObjectReference          InteractingUnitRef;
-	local StateObjectReference          GremlinOwnerUnitRef;
-
-	local VisualizationActionMetadata			EmptyTrack;
-	local VisualizationActionMetadata			ActionMetadata;
-	local X2Action_WaitForAbilityEffect DelayAction;
-	local X2Action_AbilityPerkStart		PerkStartAction;
-
-	local Vector						TargetPosition;
-	local TTile							TargetTile;
-	local PathingInputData              PathData;
-	local array<PathPoint> Path;
-	local PathingResultData	ResultData;
-
-	local X2Action_PlaySoundAndFlyOver SoundAndFlyOver;
-	local X2Action_PlayAnimation		PlayAnimation;
-
-	local int GremlinObjectID;
-	local int i, j, EffectIndex;
-	local X2VisualizerInterface TargetVisualizerInterface;
-
-	History = `XCOMHISTORY;
-	WorldData = `XWORLD;
-
-	Context = XComGameStateContext_Ability( VisualizeGameState.GetContext( ) );
-	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager( ).FindAbilityTemplate( Context.InputContext.AbilityTemplateName );
-
-	GremlinOwnerUnitState = XComGameState_Unit( History.GetGameStateForObjectID( Context.InputContext.SourceObject.ObjectID ) );
-	GremlinObjectID = class'X2Condition_HasWeaponOfCategory'.static.GetBITObjectID(GremlinOwnerUnitState, VisualizeGameState);
-
-	GremlinItem = XComGameState_Item( History.GetGameStateForObjectID( GremlinObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1 ) );
-	GremlinUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.CosmeticUnitRef.ObjectID ) );
-	AttachedUnitState = XComGameState_Unit( History.GetGameStateForObjectID( GremlinItem.AttachedUnitRef.ObjectID ) );
-
-	InteractingUnitRef = GremlinItem.CosmeticUnitRef;
-
-	ActionMetadata = EmptyTrack;
-	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID( InteractingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1 );
-	ActionMetadata.StateObject_NewState = ActionMetadata.StateObject_OldState;
-	ActionMetadata.VisualizeActor = History.GetVisualizer( InteractingUnitRef.ObjectID );
-
-	//If there are effects added to the shooter, add the visualizer actions for them
-	for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityShooterEffects.Length; ++EffectIndex)
-	{
-		AbilityTemplate.AbilityShooterEffects[ EffectIndex ].AddX2ActionsForVisualization( VisualizeGameState, ActionMetadata, Context.FindShooterEffectApplyResult( AbilityTemplate.AbilityShooterEffects[ EffectIndex ] ) );
-	}
-
-	if (Context.InputContext.TargetLocations.Length > 0)
-	{
-		TargetPosition = Context.InputContext.TargetLocations[0];
-		TargetTile = `XWORLD.GetTileCoordinatesFromPosition( TargetPosition );
-
-		if (WorldData.IsTileFullyOccupied( TargetTile ))
-		{
-			TargetTile.Z++;
-		}
-
-		if (!WorldData.IsTileFullyOccupied( TargetTile ))
-		{
-			class'X2PathSolver'.static.BuildPath( GremlinUnitState, AttachedUnitState.TileLocation, TargetTile, PathData.MovementTiles );
-			class'X2PathSolver'.static.GetPathPointsFromPath( GremlinUnitState, PathData.MovementTiles, Path );
-			class'XComPath'.static.PerformStringPulling(XGUnitNativeBase(ActionMetadata.VisualizeActor), Path);
-			PathData.MovementData = Path;
-			PathData.MovingUnitRef = GremlinUnitState.GetReference();
-			Context.InputContext.MovementPaths.AddItem(PathData);
-
-			class'X2TacticalVisibilityHelpers'.static.FillPathTileData(PathData.MovingUnitRef.ObjectID,	PathData.MovementTiles,	ResultData.PathTileData);
-			Context.ResultContext.PathResults.AddItem(ResultData);
-
-			class'X2VisualizerHelpers'.static.ParsePath( Context, ActionMetadata);
-		}
-		else
-		{
-			`redscreen("Gremlin was unable to find a location to move to for ability "@Context.InputContext.AbilityTemplateName);
-		}
-	}
-	else
-	{
-		`redscreen("Gremlin was not provided a location to move to for ability "@Context.InputContext.AbilityTemplateName);
-	}
-
-	PerkStartAction = X2Action_AbilityPerkStart(class'X2Action_AbilityPerkStart'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-	PerkStartAction.NotifyTargetTracks = true;
-
-	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context ));
-	PlayAnimation.Params.AnimName = AbilityTemplate.CustomSelfFireAnim;
-
-	
-
-	// build in a delay before we hit the end (which stops activation effects)
-	DelayAction = X2Action_WaitForAbilityEffect( class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context ) );
-	DelayAction.ChangeTimeoutLength( 1.75f );
-
-	class'X2Action_AbilityPerkEnd'.static.AddToVisualizationTree( ActionMetadata, Context );
-
-	//****************************************************************************************
-	//Configure the visualization track for the targets
-	//****************************************************************************************
-	for (i = 0; i < Context.InputContext.MultiTargets.Length; ++i)
-	{
-		InteractingUnitRef = Context.InputContext.MultiTargets[i];
-		ActionMetadata = EmptyTrack;
-		ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(InteractingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
-		ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(InteractingUnitRef.ObjectID);
-		ActionMetadata.VisualizeActor = History.GetVisualizer(InteractingUnitRef.ObjectID);
-
-		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree( ActionMetadata, Context );
-
-		for( j = 0; j < Context.ResultContext.MultiTargetEffectResults[i].Effects.Length; ++j )
-		{
-			Context.ResultContext.MultiTargetEffectResults[i].Effects[j].AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, Context.ResultContext.MultiTargetEffectResults[i].ApplyResults[j]);
-		}
-
-		TargetVisualizerInterface = X2VisualizerInterface(ActionMetadata.VisualizeActor);
-		if( TargetVisualizerInterface != none )
-		{
-			//Allow the visualizer to do any custom processing based on the new game state. For example, units will create a death action when they reach 0 HP.
-			TargetVisualizerInterface.BuildAbilityEffectsVisualization(VisualizeGameState, ActionMetadata);
-		}
-	}
-	//****************************************************************************************
-
-
-	//Configure the visualization track for the owner of the Gremlin
-	//****************************************************************************************
-	GremlinOwnerUnitRef = GremlinItem.OwnerStateObject;
-
-	ActionMetadata = EmptyTrack;
-	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(GremlinOwnerUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
-	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(GremlinOwnerUnitRef.ObjectID);
-	ActionMetadata.VisualizeActor = History.GetVisualizer(GremlinOwnerUnitRef.ObjectID);
-
-	if (AbilityTemplate.ActivationSpeech != '')
-	{
-		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyOver'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", AbilityTemplate.ActivationSpeech, eColor_Good);
-	}
-	PlayAnimation = X2Action_PlayAnimation(class'X2Action_PlayAnimation'.static.AddToVisualizationTree( ActionMetadata, Context ));
-	PlayAnimation.Params.AnimName = AbilityTemplate.CustomFireAnim;
-
-	
-	//****************************************************************************************
 }
 
 static function X2AbilityTemplate Create_EntrenchProtocol()

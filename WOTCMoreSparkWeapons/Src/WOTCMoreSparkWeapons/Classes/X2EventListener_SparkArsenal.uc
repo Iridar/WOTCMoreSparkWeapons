@@ -62,7 +62,7 @@ static function EventListenerReturn RecallCosmeticUnit_ListenerEventFunction(Obj
 	AbilityContext = XComGameStateContext_Ability(GameState.GetContext());
 	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
 
-	`LOG("RecallCosmeticUnit_ListenerEventFunction:: running",, 'WOTCMoreSparkWeapons');
+	//`LOG("RecallCosmeticUnit_ListenerEventFunction:: running",, 'WOTCMoreSparkWeapons');
 	
 	if (AbilityContext == none || UnitState == none)
 		return ELR_NoInterrupt;
@@ -71,7 +71,7 @@ static function EventListenerReturn RecallCosmeticUnit_ListenerEventFunction(Obj
 	if (RecalledItem == none)
 		return ELR_NoInterrupt;
 
-	`LOG("RecallCosmeticUnit_ListenerEventFunction:: unit:" @ UnitState.GetFullName() @ "item:" @ RecalledItem.GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
+	//`LOG("RecallCosmeticUnit_ListenerEventFunction:: unit:" @ UnitState.GetFullName() @ "item:" @ RecalledItem.GetMyTemplateName(),, 'WOTCMoreSparkWeapons');
 
 	UnitStateDesiredAttachTile = UnitState.GetDesiredTileForAttachedCosmeticUnit();
 	if (UnitStateDesiredAttachTile != RecalledItem.GetTileLocation())
@@ -83,7 +83,7 @@ static function EventListenerReturn RecallCosmeticUnit_ListenerEventFunction(Obj
 			NewRecalledItem = XComGameState_Item(NewGameState.ModifyStateObject(RecalledItem.Class, RecalledItem.ObjectID));
 			NewRecalledItem.AttachedUnitRef = UnitState.GetReference();
 
-			`LOG("RecallCosmeticUnit_ListenerEventFunction:: submitting new game state",, 'WOTCMoreSparkWeapons');
+			//`LOG("RecallCosmeticUnit_ListenerEventFunction:: submitting new game state",, 'WOTCMoreSparkWeapons');
 
 			`GAMERULES.SubmitGameState(NewGameState);
 		}
@@ -97,7 +97,7 @@ static function EventListenerReturn RecallCosmeticUnit_ListenerEventFunction(Obj
 			MoveToLoc = AbilityContext.InputContext.TargetLocations[0];
 			CosmeticUnitState.SetVisibilityLocationFromVector( MoveToLoc );
 
-			`LOG("RecallCosmeticUnit_ListenerEventFunction::MoveFromTarget MoveToLoc" @ MoveToLoc,, 'WOTCMoreSparkWeapons');
+			//`LOG("RecallCosmeticUnit_ListenerEventFunction::MoveFromTarget MoveToLoc" @ MoveToLoc,, 'WOTCMoreSparkWeapons');
 		}
 
 		//  Now move it move it
@@ -105,10 +105,10 @@ static function EventListenerReturn RecallCosmeticUnit_ListenerEventFunction(Obj
 		MoveToLoc = `XWORLD.GetPositionFromTileCoordinates(UnitStateDesiredAttachTile);
 		Visualizer.MoveToLocation(MoveToLoc, CosmeticUnitState);
 
-		`LOG("RecallCosmeticUnit_ListenerEventFunction:: move it move it",, 'WOTCMoreSparkWeapons');
+		//`LOG("RecallCosmeticUnit_ListenerEventFunction:: move it move it",, 'WOTCMoreSparkWeapons');
 	}
 
-	`LOG("RecallCosmeticUnit_ListenerEventFunction:: exiting",, 'WOTCMoreSparkWeapons');
+	//`LOG("RecallCosmeticUnit_ListenerEventFunction:: exiting",, 'WOTCMoreSparkWeapons');
 
 	return ELR_NoInterrupt;
 }

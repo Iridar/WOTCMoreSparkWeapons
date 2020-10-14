@@ -54,14 +54,16 @@ This mod is a significant buff to SPARKs' and MECs' power. However, it is create
 [list]
 [*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1796402257][b][BETA] X2WOTCCommunityHighlander[/b][/url] v1.21 or higher is required. It's possible to manually configure the mod for the limited compatibility for the older Highlander versions, [b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2442587820564618365/]the instructions are here[/url][/b].
 [*] [b]Shen's Last Gift DLC[/b] is required. 
-[*] [b]Alien Hunters DLC[/b] - I used a few assets from it, so it's probably required, though the mod might still function without it.[/list]
+[*] [b]Alien Hunters DLC[/b] - I used a few assets from it, so it's probably required, though the mod might still function without it.
+[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1517938486][b][WOTC] Iridar's Weapon Skin Replacer[/b][/url] is required to add inventory icons for Incinerator weapon upgrades that are available only if you also use [b]Mitzruti's Immolators[/b] mod. You don't have to use this mod if you don't care about that.
+[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1737532501][b][WotC] Weapon Fixes[/b][/url] is required to fix Incinerators attack visualization. You don't have to use this mod if you don't care about that.[/list]
 
 [h1]COMPANION MODS[/h1]
 [list]
 [*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1775963384][WOTC] Rocket Launchers 2.0[/url][/b] - fully supported. This mod enables SPARKs to carry, Take, Arm and Give rockets, as well as Fire them with the Ordnance Launcher. SPARKs do not suffer movement penalties for carrying rockets. All rockets are supported, including the Tactical Elerium Nuke. Judgement Day is upon ADVENT.
 [*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1161324428]SPARK Launchers Redux[/url][/b] - can be carried in the Auxiliary Weapon Slot. 
 [*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2025780967][WOTC] Iridar's Scatter Mod[/url][/b] - adds scatter to grenades and rockets and HE/HESH Heavy Cannon shots.
-[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1918448514]Immolator + Chemthrower Abilities[/url][/b] - adds Canisters that work with SPARK Incinerators when carried in the Auxiliary Weapon Slot. You can also subscribe to [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2237137501][WOTC] Immolator Overhaul[/url][/b] so that Mitzruti's Immolators look like mini-Incinerators.[/list]
+[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1918448514]Immolator + Chemthrower Abilities[/url][/b] - adds Canisters that work with SPARK Incinerators when carried in the Auxiliary Weapon Slot, and weapon upgrades for Incinerators themselves. You can also subscribe to [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2237137501][WOTC] Immolator Overhaul[/url][/b] so that Mitzruti's Immolators look like mini-Incinerators.[/list]
 
 [h1]COMPATIBILITY[/h1]
 
