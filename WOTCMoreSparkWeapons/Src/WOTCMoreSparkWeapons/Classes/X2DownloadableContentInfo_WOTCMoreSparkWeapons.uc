@@ -46,48 +46,10 @@ var config(AutogunHeavyWeapon) bool ONE_AUTOGUN_PER_SOLDIER;
 delegate ModifyTemplate(X2DataTemplate DataTemplate);
 
 //	Changelog 
-/*
-
-
-GREMLIN Changes:
-- SPARKs can now equip GREMLINs as Secondary Weapons. 
-- GREMLINs now have a Repair animation and can be used with that ability, healing more HP than BITs do.
-
-BIT Changes: 
-- BITs now have animations for all of the vanilla Protocol abilities, and can be used with them. However, BITs are less effective at Protocol duties than GREMLINs across the board: they provide a smaller Hacking bonus and lower Defense bonus when used for Aid Protocol. They also deal less damage with Combat Protocol and Capacitor Discharge, and have a smaller radius for Scanning Protocol.
-- Instead of the generic Heavy Weapon slot, BIT now grants the BIT Heavy Weapon slot to clearly differentiate that this Heavy Weapon is equipped on the BIT. 
-- If BIT Aid Protocol is used on an allied soldier, that allied soldier will gain control over the BIT's Heavy Weapon for the duration of the Aid Protocol. Note that the original owner loses control over the BIT's Heavy Weapon while the BIT is away. For the purposes of the perks that affect Heavy Weapons, such as Salvo, the game will look at the perks of the unit that currently controls the Heavy Weapon.
-- Bonus hacking that was added to BIT by SPARK Arsenal previously has been removed. BITs once again grant only +0/10/20 Hack.
-
-General changes:
-- Configuration files have been reorganized.
-
-Ability changes:
-- Changes to squaddie abilities of classes affected by this mod will now apply to existing characters. New campaign / RebuildSelectedSoldier is no longer necessary.
-- New passive ability for SPARKs and MEC Troopers: Protocol Suite. Unit gains +30 Hack, and when equipped with a BIT or GREMLIN, the unit gains Intrusion Protocol, Aid Protocol, Entrench Protocol and Active Camo.
-- Entrench Protocol is a new passive ability which makes Aid Protocol used on self last indefinetely as long as the unit doesn't move. It's mostly intended to provide a defensive buff in static combat situations to SPARKs with Heavy Cannons.
-- Active Camo no longer grants Phantom. It simply improves SPARK / MEC Troopers' detection radius to be on the same level as regular soldiers. Without Active Camo SPARKs and MEC Troopers are still much easier for enemies to notice.
-
-Compatibility with other mods:
-- SPARKs and MEC Troopers can now use the System Infiltration ability if you have that mod.
-- SPARKs and MEC Troopers can now equip Ballistic Shields as Secondary Weapons, if you have that mod. They behave in exact same ways as they do for soldiers.
-- If you use [WOTC] Weapon Upgrade UI Adjustment Tool by RustyDios, Heavy Cannon and Incinerator models will appear further away from the camera on the weapon upgrade screen. 
-
-Item changes:
-- Restorative Mist and EM Pulse are now Heavy Weapons and require that you complete the EXO Suit proving grounds project before you can build them. 
-- They can be equipped in regular Heavy Weapon and BIT Heavy Weapon slots by MEC Troopers, SPARKs and regular soldiers. SPARKs and MEC Troopers can still equip them as Aux Weapons without any additional research.
-- Similar to other Heavy Weapons, control over them can be transferred via Aid Protocol when equipped into BIT Heavy Weapon slot.
-- Heavy Strike Module, Powered Strike Module, EM Pulse and Resto Mist will now interact with Salvo, which makes heavy weapons not end turn.
-- EM Pulse now deals damage to robotic units.
-- EM Pulse and Restorative Mist have larger area of effect when they're not equipped in the BIT Heavy Weapon slot. EM Pulse also deals more damage that way.
-
-Bugfixes:
-- Speed Loader should now display flyover only when actually reloading the weapon.
-- Additional fix to Lost Towers SPARK starting without their heavy weapon, as the previous one seemed to have stopped working with this update.
-
-*/
 //	Immedaite goals:
-//	patch existing soldiers of classes, not just class templates
+
+//	Rainmaker should affect EM Pulse, maybe Resto Mist too
+//	Allow some of the support heavy weapons in the aux weapon slot
 
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
