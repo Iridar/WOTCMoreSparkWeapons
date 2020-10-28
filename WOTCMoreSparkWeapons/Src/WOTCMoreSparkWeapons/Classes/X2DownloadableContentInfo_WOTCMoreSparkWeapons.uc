@@ -50,6 +50,8 @@ delegate ModifyTemplate(X2DataTemplate DataTemplate);
 
 //	Rainmaker should affect EM Pulse, maybe Resto Mist too
 //	Allow some of the support heavy weapons in the aux weapon slot
+//  any ability that attaches bit to allied unit should transfer weaopn
+// maybe adjust EM Pulse and Resto Mist requirements so they can be built before EXO Suit, if the player already has access to heavy weapons
 
 //	Heavy Cannon shells as weapon upgrades. Can always be removed.
 //	Double check HE / HESH config for scatter
@@ -247,6 +249,7 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 								return;
 						}	
 					}
+					break;
 				case 'heavy':
 					//	If this Heavy Weapon is not in the slot granted by the BIT, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
 					if (InternalWeaponState.InventorySlot != class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot || default.bAlwaysUseArmCannonAnimationsForHeavyWeapons)
@@ -1920,6 +1923,8 @@ static private function IterateTemplatesAllDiff(class TemplateClass, delegate<Mo
  
         foreach ItemMgr.IterateTemplates(IterateTemplate)
         {
+			if (!ClassIsChildOf(IterateTemplate.Class, TemplateClass)) continue;
+
             ItemMgr.FindDataTemplateAllDifficulties(IterateTemplate.DataName, DataTemplates);
             foreach DataTemplates(DataTemplate)
             {   
@@ -1934,6 +1939,8 @@ static private function IterateTemplatesAllDiff(class TemplateClass, delegate<Mo
  
         foreach AbilityMgr.IterateTemplates(IterateTemplate)
         {
+			if (!ClassIsChildOf(IterateTemplate.Class, TemplateClass)) continue;
+
             AbilityMgr.FindDataTemplateAllDifficulties(IterateTemplate.DataName, DataTemplates);
             foreach DataTemplates(DataTemplate)
             {
@@ -1947,6 +1954,8 @@ static private function IterateTemplatesAllDiff(class TemplateClass, delegate<Mo
         CharMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
         foreach CharMgr.IterateTemplates(IterateTemplate)
         {
+			if (!ClassIsChildOf(IterateTemplate.Class, TemplateClass)) continue;
+
             CharMgr.FindDataTemplateAllDifficulties(IterateTemplate.DataName, DataTemplates);
             foreach DataTemplates(DataTemplate)
             {
@@ -1960,6 +1969,8 @@ static private function IterateTemplatesAllDiff(class TemplateClass, delegate<Mo
         StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
         foreach StratMgr.IterateTemplates(IterateTemplate)
         {
+			if (!ClassIsChildOf(IterateTemplate.Class, TemplateClass)) continue;
+
             StratMgr.FindDataTemplateAllDifficulties(IterateTemplate.DataName, DataTemplates);
             foreach DataTemplates(DataTemplate)
             {
@@ -1974,6 +1985,8 @@ static private function IterateTemplatesAllDiff(class TemplateClass, delegate<Mo
         ClassMgr = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
         foreach ClassMgr.IterateTemplates(IterateTemplate)
         {
+			if (!ClassIsChildOf(IterateTemplate.Class, TemplateClass)) continue;
+
             ClassMgr.FindDataTemplateAllDifficulties(IterateTemplate.DataName, DataTemplates);
             foreach DataTemplates(DataTemplate)
             {
