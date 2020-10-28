@@ -200,7 +200,7 @@ Adds new weapons, tools and gameplay mechanics for SPARKs, [b][url=https://steam
 
 [h1]BALANCING[/h1]
 
-This mod is a significant buff to SPARKs' and MECs' power. However, it is created around the expectation that SPARKs and MEC Troopers do not have Utility Slots. So if another mod adds some Utility Slots, abd lets you carry more than 2-3 grenades/rockets, please do not complain that it's overpowered, that is not the intended behavior for this mod. The mod does support grenades/rockets in Utility Slots, if that's what you want to do.
+This mod is a significant buff to SPARKs' and MECs' power. However, it is created around the expectation that SPARKs and MEC Troopers do not have Utility Slots. So if another mod adds some Utility Slots, and lets you carry more than 2-3 grenades/rockets, please do not complain that it's overpowered, that is not the intended behavior for this mod. The mod does support grenades/rockets in Utility Slots, if that's what you want to do.
 
 [h1]REQUIREMENTS[/h1]
 [list]
