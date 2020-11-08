@@ -1040,6 +1040,8 @@ static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2Wea
 	{
 		case 'IRI_ArtilleryCannon_CV':
 		case 'IRI_ArtilleryCannon_MG':
+		case 'IRI_ArtilleryCannon_LS':
+		case 'IRI_ArtilleryCannon_CG':
 		case 'IRI_ArtilleryCannon_BM':
 			foreach default.DisallowedWeaponUpgradeNames(DisallowedUpgradeName)
 			{
