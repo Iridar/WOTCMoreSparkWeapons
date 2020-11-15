@@ -62,9 +62,52 @@ static private function XComGameState_BaseObject GetGameStateForObjectID(XComGam
 	return BaseObject;
 }
 
+//	Reinit weapon after it has been trasnferred. Regular WeaponInit runs too early, when the OwnerStateObject has not been assigned yet. Not sure why.
+static private function ReinitiliazeTransferredWeapon(XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata, const name EffectApplyResult)
+{
+	local XComGameState_Effect_TransferWeapon	TransferWeaponEffectState;
+	local XComGameState_Unit					UnitState;
+	local XComGameState_Item					ItemState;
+	local XGWeapon								Weapon;	
+	
+	UnitState = XComGameState_Unit(ActionMetadata.StateObject_NewState);
+	if (EffectApplyResult == 'AA_Success' && UnitState != none)
+	{
+		TransferWeaponEffectState = XComGameState_Effect_TransferWeapon(UnitState.GetUnitAffectedByEffectState(default.EffectName));
+		if (TransferWeaponEffectState != none)
+		{
+			ItemState = XComGameState_Item(GetObjectStateFromGameStateOrHistory(TransferWeaponEffectState.TransferWeaponRef.ObjectID, VisualizeGameState));
+			if (ItemState != none)
+			{
+				Weapon = XGWeapon(ItemState.GetVisualizer());
+				Weapon.CreateEntity(ItemState);
+			}
+		}
+	}
+}
+
+
+static private function XComGameState_BaseObject GetObjectStateFromGameStateOrHistory(int ObjectObjectID, optional XComGameState CheckGameState)
+{
+	local XComGameState_BaseObject BaseObj;
+
+	if (CheckGameState != none)
+	{
+		BaseObj = CheckGameState.GetGameStateForObjectID(ObjectObjectID);
+	}
+	if (BaseObj == none)
+	{
+		BaseObj = `XCOMHISTORY.GetGameStateForObjectID(ObjectObjectID);
+	}
+	return BaseObj;
+}
+
 defaultproperties
 {
 	DuplicateResponse = eDupe_Ignore
 	EffectName = "X2Effect_TransferWeapon_Effect"
 	GameStateEffectClass = class'XComGameState_Effect_TransferWeapon'
+
+	VisualizationFn = ReinitiliazeTransferredWeapon
+	EffectRemovedVisualizationFn = ReinitiliazeTransferredWeapon
 }

@@ -188,18 +188,25 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 	}
 	else InternalWeaponState = ItemState;
 
+	//`LOG("WeaponInitialized:" @ InternalWeaponState.GetMyTemplateName(),, 'IRITEST');
+
 	if (InternalWeaponState != none)
 	{
 		UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(InternalWeaponState.OwnerStateObject.ObjectID));
 		WeaponTemplate = X2WeaponTemplate(InternalWeaponState.GetMyTemplate());
 
+		//`LOG("UnitState:" @ UnitState.GetFullName() @ WeaponTemplate.DataName,, 'IRITEST');
+
 		if (UnitState != none && WeaponTemplate != none && !UnitState.GetMyTemplate().bIsCosmetic) 
 		{
+			//`LOG("Unit not cosmetic",, 'IRITEST');
 			
 			if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
-			{
-				//	If this heavy weapon is equipped on a non-SPARK in the BIT-granted heavy weapon slot, replace its firing animations with point finger ones.
-				if (InternalWeaponState.InventorySlot == class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot)
+			{	
+				//`LOG("Unit not a SPARK",, 'IRITEST');
+
+				//	If this heavy weapon is equipped on a non-SPARK in the BIT-granted heavy weapon slot, or acquired via Aid Protocol Transfer Weapon, then replace its firing animations with point finger ones.
+				if (DoesThisRefBitHeavyWeapon(InternalWeaponState.GetReference(), UnitState))
 				{
 					Weapon.CustomUnitPawnAnimsets.Length = 0;
 					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
@@ -207,10 +214,10 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 					//	Autogun's game archetype already specifies the correct animation name
 					if (WeaponTemplate.DataName != 'IRI_Heavy_Autogun' && WeaponTemplate.DataName != 'IRI_Heavy_Autogun_MK2')
 					{
+						//`LOG("Replacing firing animation name for:" @ WeaponTemplate.DataName @ "on unit:" @ UnitState.GetFullName() @ "from:" @ Weapon.WeaponFireAnimSequenceName @ "to:" @ name(Weapon.WeaponFireAnimSequenceName $ 'BIT'),, 'IRITEST');
 						Weapon.WeaponFireAnimSequenceName = name(Weapon.WeaponFireAnimSequenceName $ 'BIT');
 					}
 
-					//`LOG("Replacing firing animation name for:" @ WeaponTemplate.DataName @ "on unit:" @ UnitState.GetFullName() @ "to:" @ Weapon.WeaponFireAnimSequenceName,, 'IRITEST');
 					//	This will hide the weapon from the soldier's body.
 					Weapon.DefaultSocket = '';
 				}
@@ -584,11 +591,13 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 
 		//	End of Spark-only code
 	}	
+	else  
+	{	
+		//	------------------------- ALL UNITS CHANGES -------------------------------------
 
-
-	//	------------------------- ALL UNITS CHANGES -------------------------------------
-	if (class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState) || IsUnitValidTransferWeaponTarget(UnitState))	//	Unit not a SPARK and has a BIT equipped
-	{	//	OR Unit is being targeted by a BIT-sourced Aid Protocol so they need to be able to Init their proper heavy weapon abilities 
+		//	Check all non spark units since we remove the condition from SPARK versions of heavy weapon abilities.
+		//if (class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState) || IsUnitValidTransferWeaponTarget(UnitState))	//	Unit not a SPARK and has a BIT equipped
+		//	OR Unit is being targeted by a BIT-sourced Aid Protocol so they need to be able to Init their proper heavy weapon abilities 
 		
 		//`LOG("This unit has a BIT or is a target for Transfer Weapon, begin second cycle.",, 'IRILOG');
 
@@ -765,7 +774,7 @@ static private function bool DoesThisRefBitHeavyWeapon(const StateObjectReferenc
 		//`LOG("DoesThisRefBitHeavyWeapon:: inventory slot is:" @ ItemState.InventorySlot @ Ref.ObjectID,, 'WOTCMoreSparkWeapons');
 		if (ItemState.InventorySlot == class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot)
 		{	
-			 //`LOG("DoesThisRefBitHeavyWeapon:: this heavy weapon is in the BIT Heavy Weapon slot, returning true",, 'WOTCMoreSparkWeapons');
+			//`LOG("DoesThisRefBitHeavyWeapon:: this heavy weapon is in the BIT Heavy Weapon slot, returning true",, 'WOTCMoreSparkWeapons');
 			return true;
 		}
 
@@ -775,7 +784,7 @@ static private function bool DoesThisRefBitHeavyWeapon(const StateObjectReferenc
 
 		//if (TransferWeaponState != none)
 		//{
-			//`LOG("DoesThisRefBitHeavyWeapon:: TransferWeaponState.TransferWeaponRef" @ TransferWeaponState.TransferWeaponRef.ObjectID,, 'WOTCMoreSparkWeapons');
+		//	`LOG("DoesThisRefBitHeavyWeapon:: TransferWeaponState.TransferWeaponRef" @ TransferWeaponState.TransferWeaponRef.ObjectID,, 'WOTCMoreSparkWeapons');
 		//}
 		//else `LOG("DoesThisRefBitHeavyWeapon:: no TransferWeaponState, exiting to return false",, 'WOTCMoreSparkWeapons');
 		
