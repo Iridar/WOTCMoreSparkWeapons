@@ -128,10 +128,12 @@ static function X2DataTemplate Create_Item()
 	Template.AltGameArchetype = "IRISparkHeavyWeapons.Archetypes.WP_Heavy_LAC_Powered";
 	Template.ArmorTechCatForAltArchetype = 'powered';
 
+	//	Alternative archetype if this Autogun is in the BIT Heavy Weapon slot
 	GameArch.UseGameArchetypeFn = SparkHeavyWeaponCheck;
 	GameArch.ArchetypeString = "IRISparkHeavyWeapons.Archetypes.WP_Heavy_LAC_Spark_with_BIT";
 	Template.AltGameArchetypeArray.AddItem(GameArch);
 
+	//	Use alternative alternative archetype for the BIT itself.
 	GameArch.UseGameArchetypeFn = BitHeavyWeaponCheck;
 	GameArch.ArchetypeString = "IRISparkHeavyWeapons.Archetypes.WP_Heavy_LAC_Bit";
 	Template.AltGameArchetypeArray.AddItem(GameArch);
@@ -141,23 +143,10 @@ static function X2DataTemplate Create_Item()
 
 static function bool SparkHeavyWeaponCheck(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)
 {
-	//	Use this game archetype only if the unit has a BIT.
-	if (!class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState))
-		return false;
-
-	//	Use this Autogun is in the Aux slot, then we use this Autogun-on-BIT archetype only if this unit is NOT a SPARK.
-	//	I.e. they're a regular soldier that have the Aux Slot because they equipped a BIT, and now they want to put an Autogun into that "BIT heavy weapon" aux slot.
-	if (ItemState.InventorySlot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot)
-	{
-		return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE;
-	}
-
-	//	If this Autogun is NOT in the Aux slot, then we use the Autogun-on-BIT archetype if this unit is a spark.
-	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE;
+	return ItemState.InventorySlot == class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot;
 }
 
 static function bool BitHeavyWeaponCheck(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)
 {
-	//	Use alternative alternative archetype for the BIT itself.
 	return UnitState.GetMyTemplate().bIsCosmetic;
 }

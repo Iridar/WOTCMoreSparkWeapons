@@ -367,6 +367,8 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 	local name						TemplateName;
 	local bool						bUnitIsSpark;
 	local int Index;
+
+	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 	
 	//	------------------------- SPARK ONLY CHANGES -------------------------------------
 	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
@@ -374,8 +376,6 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 		bUnitIsSpark = true;
 
 		//`LOG("Finalize abilities for unit:" @ UnitState.GetFullName(),, 'IRILOG');
-
-		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();		
 
 		//	Ordnance Launcher Equipped?
 		ItemState = UnitState.GetItemInSlot(class'X2Item_OrdnanceLauncher_CV'.default.INVENTORY_SLOT, StartState);
@@ -593,15 +593,13 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 	}	
 	else  
 	{	
-		//	------------------------- ALL UNITS CHANGES -------------------------------------
+		//	------------------------- NON SPARK CHANGES -------------------------------------
 
 		//	Check all non spark units since we remove the condition from SPARK versions of heavy weapon abilities.
 		//if (class'X2Condition_HasWeaponOfCategory'.static.DoesUnitHaveBITEquipped(UnitState) || IsUnitValidTransferWeaponTarget(UnitState))	//	Unit not a SPARK and has a BIT equipped
 		//	OR Unit is being targeted by a BIT-sourced Aid Protocol so they need to be able to Init their proper heavy weapon abilities 
-		
 		//`LOG("This unit has a BIT or is a target for Transfer Weapon, begin second cycle.",, 'IRILOG');
 
-		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 		for (Index = SetupData.Length - 1; Index >= 0; Index--)
 		{
 			//`LOG("Looking at ability:" @ SetupData[Index].TemplateName,, 'IRILOG');
@@ -635,68 +633,76 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 						SetupData.Remove(Index, 1);
 					}
 					break;
-				//	=======	Heavy Strike Module =======
-				//case 'IRI_KineticStrike_Soldier':
-				//	if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
-				//	{
-				//		SetupData[Index].TemplateName = 'IRI_HeavyStrike_Bit';
-				//		SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_HeavyStrike_Bit');
-				//	}
-				//	break;
-				//	=======	Heavy Autogun =======
-				case 'IRI_Fire_HeavyAutogun':
-					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
-					{
-						SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_BIT';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_BIT');
-					}
-					else if (bUnitIsSpark)	//	If this unit is a SPARK, and this AutoGun is NOT in the BIT-granted heavy weapon slot, then we replace the ability with the Arm Cannon one.
-					{
-						SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_Spark');
-					}
-					break;
-				case 'IRI_OverwatchShot_HeavyAutogun':
-					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
-					{
-						SetupData[Index].TemplateName = 'IRI_OverwatchShot_HeavyAutogun_BIT';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_OverwatchShot_HeavyAutogun_BIT');
-					}
-					else if (bUnitIsSpark)	//	If this unit is a SPARK, and this AutoGun is NOT in the BIT-granted heavy weapon slot, then we replace the ability with the Arm Cannon one.
-					{
-						SetupData[Index].TemplateName = 'IRI_OverwatchShot_HeavyAutogun_Spark';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_OverwatchShot_HeavyAutogun_Spark');
-					}
-					break;
-				//	=======	Restorative Mist =======
-				case 'IRI_RestorativeMist_Heal':
-					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
-					{
-						SetupData[Index].TemplateName = 'IRI_RestorativeMist_HealBit';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_RestorativeMist_HealBit');
-					}
-					break;
-				//	=======	Electro Pulse =======
-				case 'IRI_ElectroPulse':
-					if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
-					{
-						SetupData[Index].TemplateName = 'IRI_ElectroPulse_Bit';
-						SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_ElectroPulse_Bit');
-					}
-					break;			
 				default:
 					break;
 			}
 		}
 	}
 
+	//	------------------------- ALL UNIT CHANGES -------------------------------------
+
+	for (Index = SetupData.Length - 1; Index >= 0; Index--)
+	{
+		switch (SetupData[Index].TemplateName)
+		{
+			//	=======	Heavy Autogun =======
+			case 'IRI_Fire_HeavyAutogun':
+				if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
+				{
+					SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_BIT';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_BIT');
+				}
+				else if (bUnitIsSpark)	//	If this unit is a SPARK, and this AutoGun is NOT in the BIT-granted heavy weapon slot, then we replace the ability with the Arm Cannon one.
+				{
+					SetupData[Index].TemplateName = 'IRI_Fire_HeavyAutogun_Spark';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_Fire_HeavyAutogun_Spark');
+				}
+				break;
+			case 'IRI_OverwatchShot_HeavyAutogun':
+				if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
+				{
+					SetupData[Index].TemplateName = 'IRI_OverwatchShot_HeavyAutogun_BIT';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_OverwatchShot_HeavyAutogun_BIT');
+				}
+				else if (bUnitIsSpark)	//	If this unit is a SPARK, and this AutoGun is NOT in the BIT-granted heavy weapon slot, then we replace the ability with the Arm Cannon one.
+				{
+					SetupData[Index].TemplateName = 'IRI_OverwatchShot_HeavyAutogun_Spark';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_OverwatchShot_HeavyAutogun_Spark');
+				}
+				break;
+			//	=======	Heavy Strike Module =======
+			//case 'IRI_KineticStrike_Soldier':
+			//	if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
+			//	{
+			//		SetupData[Index].TemplateName = 'IRI_HeavyStrike_Bit';
+			//		SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_HeavyStrike_Bit');
+			//	}
+			//	break;
+			//	=======	Restorative Mist =======
+			case 'IRI_RestorativeMist_Heal':
+				if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
+				{
+					SetupData[Index].TemplateName = 'IRI_RestorativeMist_HealBit';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_RestorativeMist_HealBit');
+				}
+				break;
+			//	=======	Electro Pulse =======
+			case 'IRI_ElectroPulse':
+				if (DoesThisRefBitHeavyWeapon(SetupData[Index].SourceWeaponRef, UnitState, StartState))
+				{
+					SetupData[Index].TemplateName = 'IRI_ElectroPulse_Bit';
+					SetupData[Index].Template = AbilityTemplateManager.FindAbilityTemplate('IRI_ElectroPulse_Bit');
+				}
+				break;			
+			default:
+				break;
+		}
+	}
+
 	//	----------------------------------------------------------
 	//	Grant Speed Loader Reload to weapons that have it equipped.
 	ItemStates = UnitState.GetAllInventoryItems(StartState, true);
-	if (AbilityTemplateManager == none)
-	{
-		AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();	
-	}
+
 	AbilityTemplate = AbilityTemplateManager.FindAbilityTemplate('IRI_SpeedLoader_Reload');
 	foreach ItemStates(ItemState)
 	{
