@@ -49,6 +49,16 @@ static function X2AbilityTemplate Create_LAC_Overwatch()
 		}
 	}
 
+	//	Fix bug where this ability can be used even with no AP while under Overdrive.
+	for (i = 0; i < Template.AbilityCosts.Length; i++)
+	{	
+		if (X2AbilityCost_ActionPoints(Template.AbilityCosts[i]) != none)
+		{
+			X2AbilityCost_ActionPoints(Template.AbilityCosts[i]).iNumPoints = 1;
+		}
+
+	}
+
 	Template.HideIfAvailable.Length = 0;
 	Template.DefaultKeyBinding = 0;
 

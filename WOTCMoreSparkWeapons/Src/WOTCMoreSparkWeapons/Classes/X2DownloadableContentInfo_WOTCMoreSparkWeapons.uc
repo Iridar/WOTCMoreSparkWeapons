@@ -3,6 +3,7 @@ class X2DownloadableContentInfo_WOTCMoreSparkWeapons extends X2DownloadableConte
 var config(SparkArsenal) array<name> AbilitiesToAddProperKnockback;
 
 var config(SparkArsenal) array<name> SparkCharacterTemplates;
+var config(SparkArsenal) array<name> SparkLikeSoldierClasses;
 var config(SparkArsenal) bool bRocketLaunchersModPresent;
 var config(SparkArsenal) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
 
@@ -164,6 +165,11 @@ HWZ-1 "Arbalest", HWZ-3 "Onager",     HWZ-9 "Scorpion"
 //	REJECTED
 //	shells equippable into ammo slot? -> cannot do that,  would have compatibility issues with regular ammo, wouldn't be able to carry them with special ammo and HotLoadAmmo would try to grab special shells.
 // SPARK Arsenal -> hacking a door without BIT crashes the game? -- Couldn't confirm.
+
+static function bool IsUnitSparkLike(const XComGameState_Unit UnitState)
+{
+	return default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE || default.SparkLikeSoldierClasses.Find(UnitState.GetSoldierClassTemplateName()) != INDEX_NONE;
+}
 
 //	===================================================================================================================================
 //														DLC METHODS
@@ -371,7 +377,7 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 	
 	//	------------------------- SPARK ONLY CHANGES -------------------------------------
-	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
+	if (IsUnitSparkLike(UnitState))
 	{
 		bUnitIsSpark = true;
 
@@ -846,7 +852,7 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 			bCanAddItem = 0;
 			return OverrideNormalBehavior;
 		}//	Also can't equip MM and Shells on non-SPARKS.
-		else if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+		else if (!IsUnitSparkLike(UnitState))
 		{
 			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
 			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
@@ -865,7 +871,7 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 			bCanAddItem = 0;
 			return OverrideNormalBehavior;
 		}
-		else if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+		else if (!IsUnitSparkLike(UnitState))
 		{
 			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
 			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
@@ -891,7 +897,7 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 		}	
 	}
 	//	SPARK-only changes past this point.
-	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+	if (!IsUnitSparkLike(UnitState))
 		return DoNotOverrideNormalBehavior;
 
 	//	Complains about "missing allowed soldier class" without this. WTF?!
@@ -1466,6 +1472,10 @@ static private function PatchAbilityTemplates()
 	ModifyTemplateAllDiff('Bulwark', class'X2AbilityTemplate', PatchBulwarkTemplate);
 	ModifyTemplateAllDiff('RoboticChassis', class'X2AbilityTemplate', PatchBulwarkTemplate); //	Mechatronic Warfare
 
+	//	Fix bug where Shield Wall doesn't end turn properly under Overdrive.
+	ModifyTemplateAllDiff('HighCoverGenerator', class'X2AbilityTemplate', PatchShieldWallTemplate);
+	ModifyTemplateAllDiff('ShieldWall', class'X2AbilityTemplate', PatchShieldWallTemplate);
+
 	//	Make using Aid Protocol with BIT transfer the control of the BIT's heavy weapon to the targeted soldier
 	ModifyTemplateAllDiff('AidProtocol', class'X2AbilityTemplate', PatchAidProtocolTemplate);
 
@@ -1512,6 +1522,26 @@ static private function PatchBulwarkTemplate(X2DataTemplate DataTemplate)
 	{
 		Template.OverrideAbilities.AddItem('BallisticShield_GenerateCover');
 	}	
+}
+
+static private function PatchShieldWallTemplate(X2DataTemplate DataTemplate)
+{
+	local X2AbilityTemplate				Template;
+	local X2AbilityCost					AbilityCost;
+	local X2AbilityCost_ActionPoints	ActionCost;
+
+	Template = X2AbilityTemplate(DataTemplate);
+	if (Template != none)
+	{
+		foreach Template.AbilityCosts(AbilityCost)
+		{
+			ActionCost = X2AbilityCost_ActionPoints(AbilityCost);
+			if (ActionCost != none && !ActionCost.bFreeCost && ActionCost.bConsumeAllPoints && ActionCost.iNumPoints == 0)
+			{
+				ActionCost.iNumPoints = 1;				
+			}
+		}
+	}
 }
 
 static private function PatchAidProtocolTemplate(X2DataTemplate DataTemplate)

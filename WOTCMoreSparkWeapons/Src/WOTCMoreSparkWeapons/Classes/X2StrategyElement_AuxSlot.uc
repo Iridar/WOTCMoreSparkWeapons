@@ -55,7 +55,7 @@ static function X2DataTemplate CreateSlotTemplate()
 static function bool HasSlot(CHItemSlot Slot, XComGameState_Unit UnitState, out string LockedReason, optional XComGameState CheckGameState)
 {    
 	//	Aux Slot is granted to all SPARK / MEC characters
-	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE;
+	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.static.IsUnitSparkLike(UnitState);
 }
 
 static function bool ShowItemInLockerList(CHItemSlot Slot, XComGameState_Unit Unit, XComGameState_Item ItemState, X2ItemTemplate ItemTemplate, XComGameState CheckGameState)
