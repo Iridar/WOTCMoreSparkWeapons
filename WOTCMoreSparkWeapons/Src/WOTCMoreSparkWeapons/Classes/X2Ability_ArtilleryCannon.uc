@@ -433,7 +433,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 	local X2Condition_RequiredItem				RequiredItem;
 
 	//	Disallow disoriented, HESHDamage tag for the primary target damage, its explosive damage, requires shell item.
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HE', false, 'NoPrimary', true);
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HE', false, 'NoPrimary', true, true);
 
 	Template.AbilityToHitCalc = default.DeadEye;
 
@@ -483,7 +483,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HESH()
 	local X2Condition_RequiredItem				RequiredItem;
 
 	//	Disallow disoriented, HESHDamage tag for the primary target damage, its explosive damage, requires shell item.
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HESH', false, 'HESHDamage', true);
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HESH', false, 'HESHDamage', true, true);
 
 	Template.AbilityToHitCalc = default.DeadEye;
 
