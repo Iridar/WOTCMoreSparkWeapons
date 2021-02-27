@@ -110,7 +110,7 @@ function bool PostAbilityCostPaid(XComGameState_Effect EffectState, XComGameStat
 	//	This is a movement ability and the unit is dashing.
 	if (AbilityContext.InputContext.MovementPaths.Length > 0)
 	{	
-		if (AbilityContext.InputContext.MovementPaths[0].CostIncreases.Length > 0)
+		if (AbilityContext.InputContext.MovementPaths[0].CostIncreases.Length > 0 && !kAbility.IsMeleeAbility())
 		{
 			`XEVENTMGR.TriggerEvent('IRI_SpeedLoader_Trigger_Event', SourceUnit, SourceUnit, NewGameState);
 		}
