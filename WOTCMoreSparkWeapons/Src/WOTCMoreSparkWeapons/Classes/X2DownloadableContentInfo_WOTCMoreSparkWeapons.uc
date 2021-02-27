@@ -834,6 +834,7 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
     local XGParamTag                    LocTag;
     local bool							OverrideNormalBehavior;
     local bool							DoNotOverrideNormalBehavior;
+	local bool							bUnitSparkLike;
     local X2SoldierClassTemplateManager Manager;
 
     OverrideNormalBehavior = CheckGameState != none;
@@ -842,6 +843,7 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
     if(DisabledReason != "")
         return DoNotOverrideNormalBehavior;
 
+	bUnitSparkLike = IsUnitSparkLike(UnitState);
 	
 	if (IsItemSpecialShell(ItemTemplate.DataName))
 	{	
@@ -852,7 +854,7 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 			bCanAddItem = 0;
 			return OverrideNormalBehavior;
 		}//	Also can't equip MM and Shells on non-SPARKS.
-		else if (!IsUnitSparkLike(UnitState))
+		else if (!bUnitSparkLike)
 		{
 			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
 			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
@@ -871,7 +873,7 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 			bCanAddItem = 0;
 			return OverrideNormalBehavior;
 		}
-		else if (!IsUnitSparkLike(UnitState))
+		else if (!bUnitSparkLike)
 		{
 			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
 			LocTag = XGParamTag(`XEXPANDCONTEXT.FindTag("XGParam"));
@@ -896,16 +898,19 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 			return OverrideNormalBehavior;
 		}	
 	}
-	//	SPARK-only changes past this point.
-	if (!IsUnitSparkLike(UnitState))
-		return DoNotOverrideNormalBehavior;
 
+	//	If we're trying to equip a Chemthrower Canister into an auxiliary weapon slot, and they don't have a canister yet and have a chemthrower, then allow it.
 	//	Complains about "missing allowed soldier class" without this. WTF?!
-	if (IsItemCanister(ItemTemplate))
-	{
+	if (IsItemCanister(ItemTemplate) && Slot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot && !DoesUnitHaveCanisterEquipped(UnitState) && IsUnitsPrimaryWeaponValidForCanister(UnitState))
+	{	
 		bCanAddItem = 1;
 		return OverrideNormalBehavior;
 	}
+
+	//	SPARK-only changes past this point.
+	if (!bUnitSparkLike)
+		return DoNotOverrideNormalBehavior;
+
 	//	Can't equip Heavy Strike Module on SPARK.
 	if (ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T1' || ItemTemplate.DataName == 'IRI_HeavyStrikeModule_T2')
 	{
@@ -918,6 +923,48 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 	}
     return DoNotOverrideNormalBehavior;
 }
+
+static private function bool DoesUnitHaveCanisterEquipped(const XComGameState_Unit UnitState)
+{
+    local array<XComGameState_Item> InventoryItems;
+    local XComGameState_Item        InventoryItem;
+ 
+    InventoryItems = UnitState.GetAllInventoryItems();
+ 
+    foreach InventoryItems(InventoryItem)
+    {
+        if (InventoryItem.GetWeaponCategory() == 'canister')
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+static private function bool IsUnitsPrimaryWeaponValidForCanister(const XComGameState_Unit UnitState)
+{
+   local XComGameState_Item PrimaryWeapon;
+ 
+    PrimaryWeapon = UnitState.GetPrimaryWeapon();
+
+    if (PrimaryWeapon != none)
+	{
+		if (PrimaryWeapon.GetWeaponCategory() == 'chemthrower')
+			return true;
+
+		switch (PrimaryWeapon.GetMyTemplateName())
+		{
+		case 'IRI_Incinerator_CV':
+		case 'IRI_Incinerator_MG':
+		case 'IRI_Incinerator_BM':
+			return true;
+		default:
+			return false;
+		}
+	}
+	return false;
+}
+
 
 private static function bool DoesUnitHaveMunitionsMount(const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {

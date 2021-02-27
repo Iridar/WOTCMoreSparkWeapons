@@ -9,6 +9,8 @@ var config array<name> AuxSlotAllowedWeaponCategories;
 var config array<name> AuxSlotAllowedItemsWithTech;
 var config array<name> AuxSlotAlwaysAllowedItems;
 var config name		   TechRequiredForItems;
+var config bool		   bAllowCanisters;
+var config bool		   bAllowCanistersForNonSPARKs;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -55,7 +57,31 @@ static function X2DataTemplate CreateSlotTemplate()
 static function bool HasSlot(CHItemSlot Slot, XComGameState_Unit UnitState, out string LockedReason, optional XComGameState CheckGameState)
 {    
 	//	Aux Slot is granted to all SPARK / MEC characters
-	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.static.IsUnitSparkLike(UnitState);
+	return class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.static.IsUnitSparkLike(UnitState) || default.bAllowCanistersForNonSPARKs && IsUnitsPrimaryWeaponValidForCanister(UnitState) && !DoesUnitHaveCanisterEquippedInOtherSlot(UnitState);
+}
+
+static private function bool IsUnitsPrimaryWeaponValidForCanister(const XComGameState_Unit UnitState)
+{
+   local XComGameState_Item PrimaryWeapon;
+ 
+    PrimaryWeapon = UnitState.GetPrimaryWeapon();
+
+    if (PrimaryWeapon != none)
+	{
+		if (PrimaryWeapon.GetWeaponCategory() == 'chemthrower')
+			return true;
+
+		switch (PrimaryWeapon.GetMyTemplateName())
+		{
+		case 'IRI_Incinerator_CV':
+		case 'IRI_Incinerator_MG':
+		case 'IRI_Incinerator_BM':
+			return true;
+		default:
+			return false;
+		}
+	}
+	return false;
 }
 
 static function bool ShowItemInLockerList(CHItemSlot Slot, XComGameState_Unit Unit, XComGameState_Item ItemState, X2ItemTemplate ItemTemplate, XComGameState CheckGameState)
@@ -117,13 +143,47 @@ private static function bool IsTemplateValidForSlot(EInventorySlot InvSlot, X2It
 		if (IsItemValidGrenade(ItemTemplate)) return true;
 	}
 
+	//	Allow canisters in Aux Slot, as long as they don't already have a canister equipped.
+	if (IsItemCanister(ItemTemplate) && !class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.static.IsUnitSparkLike(UnitState) && 
+		default.bAllowCanistersForNonSPARKs && !DoesUnitHaveCanisterEquippedInOtherSlot(UnitState))
+	{
+		return true;
+	}
+
 	//	Whitelist items by weaponcat
 	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
 	if (WeaponTemplate != none)
 	{
 		return default.AuxSlotAllowedWeaponCategories.Find(WeaponTemplate.WeaponCat) != INDEX_NONE;
 	}
+
 	return false;
+}
+
+static private function bool DoesUnitHaveCanisterEquippedInOtherSlot(const XComGameState_Unit UnitState)
+{
+    local array<XComGameState_Item> InventoryItems;
+    local XComGameState_Item        InventoryItem;
+ 
+    InventoryItems = UnitState.GetAllInventoryItems();
+ 
+    foreach InventoryItems(InventoryItem)
+    {
+        if (InventoryItem.GetWeaponCategory() == 'canister' && InventoryItem.InventorySlot != default.AuxiliaryWeaponSlot)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+private static function bool IsItemCanister(const X2ItemTemplate ItemTemplate)
+{
+	local X2WeaponTemplate	WeaponTemplate;
+
+	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
+
+	return default.bAllowCanisters && WeaponTemplate != none && WeaponTemplate.WeaponCat =='canister';
 }
 
 private static function bool IsItemValidGrenade(const X2ItemTemplate ItemTemplate)
