@@ -110,51 +110,63 @@ private static function bool IsTemplateValidForSlot(EInventorySlot InvSlot, X2It
 
 	//`LOG("IsTemplateValidForSlot:" @ ItemTemplate.DataName,, 'IRITEST');
 
-	if (default.AuxSlotAlwaysAllowedItems.Find(ItemTemplate.DataName) != INDEX_NONE)
+	// Handle SPARK-like units.
+	if (class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.static.IsUnitSparkLike(UnitState))
 	{
-		return true;
-	}
-	
-	//	Whitelist items by template name
-	if (default.AuxSlotAllowedItemsWithTech.Find(ItemTemplate.DataName) != INDEX_NONE)
-	{
-		if (default.TechRequiredForItems != '')
+		if (default.AuxSlotAlwaysAllowedItems.Find(ItemTemplate.DataName) != INDEX_NONE)
 		{
-			XComHQ = `XCOMHQ;
-			if (XComHQ.IsTechResearched(default.TechRequiredForItems))
-			{
-				return true;
-			}
+			return true;
 		}
-		else return true;	//	Allow equipping specified items if no required Tech is specified.
-	}	
+	
+		//	Whitelist items by template name
+		if (default.AuxSlotAllowedItemsWithTech.Find(ItemTemplate.DataName) != INDEX_NONE)
+		{
+			if (default.TechRequiredForItems != '')
+			{
+				XComHQ = `XCOMHQ;
+				if (XComHQ.IsTechResearched(default.TechRequiredForItems))
+				{
+					return true;
+				}
+			}
+			else return true;	//	Allow equipping specified items if no required Tech is specified.
+		}	
 
-	//	Whitelist items by inventory slot - in case an item was made or patched to be here.
-	EqTemplate = X2EquipmentTemplate(ItemTemplate);
-	if (EqTemplate != none && EqTemplate.InventorySlot == InvSlot)
-	{
-		return true;
+		//	Whitelist items by inventory slot - in case an item was made or patched to be here.
+		EqTemplate = X2EquipmentTemplate(ItemTemplate);
+		if (EqTemplate != none && EqTemplate.InventorySlot == InvSlot)
+		{
+			return true;
+		}
+
+		//	If the ordnance launcher is equipped, allow equipping grenades in the slot.
+		OrdLauncherState = UnitState.GetItemInSlot(class'X2Item_OrdnanceLauncher_CV'.default.INVENTORY_SLOT, CheckGameState);
+		if (OrdLauncherState != none && OrdLauncherState.GetWeaponCategory() == class'X2Item_OrdnanceLauncher_CV'.default.WEAPON_CATEGORY)
+		{
+			if (IsItemValidGrenade(ItemTemplate)) return true;
+		}
+
+		//	Allow canisters in Aux Slot, as long as they don't already have a canister equipped.
+		if (IsItemCanister(ItemTemplate) && default.bAllowCanisters && !DoesUnitHaveCanisterEquippedInOtherSlot(UnitState))
+		{
+			return true;
+		}
+
+		//	Whitelist items by weaponcat
+		WeaponTemplate = X2WeaponTemplate(ItemTemplate);
+		if (WeaponTemplate != none)
+		{
+			return default.AuxSlotAllowedWeaponCategories.Find(WeaponTemplate.WeaponCat) != INDEX_NONE;
+		}
+	
 	}
-
-	//	If the ordnance launcher is equipped, allow equipping grenades in the slot.
-	OrdLauncherState = UnitState.GetItemInSlot(class'X2Item_OrdnanceLauncher_CV'.default.INVENTORY_SLOT, CheckGameState);
-	if (OrdLauncherState != none && OrdLauncherState.GetWeaponCategory() == class'X2Item_OrdnanceLauncher_CV'.default.WEAPON_CATEGORY)
+	else // Handle non-SPARK units
 	{
-		if (IsItemValidGrenade(ItemTemplate)) return true;
-	}
-
-	//	Allow canisters in Aux Slot, as long as they don't already have a canister equipped.
-	if (IsItemCanister(ItemTemplate) && !class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.static.IsUnitSparkLike(UnitState) && 
-		default.bAllowCanistersForNonSPARKs && !DoesUnitHaveCanisterEquippedInOtherSlot(UnitState))
-	{
-		return true;
-	}
-
-	//	Whitelist items by weaponcat
-	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
-	if (WeaponTemplate != none)
-	{
-		return default.AuxSlotAllowedWeaponCategories.Find(WeaponTemplate.WeaponCat) != INDEX_NONE;
+		//	Allow canisters in Aux Slot, as long as they don't already have a canister equipped.
+		if (IsItemCanister(ItemTemplate) && default.bAllowCanistersForNonSPARKs && !DoesUnitHaveCanisterEquippedInOtherSlot(UnitState))
+		{
+			return true;
+		}
 	}
 
 	return false;
@@ -183,7 +195,7 @@ private static function bool IsItemCanister(const X2ItemTemplate ItemTemplate)
 
 	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
 
-	return default.bAllowCanisters && WeaponTemplate != none && WeaponTemplate.WeaponCat =='canister';
+	return WeaponTemplate != none && WeaponTemplate.WeaponCat =='canister';
 }
 
 private static function bool IsItemValidGrenade(const X2ItemTemplate ItemTemplate)
