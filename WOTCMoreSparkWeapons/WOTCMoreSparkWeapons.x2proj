@@ -73,6 +73,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Compatibility\XComSystemInfiltration.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\Compatibility\XComTemplateEditor.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\Compatibility\XComUI.ini">
       <SubType>Content</SubType>
     </Content>
