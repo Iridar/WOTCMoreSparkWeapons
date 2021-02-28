@@ -1009,7 +1009,8 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	Trigger.ListenerData.Deferral = ELD_OnStateSubmitted;
 	Trigger.ListenerData.EventID = 'StartOfMatchConcealment';
 	Trigger.ListenerData.Filter = eFilter_Player;
-	Trigger.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_Self; //_VisualizeInGameState;
+	Trigger.ListenerData.Priority = 10;
+	Trigger.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_Self;
 	Template.AbilityTriggers.AddItem(Trigger);
 
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
@@ -1031,14 +1032,52 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	Template.AddTargetEffect(PersistentStatChangeEffect);
 
 	Template.Hostility = eHostility_Neutral;
-	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildNewGameStateFn = ActiveCamo_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 	Template.CustomFireAnim = 'NO_Camouflage';
-	//Template.MergeVisualizationFn = class'X2Ability_TheLost'.static.LostAttack_MergeVisualization;
-	//Template.AssociatedPlayTiming = SPT_AfterParallel;
-	//Template.AssociatedPlayTiming = SPT_BeforeParallel;
+	Template.MergeVisualizationFn = class'X2Ability_TheLost'.static.LostAttack_MergeVisualization;
+	Template.ModifyNewContextFn = ActiveCamo_ModifyActivatedAbilityContext;
 
 	return Template;
+}
+
+static function XComGameState ActiveCamo_BuildGameState(XComGameStateContext Context)
+{
+	local XComGameState					NewGameState;
+	local XComGameStateContext_Ability	AbilityContext;
+	local XComGameState_Ability			AbilityState;
+
+	// Use Cooldown for tracking whether this ability has been activated already or not.
+	NewGameState = TypicalAbility_BuildGameState(Context);
+	AbilityContext = XComGameStateContext_Ability(NewGameState.GetContext());
+	AbilityState = XComGameState_Ability(NewGameState.GetGameStateForObjectID(AbilityContext.InputContext.AbilityRef.ObjectID));	
+	AbilityState.iCooldown = 3;
+
+	return NewGameState;
+}
+
+static simulated function ActiveCamo_ModifyActivatedAbilityContext(XComGameStateContext Context)
+{
+	local XComGameStateContext_Ability	AbilityContext;
+	local XComGameState_Ability			AbilityState;
+	local XComGameStateHistory			History;
+
+	History = `XCOMHISTORY;
+	AbilityContext = XComGameStateContext_Ability(Context);
+	AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityContext.InputContext.AbilityRef.ObjectID));
+
+	//	The goal of this whole system is to set bSkipAdditionalVisualizationSteps = true for all Active Camo ability contexts except for the first one.
+	//	So we check if the history has any other Active Camos on cooldown, and set bSkipAdditionalVisualizationSteps = true only if there are any, 
+	//	because then this activation is not the first one.
+
+	foreach History.IterateByClassType(class'XComGameState_Ability', AbilityState)
+	{
+		if (AbilityState.GetMyTemplateName() == 'IRI_ActiveCamo' && AbilityState.ObjectID != AbilityContext.InputContext.AbilityRef.ObjectID && AbilityState.iCooldown > 0)
+		{		
+			AbilityContext.bSkipAdditionalVisualizationSteps = true;
+			return;
+		}
+	}	
 }
 
 static function X2AbilityTemplate IRI_DebuffConcealment()
