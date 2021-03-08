@@ -181,11 +181,14 @@ static private function bool DoesUnitHaveCanisterEquippedInOtherSlot(const XComG
  
     foreach InventoryItems(InventoryItem)
     {
-        if (InventoryItem.GetWeaponCategory() == 'canister' && InventoryItem.InventorySlot != default.AuxiliaryWeaponSlot)
+		//	Filtering for the Unknown slot is necessary so that items don't get unequipped before they get properly equipped first.
+        if (InventoryItem.GetWeaponCategory() == 'canister' && InventoryItem.InventorySlot != default.AuxiliaryWeaponSlot && InventoryItem.InventorySlot != eInvSlot_Unknown)
         {
+			//`LOG("Unit has canister equipped in slot:" @ InventoryItem.InventorySlot,, 'WOTCSparkArsenal');
             return true;
         }
     }
+	//`LOG("Unit DOES NOT has canister equipped in other slot",, 'WOTCSparkArsenal');
     return false;
 }
 

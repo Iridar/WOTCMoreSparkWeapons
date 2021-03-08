@@ -1464,27 +1464,30 @@ static private function PatchCharacterTemplates()
 				CharTemplate.OnCosmeticUnitCreatedFn = CosmeticBITUnitCreated;	
 			}
 		}
+	}
 
-		//	Cycle through all "humanoid" character templates that are used by the game to create player-controllable soldiers
-		foreach CharMgr.IterateTemplates(DataTemplate, none)
+	//	Cycle through all "humanoid" character templates that are used by the game to create player-controllable soldiers
+	foreach CharMgr.IterateTemplates(DataTemplate, none)
+	{
+		CharMgr.FindDataTemplateAllDifficulties(DataTemplate.DataName, DifficultyVariants);
+		foreach DifficultyVariants(DifficultyVariant)
 		{
-			CharMgr.FindDataTemplateAllDifficulties(DataTemplate.DataName, DifficultyVariants);
-			foreach DifficultyVariants(DifficultyVariant)
+			CharTemplate = X2CharacterTemplate(DifficultyVariant);
+
+			if (CharTemplate != none && CharTemplate.bIsSoldier && CharTemplate.UnitHeight == 2 && CharTemplate.UnitSize == 1 && CharTemplate.OnCosmeticUnitCreatedFn == none)
 			{
-				CharTemplate = X2CharacterTemplate(DifficultyVariant);
+				//	This will copy the Heavy Weapon in the BIT Heavy Weapon slot on the soldier to BIT's heavy weapon slot. 
+				//	It needs to be in that slot, cuz that's where the SparkHeavyWeapon ability's build viz will be looking for it.
+				CharTemplate.OnCosmeticUnitCreatedFn = CosmeticBITUnitCreated;
 
-				if (CharTemplate != none && CharTemplate.bIsSoldier && CharTemplate.UnitHeight == 2 && CharTemplate.UnitSize == 1 && CharTemplate.OnCosmeticUnitCreatedFn == none)
-				{
-					//	This will copy the Heavy Weapon in the BIT Heavy Weapon slot on the soldier to BIT's heavy weapon slot. 
-					//	It needs to be in that slot, cuz that's where the SparkHeavyWeapon ability's build viz will be looking for it.
-					CharTemplate.OnCosmeticUnitCreatedFn = CosmeticBITUnitCreated;
+				//	Add AnimSet with Active Camo
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_ActiveCamo_Soldier")));
 
-					//	Add AnimSet with Active Camo
-					CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_ActiveCamo_Soldier")));
+				//	Add AnimSet with firing Heavy Weapon animations 
+				CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Soldier_BIT")));
 
-					//	Add AnimSet with firing Heavy Weapon animations 
-					CharTemplate.AdditionalAnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Soldier_BIT")));
-				}
+				//	This will let regular soldiers use BIT Hack matinee even if there's no SPARK on the mission.
+				CharTemplate.strMatineePackages.AddItem("CIN_Spark");
 			}
 		}
 	}
