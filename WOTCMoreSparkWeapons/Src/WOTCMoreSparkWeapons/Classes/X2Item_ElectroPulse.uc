@@ -69,12 +69,6 @@ static function X2DataTemplate Create_Item()
 
 	Template.StowedLocation = eSlot_LeftBack;
 	Template.EquipSound = "Secondary_Weapon_Equip_Beam";
-
-	if (default.ICLIPSIZE > 0)
-	{
-		Template.SetUIStatMarkup(class'XLocalizedData'.default.ChargesLabel, , default.ICLIPSIZE);
-		Template.bHideClipSizeStat = true;
-	}
 	if (default.COOLDOWN > 0)
 	{
 		Template.SetUIStatMarkup(class'XLocalizedData'.default.CooldownLabel, , default.COOLDOWN);
@@ -118,11 +112,19 @@ static function X2DataTemplate Create_Item()
 	Template.ExtraDamage = default.EXTRA_DAMAGE;
 	Template.Aim = default.AIM;
 	Template.CritChance = default.CRITCHANCE;
+
 	Template.iClipSize = default.ICLIPSIZE;
+	Template.bHideClipSizeStat = true;
 	if (default.ICLIPSIZE == -1)
 	{
 		Template.InfiniteAmmo = true;
+		Template.iClipSize = 99;
 	}
+	if (default.ICLIPSIZE > 0)
+	{
+		Template.SetUIStatMarkup(class'XLocalizedData'.default.ChargesLabel, , default.ICLIPSIZE);
+	}
+
 	Template.iSoundRange = default.ISOUNDRANGE;
 	Template.iEnvironmentDamage = default.IENVIRONMENTDAMAGE;
 	Template.DamageTypeTemplateName = default.DAMAGE.DamageType;
