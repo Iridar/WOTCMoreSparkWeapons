@@ -140,6 +140,8 @@ static function EventListenerReturn OverrideClipSize_ListenerEventFunction(Objec
 			case 'IRI_ArtilleryCannon_CV':
 			case 'IRI_ArtilleryCannon_MG':
 			case 'IRI_ArtilleryCannon_BM':
+			case 'IRI_ArtilleryCannon_LS':
+			case 'IRI_ArtilleryCannon_CG':
 				Tuple.Data[0].i = X2WeaponTemplate(ItemState.GetMyTemplate()).iClipSize;
 				return ELR_NoInterrupt;
 			default:
