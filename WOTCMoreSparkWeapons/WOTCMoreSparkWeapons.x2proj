@@ -208,6 +208,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="ReadMe.txt" />
     <Content Include="ModPreview.jpg" />
     <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\AnimNotify_ShieldAnimation.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\KSMHelper.uc">
       <SubType>Content</SubType>
     </Content>
