@@ -170,6 +170,115 @@ static function PatchWeaponUpgrades()
 	
 }
 
+static final function CopyWIOAttachmentAppearance()
+{
+	local X2ItemTemplateManager ItemMgr;
+
+	if (!IsModActive('WOTC_APA_WeaponItemOverhaul'))
+		return;
+
+	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+
+	CopyWIOAttachmentAppearanceForWeapon('IRI_ArtilleryCannon_CV', ItemMgr);
+	CopyWIOAttachmentAppearanceForWeapon('IRI_ArtilleryCannon_MG', ItemMgr);
+	CopyWIOAttachmentAppearanceForWeapon('IRI_ArtilleryCannon_BM', ItemMgr);
+}
+
+static final function bool IsModActive(name ModName)
+{
+    local XComOnlineEventMgr    EventManager;
+    local int                   Index;
+
+    EventManager = `ONLINEEVENTMGR;
+
+    for (Index = EventManager.GetNumDLC() - 1; Index >= 0; Index--) 
+    {
+        if (EventManager.GetDLCNames(Index) == ModName) 
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+static final function CopyWIOAttachmentAppearanceForWeapon(name WeaponTemplateName, X2ItemTemplateManager ItemMgr)
+{
+	CopyAttachmentAppearance('WOTC_APA_Basic_LightweightFrame', 'MissDamageUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Advanced_LightweightFrame', 'MissDamageUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Superior_LightweightFrame', 'MissDamageUpgrade_Sup', WeaponTemplateName, ItemMgr);
+
+	CopyAttachmentAppearance('WOTC_APA_Basic_BeddedStock', 'MissDamageUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Advanced_BeddedStock', 'MissDamageUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Superior_BeddedStock', 'MissDamageUpgrade_Sup', WeaponTemplateName, ItemMgr);
+
+	CopyAttachmentAppearance('WOTC_APA_Basic_Scope', 'AimUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Advanced_Scope', 'AimUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Superior_Scope', 'AimUpgrade_Sup', WeaponTemplateName, ItemMgr);
+
+	CopyAttachmentAppearance('WOTC_APA_Basic_ReflexSight', 'AimUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Advanced_ReflexSight', 'AimUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Superior_ReflexSight', 'AimUpgrade_Sup', WeaponTemplateName, ItemMgr);
+
+	CopyAttachmentAppearance('WOTC_APA_Basic_LaserSight', 'CritUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Advanced_LaserSight', 'CritUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Superior_LaserSight', 'CritUpgrade_Sup', WeaponTemplateName, ItemMgr);
+
+	CopyAttachmentAppearance('WOTC_APA_Basic_Bipod', 'FreeFireUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Advanced_Bipod', 'FreeFireUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Superior_Bipod', 'FreeFireUpgrade_Sup', WeaponTemplateName, ItemMgr);
+
+	CopyAttachmentAppearance('WOTC_APA_Basic_Suppressor', 'FreeKillUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Advanced_Suppressor', 'FreeKillUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Superior_Suppressor', 'FreeKillUpgrade_Sup', WeaponTemplateName, ItemMgr);
+
+	CopyAttachmentAppearance('WOTC_APA_Basic_Foregrip', 'FreeFireUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Advanced_Foregrip', 'FreeFireUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Superior_Foregrip', 'FreeFireUpgrade_Sup', WeaponTemplateName, ItemMgr);
+
+	//CopyAttachmentAppearance('WOTC_APA_Basic_Speedloader', 'ReloadUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	//CopyAttachmentAppearance('WOTC_APA_Advanced_Speedloader', 'ReloadUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	//CopyAttachmentAppearance('WOTC_APA_Superior_Speedloader', 'ReloadUpgrade_Sup', WeaponTemplateName, ItemMgr);
+
+	//CopyAttachmentAppearance('WOTC_APA_Basic_ExpandedMag', 'ClipSizeUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	//CopyAttachmentAppearance('WOTC_APA_Advanced_ExpandedMag', 'ClipSizeUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	//CopyAttachmentAppearance('WOTC_APA_Superior_ExpandedMag', 'ClipSizeUpgrade_Sup', WeaponTemplateName, ItemMgr);
+
+	CopyAttachmentAppearance('WOTC_APA_Basic_WildcatCartridges', 'ClipSizeUpgrade_Bsc', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Advanced_WildcatCartridges', 'ClipSizeUpgrade_Adv', WeaponTemplateName, ItemMgr);
+	CopyAttachmentAppearance('WOTC_APA_Superior_WildcatCartridges', 'ClipSizeUpgrade_Sup', WeaponTemplateName, ItemMgr);
+}
+
+static final function CopyAttachmentAppearance(const name AcceptorTemplateName, const name DonorTemplateName, const name WeponName, X2ItemTemplateManager ItemMgr)
+{
+	local X2WeaponUpgradeTemplate	AcceptorTemplate;
+	local X2WeaponUpgradeTemplate	DonorTemplate;
+	local WeaponAttachment			Attach;
+
+	AcceptorTemplate = X2WeaponUpgradeTemplate(ItemMgr.FindItemTemplate(AcceptorTemplateName));
+	if (AcceptorTemplate == none)
+		return;
+
+	DonorTemplate = X2WeaponUpgradeTemplate(ItemMgr.FindItemTemplate(DonorTemplateName));
+	if (DonorTemplate == none)
+		return;
+
+	foreach AcceptorTemplate.UpgradeAttachments(Attach)
+	{
+		if (Attach.ApplyToWeaponTemplate == WeponName)
+		{
+			AcceptorTemplate.UpgradeAttachments.RemoveItem(Attach);
+		}
+	}
+
+	foreach DonorTemplate.UpgradeAttachments(Attach)
+	{
+		if (Attach.ApplyToWeaponTemplate == WeponName)
+		{
+			AcceptorTemplate.UpgradeAttachments.AddItem(Attach);
+		}
+	}
+}
+
 static function AddLootTables()
 {
 	local X2LootTableManager	LootManager;

@@ -1117,7 +1117,7 @@ static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2Wea
 		case 'IRI_ArtilleryCannon_BM':
 			foreach default.DisallowedWeaponUpgradeNames(DisallowedUpgradeName)
 			{
-				if (InStr(UpgradeTemplate.DataName, DisallowedUpgradeName) > INDEX_NONE)
+				if (UpgradeTemplate.DataName == DisallowedUpgradeName)
 				{
 					return false;
 				}
@@ -1373,6 +1373,7 @@ static event OnPostTemplatesCreated()
 	class'X2Item_ArtilleryCannon_MG'.static.UpdateMods();
 	class'X2Item_ArtilleryCannon_BM'.static.UpdateMods();
 	class'X2Item_SparkArsenal'.static.PatchWeaponUpgrades();
+	class'X2Item_SparkArsenal'.static.CopyWIOAttachmentAppearance();
 }
 
 //	===================================================================================================================================
