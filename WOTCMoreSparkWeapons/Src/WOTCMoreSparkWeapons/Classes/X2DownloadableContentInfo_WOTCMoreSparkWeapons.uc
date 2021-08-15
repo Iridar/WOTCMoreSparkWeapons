@@ -900,10 +900,14 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 	}
 
 	//	If we're trying to equip a Chemthrower Canister into an auxiliary weapon slot, and they don't have a canister yet and have a chemthrower, then allow it.
-	//	Complains about "missing allowed soldier class" without this. WTF?!
-	if (IsItemCanister(ItemTemplate) && Slot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot && !DoesUnitHaveCanisterEquipped(UnitState) && IsUnitsPrimaryWeaponValidForCanister(UnitState))
+	//	Complains about "missing allowed soldier class" without this. WTF?!-- Answer is in: https://github.com/X2CommunityCore/X2WOTCCommunityHighlander/issues/1057
+	if (IsItemCanister(ItemTemplate) && Slot == class'X2StrategyElement_AuxSlot'.default.AuxiliaryWeaponSlot && IsUnitsPrimaryWeaponValidForCanister(UnitState))
 	{	
-		bCanAddItem = 1;
+		if (CheckGameState != none && UnitState.GetItemInSlot(Slot, CheckGameState) == none && !DoesUnitHaveCanisterEquipped(UnitState))
+		{
+			bCanAddItem = 1;
+		}
+		DisabledReason = "";
 		return OverrideNormalBehavior;
 	}
 
