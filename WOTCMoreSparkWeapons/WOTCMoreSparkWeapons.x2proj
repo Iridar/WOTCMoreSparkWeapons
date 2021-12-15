@@ -190,9 +190,6 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Localization\WOTCMoreSparkWeapons.kor">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Localization\WOTCMoreSparkWeapons.rus">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Localization\XComGame.chn">
       <SubType>Content</SubType>
     </Content>
@@ -200,9 +197,6 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\XComGame.kor">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Localization\XComGame.rus">
       <SubType>Content</SubType>
     </Content>
     <Content Include="ReadMe.txt" />
@@ -399,7 +393,7 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>
-    <PropertyGroup>
+  <PropertyGroup>
     <SolutionRoot>$(MSBuildProjectDirectory)\..\</SolutionRoot>
     <ScriptsDir>$(SolutionRoot).scripts\</ScriptsDir>
     <BuildCommonRoot>$(ScriptsDir)X2ModBuildCommon\</BuildCommonRoot>
