@@ -10,15 +10,14 @@ event name CallMeetsCondition(XComGameState_BaseObject kTarget)
 	
 	UnitState = XComGameState_Unit(kTarget);
 	
-	if (UnitState != none)
+	if (UnitState == none)
+		return 'AA_NotAUnit';
+	
+	AidProtocol = UnitState.GetUnitAffectedByEffectState('AidProtocol');
+	if (AidProtocol != none && AidProtocol.ApplyEffectParameters.SourceStateObjectRef.ObjectID == UnitState.ObjectID)
 	{
-		AidProtocol = UnitState.GetUnitAffectedByEffectState('AidProtocol');
-		if (AidProtocol != none && AidProtocol.ApplyEffectParameters.SourceStateObjectRef.ObjectID == UnitState.ObjectID)
-		{
-			return 'AA_Success';
-		}
+		return 'AA_Success';
 	}
-	else return 'AA_NotAUnit';
 	
 	return 'AA_MissingRequiredEffect';
 }

@@ -37,6 +37,8 @@ simulated function OnEffectRemoved(const out EffectAppliedData ApplyEffectParame
 {
 	local XComGameState_Effect_TransferWeapon	TransferWeaponEffect;
 
+	`LOG(GetFuncName(),, 'IRITEST');
+
 	TransferWeaponEffect = XComGameState_Effect_TransferWeapon(RemovedEffectState);
 	if (TransferWeaponEffect != none)
 	{

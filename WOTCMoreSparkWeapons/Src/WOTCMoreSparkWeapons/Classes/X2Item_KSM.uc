@@ -90,7 +90,16 @@ static function X2DataTemplate Create_Item()
 	Template.ExtraDamage = default.EXTRA_DAMAGE;
 	Template.Aim = default.AIM;
 	Template.CritChance = default.CRITCHANCE;
-	Template.iClipSize = default.ICLIPSIZE;
+	if (default.ICLIPSIZE == -1)
+	{
+		Template.iClipSize = 99;
+		Template.InfiniteAmmo = true;
+		Template.bHideClipSizeStat = true;
+	}
+	else
+	{
+		Template.iClipSize = default.ICLIPSIZE;
+	}
 	Template.bHideClipSizeStat = true;
 	Template.InfiniteAmmo = true;
 	Template.iSoundRange = default.ISOUNDRANGE;

@@ -402,6 +402,15 @@ static function SetUpRestorativeMist(X2AbilityTemplate Template, optional bool b
 	}
 	Template.AddMultiTargetEffect(RemoveEffects);
 
+	if (bHealShooter)
+	{
+		UnitPropertyCondition = new class'X2Condition_UnitProperty';
+		UnitPropertyCondition.ExcludeDead = true;
+		UnitPropertyCondition.ExcludeRobotic = true;
+		RemoveEffects.TargetConditions.AddItem(UnitPropertyCondition);
+		Template.AddShooterEffect(RemoveEffects);
+	}
+
 	//	State and Viz
 	Template.ActivationSpeech = 'HealingAlly';
 	Template.Hostility = eHostility_Defensive;
@@ -978,7 +987,7 @@ static function X2AbilityTemplate Create_EntrenchProtocol_Passive()
 	StatEffect = new class'X2Effect_PersistentStatChange';
 	StatEffect.BuildPersistentEffect(1, true);
 	StatEffect.AddPersistentStatChange(eStat_Hacking, class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.ProtocolSuiteHackingBonus, MODOP_Addition);
-	StatEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, Template.IconImage, true, ,Template.AbilitySourceName);
+	StatEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription $ "\n" $ Template.LocPromotionPopupText, Template.IconImage, true, ,Template.AbilitySourceName);
 	Template.AddTargetEffect(StatEffect);
 
 	Template.SetUIStatMarkup(class'XLocalizedData'.default.TechLabel, eStat_Hacking, class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.default.ProtocolSuiteHackingBonus);

@@ -6,30 +6,44 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
 
-	Templates.AddItem(Create_ListenerTemplate());
-	Templates.AddItem(Create_TacticalListenerTemplate());
-	
+	Templates.AddItem(StrategyAndTacticalListener());
+	Templates.AddItem(TacticalListener());
+	Templates.AddItem(StrategyListener());
+
 	return Templates;
 }
 
-static function CHEventListenerTemplate Create_ListenerTemplate()
+static function CHEventListenerTemplate StrategyAndTacticalListener()
 {
 	local CHEventListenerTemplate Template;
 
-	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'IRI_X2EventListener_HasAmmoPocket');
+	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'IRI_SparkArsenal_StrategyAndTacticalListener');
 
 	Template.RegisterInTactical = true;
 	Template.RegisterInStrategy = true;
 
-	Template.AddCHEvent('OverrideHasAmmoPocket', ListenerEventFunction, ELD_Immediate);
+	Template.AddCHEvent('OverrideHasAmmoPocket', OnOverrideHasAmmoPocket, ELD_Immediate);
 
 	return Template;
 }
-static function CHEventListenerTemplate Create_TacticalListenerTemplate()
+static function CHEventListenerTemplate StrategyListener()
 {
 	local CHEventListenerTemplate Template;
 
-	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'IRI_SPARK_Arsenal_Tactical_Listener');
+	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'IRI_SparkArsenal_StrategyListener');
+
+	Template.RegisterInTactical = false;
+	Template.RegisterInStrategy = true;
+
+	Template.AddCHEvent('WeaponUpgraded', OnWeaponUpgraded, ELD_Immediate);
+
+	return Template;
+}
+static function CHEventListenerTemplate TacticalListener()
+{
+	local CHEventListenerTemplate Template;
+
+	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'IRI_SparkArsenal_TacticalListener');
 
 	Template.RegisterInTactical = true;
 	Template.RegisterInStrategy = false;
@@ -40,6 +54,7 @@ static function CHEventListenerTemplate Create_TacticalListenerTemplate()
 		Template.AddCHEvent('OverrideClipSize', OverrideClipSize_ListenerEventFunction, ELD_Immediate, 101);
 	}
 	Template.AddCHEvent('IRI_RecallCosmeticUnit_Event', RecallCosmeticUnit_ListenerEventFunction, ELD_OnStateSubmitted);
+	Template.AddCHEvent('CleanupTacticalMission', OnCleanupTacticalMission, ELD_Immediate);	
 
 	return Template;
 }
@@ -152,7 +167,7 @@ static function EventListenerReturn OverrideClipSize_ListenerEventFunction(Objec
 }
 
 
-static function EventListenerReturn ListenerEventFunction(Object EventData, Object EventSource, XComGameState NullGameState, Name Event, Object CallbackData)
+static function EventListenerReturn OnOverrideHasAmmoPocket(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
 {
 	local XComLWTuple				Tuple;
 	local XComGameState_Unit		UnitState;
@@ -200,8 +215,55 @@ static function EventListenerReturn ListenerEventFunction(Object EventData, Obje
 }
 
 
+static private function EventListenerReturn OnWeaponUpgraded(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
+{
+	local XComGameState_Item ItemState;
+	local XComGameState_Item NewItemState;
+	local XComGameState_Unit NewUnitState;
+	local array<name> EquippedUpgrades;
+	local array<name> NewEquippedUpgrades;
 
+	// `XEVENTMGR.TriggerEvent('WeaponUpgraded', Weapon, UpgradeItem, ChangeState);
+	ItemState = XComGameState_Item(EventData);
+	if (ItemState == none)
+		return ELR_NoInterrupt;
 
+	NewItemState = XComGameState_Item(NewGameState.GetGameStateForObjectID(ItemState.ObjectID));
+	if (NewItemState == none)
+		return ELR_NoInterrupt;
 
+	EquippedUpgrades = ItemState.GetMyWeaponUpgradeTemplateNames();
+	NewEquippedUpgrades = NewItemState.GetMyWeaponUpgradeTemplateNames();
 
-			
+	// Validate loadout if the weapon was equipped with an Experimental Magazine, or if it was removed.
+	// Prevents the following bug:
+	//Make soldier eligible for the Ammo Pocket (e.g. by equipping a weapon upgrade that grants the Ammo Slot, like Experimental Magazine from SPARK Arsenal)
+	//Equip experimental ammo
+	//Make soldier ineligible (e.g. by removing mentioned weapon upgrade).
+	//Ammo slot is no longer visible in the UI, but the soldier still has the Ammo equipped under the hood, and will benefit from it in Tactical.
+	if (EquippedUpgrades.Find('IRI_ExperimentalMagazine_Upgrade') != NewEquippedUpgrades.Find('IRI_ExperimentalMagazine_Upgrade'))
+	{
+		NewUnitState = XComGameState_Unit(NewGameState.GetGameStateForObjectID(ItemState.OwnerStateObject.ObjectID));
+		if (NewUnitState == none)
+			NewUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', ItemState.OwnerStateObject.ObjectID));
+
+		NewUnitState.ValidateLoadout(NewGameState);
+	}
+	return ELR_NoInterrupt;
+}
+
+// Remove all Transfer Weapon effects at the end of tactical. This does not happen automatically, because `UnitRemovedFromPlay` is not called for XCOM units.
+static private function EventListenerReturn OnCleanupTacticalMission(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
+{
+	local XComGameStateHistory					History;
+	local XComGameState_Effect_TransferWeapon	EffectState;
+
+	History = `XCOMHISTORY;
+
+	foreach History.IterateByClassType(class'XComGameState_Effect_TransferWeapon', EffectState)
+	{
+		EffectState.RemoveEffect(NewGameState, NewGameState, true);
+	}
+
+	return ELR_NoInterrupt;
+}
