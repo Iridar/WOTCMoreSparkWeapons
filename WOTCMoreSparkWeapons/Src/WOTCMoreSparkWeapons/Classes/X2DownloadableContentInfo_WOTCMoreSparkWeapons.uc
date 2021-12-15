@@ -6,6 +6,7 @@ var config(SparkArsenal) array<name> SparkCharacterTemplates;
 var config(SparkArsenal) array<name> SparkLikeSoldierClasses;
 var config(SparkArsenal) bool bRocketLaunchersModPresent;
 var config(SparkArsenal) bool bAlwaysUseArmCannonAnimationsForHeavyWeapons;
+var config(SparkArsenal) array<name> HeavyWeaponsExcludedFromArmCannonAnimations;
 
 var config(SparkArsenal) array<name> StartingItemsToAddOnSaveLoad;
 var config(OrdnanceLaunchers) bool bOrdnanceAmplifierUsesBlasterLauncherTargeting;
@@ -181,7 +182,7 @@ static function bool IsUnitSparkLike(const XComGameState_Unit UnitState)
 
 static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, optional XComGameState_Item ItemState=none)
 {
-    Local XComGameState_Item	InternalWeaponState, SecondaryWeaponState;
+    Local XComGameState_Item	SecondaryWeaponState;
 	local XComGameState_Unit	UnitState;
 	local X2GrenadeTemplate		GrenadeTemplate;
 	local X2WeaponTemplate		WeaponTemplate;
@@ -189,173 +190,171 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 
     if (ItemState == none) 
 	{	
-		InternalWeaponState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(WeaponArchetype.ObjectID));
+		ItemState = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(WeaponArchetype.ObjectID));
 		`redscreen("SPARK Weapons: Weapon Initialized -> Had to reach into history to get Internal Weapon State.-Iridar");
 	}
-	else InternalWeaponState = ItemState;
+	if (ItemState == none)
+		return;
 
-	//`LOG("WeaponInitialized:" @ InternalWeaponState.GetMyTemplateName(),, 'IRITEST');
+	//`LOG("WeaponInitialized:" @ ItemState.GetMyTemplateName(),, 'IRITEST');	
+	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(ItemState.OwnerStateObject.ObjectID));
+	WeaponTemplate = X2WeaponTemplate(ItemState.GetMyTemplate());
 
-	if (InternalWeaponState != none)
+	//`LOG("UnitState:" @ UnitState.GetFullName() @ WeaponTemplate.DataName,, 'IRITEST');
+
+	if (UnitState != none && WeaponTemplate != none && !UnitState.GetMyTemplate().bIsCosmetic) 
 	{
-		UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(InternalWeaponState.OwnerStateObject.ObjectID));
-		WeaponTemplate = X2WeaponTemplate(InternalWeaponState.GetMyTemplate());
-
-		//`LOG("UnitState:" @ UnitState.GetFullName() @ WeaponTemplate.DataName,, 'IRITEST');
-
-		if (UnitState != none && WeaponTemplate != none && !UnitState.GetMyTemplate().bIsCosmetic) 
-		{
-			//`LOG("Unit not cosmetic",, 'IRITEST');
+		//`LOG("Unit not cosmetic",, 'IRITEST');
 			
-			if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
-			{	
-				//`LOG("Unit not a SPARK",, 'IRITEST');
+		if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) == INDEX_NONE)
+		{	
+			//`LOG("Unit not a SPARK",, 'IRITEST');
 
-				//	If this heavy weapon is equipped on a non-SPARK in the BIT-granted heavy weapon slot, or acquired via Aid Protocol Transfer Weapon, then replace its firing animations with point finger ones.
-				if (DoesThisRefBitHeavyWeapon(InternalWeaponState.GetReference(), UnitState))
+			//	If this heavy weapon is equipped on a non-SPARK in the BIT-granted heavy weapon slot, or acquired via Aid Protocol Transfer Weapon, then replace its firing animations with point finger ones.
+			if (DoesThisRefBitHeavyWeapon(ItemState.GetReference(), UnitState))
+			{
+				Weapon.CustomUnitPawnAnimsets.Length = 0;
+				Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+
+				//	Autogun's game archetype already specifies the correct animation name
+				if (WeaponTemplate.DataName != 'IRI_Heavy_Autogun' && WeaponTemplate.DataName != 'IRI_Heavy_Autogun_MK2')
 				{
-					Weapon.CustomUnitPawnAnimsets.Length = 0;
-					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+					//`LOG("Replacing firing animation name for:" @ WeaponTemplate.DataName @ "on unit:" @ UnitState.GetFullName() @ "from:" @ Weapon.WeaponFireAnimSequenceName @ "to:" @ name(Weapon.WeaponFireAnimSequenceName $ 'BIT'),, 'IRITEST');
+					Weapon.WeaponFireAnimSequenceName = name(Weapon.WeaponFireAnimSequenceName $ 'BIT');
+				}
 
-					//	Autogun's game archetype already specifies the correct animation name
-					if (WeaponTemplate.DataName != 'IRI_Heavy_Autogun' && WeaponTemplate.DataName != 'IRI_Heavy_Autogun_MK2')
+				//	This will hide the weapon from the soldier's body.
+				Weapon.DefaultSocket = '';
+			}
+			return;
+		}
+
+		//	Initial checks complete, this is a weapon equipped on a SPARK.
+		Content = `CONTENT;
+
+		switch (WeaponTemplate.WeaponCat)
+		{
+			//	Ballistic Shields
+			case 'shield':
+				Weapon.DefaultSocket = 'iri_spark_ballistic_shield';
+				Weapon.CustomUnitPawnAnimsets.Length = 0;
+				Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+				return;
+			//	Swords
+			//case 'sword':
+			//	Weapon.DefaultSocket = 'iri_spark_sword';
+			//	Weapon.CustomUnitPawnAnimsets.Length = 0;
+			//	Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+			//	return;
+			//	If this is an Ordnance Launcher and the Rocket Launchers mod is present, add Weapon Animations for firing rockets.
+			case 'iri_ordnance_launcher': 
+				if (default.bRocketLaunchersModPresent)
+				{
+					switch (WeaponTemplate.WeaponTech)
 					{
-						//`LOG("Replacing firing animation name for:" @ WeaponTemplate.DataName @ "on unit:" @ UnitState.GetFullName() @ "from:" @ Weapon.WeaponFireAnimSequenceName @ "to:" @ name(Weapon.WeaponFireAnimSequenceName $ 'BIT'),, 'IRITEST');
-						Weapon.WeaponFireAnimSequenceName = name(Weapon.WeaponFireAnimSequenceName $ 'BIT');
+						case 'magnetic':
+							SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_MG_Rockets")));
+							return;
+						case 'beam':
+							SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_BM_Rockets")));
+							return;
+						case 'conventional':
+						default:
+							SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_CV_Rockets")));
+							return;
+					}	
+				}
+				break;
+			case 'heavy':
+				//	If this Heavy Weapon is not in the slot granted by the BIT, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
+				if (ItemState.InventorySlot != class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot || default.bAlwaysUseArmCannonAnimationsForHeavyWeapons)
+				{
+					//	Don't do anything to Resto Mist and Electro Pulse in Aux or regular Heavy Weapon slot
+					if (default.HeavyWeaponsExcludedFromArmCannonAnimations.Find(WeaponTemplate.DataName) != INDEX_NONE)
+						return; 
+
+					//	Replace the mesh for this heavy weapon with the arm cannon and replace the weapon and pawn animations.
+					Weapon.CustomUnitPawnAnimsets.Length = 0;
+					Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Spark")));
+					SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("IRISparkHeavyWeapons.Meshes.SM_SparkHeavyWeapon"));
+					SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Weapon")));
+
+					//	Bandaid patch to play a different animation with a different weapon charging sound.
+					if (WeaponTemplate.DataName == 'IRI_Heavy_Autogun_MK2')
+					{
+						Weapon.WeaponFireAnimSequenceName = 'FF_FireLAC_MK2';
 					}
 
-					//	This will hide the weapon from the soldier's body.
+					//`LOG("Weapon Initialized -> Patched heavy weapon for a SPARK.",, 'IRITEST');
+				}
+				else	//	If this weapon IS in the BIT-granted heavy weapon slot, then blanket out its default socket so it doesn't appear on the SPARK, clipping ugly through its arm.
+				{
 					Weapon.DefaultSocket = '';
 				}
 				return;
-			}
+			default:
+				break;
+		}
 
-			//	Initial checks complete, this is a weapon equipped on a SPARK.
-			Content = `CONTENT;
-
-			switch (WeaponTemplate.WeaponCat)
+		//	If the rocket launchers mod is installed
+		if (default.bRocketLaunchersModPresent)
+		{
+			//	And this weapon is a rocket
+			GrenadeTemplate = X2GrenadeTemplate(ItemState.GetMyTemplate());
+			if (GrenadeTemplate != none && GrenadeTemplate.WeaponCat == 'rocket')
 			{
-				//	Ballistic Shields
-				case 'shield':
-					Weapon.DefaultSocket = 'iri_spark_ballistic_shield';
-					Weapon.CustomUnitPawnAnimsets.Length = 0;
-					Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
-					return;
-				//	Swords
-				//case 'sword':
-				//	Weapon.DefaultSocket = 'iri_spark_sword';
-				//	Weapon.CustomUnitPawnAnimsets.Length = 0;
-				//	Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
-				//	return;
-				//	If this is an Ordnance Launcher and the Rocket Launchers mod is present, add Weapon Animations for firing rockets.
-				case 'iri_ordnance_launcher': 
-					if (default.bRocketLaunchersModPresent)
-					{
-						switch (WeaponTemplate.WeaponTech)
-						{
-							case 'magnetic':
-								SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_MG_Rockets")));
-								return;
-							case 'beam':
-								SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_BM_Rockets")));
-								return;
-							case 'conventional':
-							default:
-								SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_OrdnanceLauncher_CV_Rockets")));
-								return;
-						}	
-					}
-					break;
-				case 'heavy':
-					//	If this Heavy Weapon is not in the slot granted by the BIT, or if the mod is configured to always use the Arm Cannon animations for heavy weapons
-					if (InternalWeaponState.InventorySlot != class'X2StrategyElement_BITHeavyWeaponSlot'.default.BITHeavyWeaponSlot || default.bAlwaysUseArmCannonAnimationsForHeavyWeapons)
-					{
-						//	Don't do anything to Resto Mist and Electro Pulse in Aux or regular Heavy Weapon slot
-						if (WeaponTemplate.DataName == 'IRI_RestorativeMist_CV' || WeaponTemplate.DataName == 'IRI_ElectroPulse_CV')
-							return; 
-
-						//	Replace the mesh for this heavy weapon with the arm cannon and replace the weapon and pawn animations.
-						Weapon.CustomUnitPawnAnimsets.Length = 0;
-						Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Spark")));
-						SkeletalMeshComponent(Weapon.Mesh).SkeletalMesh = SkeletalMesh(Content.RequestGameArchetype("IRISparkHeavyWeapons.Meshes.SM_SparkHeavyWeapon"));
-						SkeletalMeshComponent(Weapon.Mesh).AnimSets.AddItem(AnimSet(Content.RequestGameArchetype("IRISparkHeavyWeapons.Anims.AS_Heavy_Weapon")));
-
-						//	Bandaid patch to play a different animation with a different weapon charging sound.
-						if (WeaponTemplate.DataName == 'IRI_Heavy_Autogun_MK2')
-						{
-							Weapon.WeaponFireAnimSequenceName = 'FF_FireLAC_MK2';
-						}
-
-						//`LOG("Weapon Initialized -> Patched heavy weapon for a SPARK.",, 'IRITEST');
-					}
-					else	//	If this weapon IS in the BIT-granted heavy weapon slot, then blanket out its default socket so it doesn't appear on the SPARK, clipping ugly through its arm.
-					{
-						Weapon.DefaultSocket = '';
-					}
-					return;
-				default:
-					break;
-			}
-
-			//	If the rocket launchers mod is installed
-			if (default.bRocketLaunchersModPresent)
-			{
-				//	And this weapon is a rocket
-				GrenadeTemplate = X2GrenadeTemplate(InternalWeaponState.GetMyTemplate());
-				if (GrenadeTemplate != none && GrenadeTemplate.WeaponCat == 'rocket')
+				//	Check if the Secondary Weapon is an Ordnance Launcher
+				SecondaryWeaponState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon);
+				if (SecondaryWeaponState != none)
 				{
-					//	Check if the Secondary Weapon is an Ordnance Launcher
-					SecondaryWeaponState = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon);
-					if (SecondaryWeaponState != none)
-					{
-						WeaponTemplate = X2WeaponTemplate(SecondaryWeaponState.GetMyTemplate());
-					}
-					if (WeaponTemplate != none && WeaponTemplate.WeaponCat == 'iri_ordnance_launcher')
-					{
-						//	Replace the rocket's Pawn Animations with the ones made for the Ordnance Launcher.
-						Weapon.CustomUnitPawnAnimsets.Length = 0;
-						//	Firing animations
-						//	Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRIOrdnanceLauncher.Anims.AS_OrdnanceLauncher")));
+					WeaponTemplate = X2WeaponTemplate(SecondaryWeaponState.GetMyTemplate());
+				}
+				if (WeaponTemplate != none && WeaponTemplate.WeaponCat == 'iri_ordnance_launcher')
+				{
+					//	Replace the rocket's Pawn Animations with the ones made for the Ordnance Launcher.
+					Weapon.CustomUnitPawnAnimsets.Length = 0;
+					//	Firing animations
+					//	Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRIOrdnanceLauncher.Anims.AS_OrdnanceLauncher")));
 
-						//	Give Rocket and stuff. Take Rocket is added to character templates in Rocket Launchers mod, because eveery spark must be able to Take Rockets before their Weapon is initialized.
-						Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket")));
+					//	Give Rocket and stuff. Take Rocket is added to character templates in Rocket Launchers mod, because eveery spark must be able to Take Rockets before their Weapon is initialized.
+					Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket")));
 
-						//	Attach additional Anim Sets based on the tier of the launcher.
+					//	Attach additional Anim Sets based on the tier of the launcher.
+					switch (WeaponTemplate.WeaponTech)
+					{
+						case 'magnetic':
+							Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_MG")));
+							break;
+						case 'beam':
+							Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_BM")));
+							break;
+						case 'conventional':
+						//	Basic anims are enough for conventional.
+						default:
+							break;
+					}	
+					//	T3 Lockon rocket gets its own firing animation with a different Play Socket Animation notify to play a different "rocket flying in the sky" cosmetic PFX.
+					if (GrenadeTemplate.DataName == 'IRI_X2Rocket_Lockon_T3')
+					{	
 						switch (WeaponTemplate.WeaponTech)
 						{
 							case 'magnetic':
-								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_MG")));
+								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_MG")));
 								break;
 							case 'beam':
-								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_Rocket_BM")));
+								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_BM")));
 								break;
 							case 'conventional':
-							//	Basic anims are enough for conventional.
+								Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3")));
 							default:
 								break;
-						}	
-						//	T3 Lockon rocket gets its own firing animation with a different Play Socket Animation notify to play a different "rocket flying in the sky" cosmetic PFX.
-						if (GrenadeTemplate.DataName == 'IRI_X2Rocket_Lockon_T3')
-						{	
-							switch (WeaponTemplate.WeaponTech)
-							{
-								case 'magnetic':
-									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_MG")));
-									break;
-								case 'beam':
-									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3_BM")));
-									break;
-								case 'conventional':
-									Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(Content.RequestGameArchetype("IRI_MECRockets.Anims.AS_SPARK_LockonT3")));
-								default:
-									break;
-							}
 						}
 					}
 				}
 			}
 		}
-	}		
+	}
+	
 }
 
 //	-----------------------------------------------------------------------------------------------------------------------------------
