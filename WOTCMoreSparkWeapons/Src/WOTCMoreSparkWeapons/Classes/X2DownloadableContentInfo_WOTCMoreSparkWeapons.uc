@@ -235,11 +235,11 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 		switch (WeaponTemplate.WeaponCat)
 		{
 			//	Ballistic Shields
-			case 'shield':
-				Weapon.DefaultSocket = 'iri_spark_ballistic_shield';
-				Weapon.CustomUnitPawnAnimsets.Length = 0;
-				Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
-				return;
+			//case 'shield':
+			//	Weapon.DefaultSocket = 'iri_spark_ballistic_shield';
+			//	Weapon.CustomUnitPawnAnimsets.Length = 0;
+			//	Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+			//	return;
 			//	Swords
 			//case 'sword':
 			//	Weapon.DefaultSocket = 'iri_spark_sword';
@@ -1066,6 +1066,8 @@ static function string DLCAppendSockets(XComUnitPawn Pawn)
 //	-----------------------------------------------------------------------------------------------------------------------------------
 //														UPDATE ANIMATIONS
 //	-----------------------------------------------------------------------------------------------------------------------------------
+// Since SPARK Ballistic Shields are now a thing, custom support for soldier shields is not required.
+/*
 static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameState_Unit UnitState, XComUnitPawn Pawn)
 {
 	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE && UnitHasBallisticShieldEquipped(UnitState))
@@ -1082,7 +1084,7 @@ static private function bool UnitHasBallisticShieldEquipped(const XComGameState_
 
 	return SecondaryWeapon != none && SecondaryWeapon.GetWeaponCategory() == 'shield';
 }
-
+*/
 //	-----------------------------------------------------------------------------------------------------------------------------------
 //														MISC
 //	-----------------------------------------------------------------------------------------------------------------------------------
