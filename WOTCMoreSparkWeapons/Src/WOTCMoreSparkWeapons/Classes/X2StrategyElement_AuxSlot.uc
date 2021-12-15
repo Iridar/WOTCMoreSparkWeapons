@@ -216,26 +216,39 @@ private static function bool IsItemValidGrenade(const X2ItemTemplate ItemTemplat
 
 static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XComGameState_HeadquartersXCom XComHQ, XComGameState NewGameState)
 {
-	local XComGameState_Item ItemState;
-	local string strDummy;
-	local bool HasSlot;
+	local XComGameState_Item	ItemState;
+	local string				strDummy;
+	local bool					HasSlot;
+	local bool					bShouldUnequip;
 
 	ItemState = Unit.GetItemInSlot(Slot.InvSlot, NewGameState);
 	HasSlot = Slot.UnitHasSlot(Unit, strDummy, NewGameState);
+	if (!HasSlot)
+	{
+		bShouldUnequip = true;
+	}
+	else if (ItemState != none)
+	{
+		if (!IsTemplateValidForSlot(Slot.InvSlot, ItemState.GetMyTemplate(), Unit, NewGameState))
+		{
+			bShouldUnequip = true;
+		}
+		if (class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.static.IsItemSpecialShell(ItemState.GetMyTemplateName()) &&
+			!class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.static.DoesUnitHaveHeavyCannonEquipped(Unit, NewGameState))
+		{
+			bShouldUnequip = true;
+		}
+	}
 
 	//	If there's an item equipped in the slot, but the unit is not supposed to have the slot, or the item is not supposed to be in the slot, then unequip it and put it into HQ Inventory.
-	if (ItemState != none && (!HasSlot || !IsTemplateValidForSlot(Slot.InvSlot, ItemState.GetMyTemplate(), Unit, NewGameState)))
+	if (bShouldUnequip)
 	{
-		//`LOG("WARNING Unit:" @ Unit.GetFullName() @ "soldier class:" @ Unit.GetSoldierClassTemplateName() @ "has an item equipped in the Slot:" @ Slot.InvSlot @ ", but they are not supposed to have the Slot. Attempting to unequip the item.",, 'WOTCMoreSparkWeapons');
-
 		ItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', ItemState.ObjectID));
 		Unit = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', Unit.ObjectID));
 		if (Unit.RemoveItemFromInventory(ItemState, NewGameState))
 		{
-			//`LOG("Successfully unequipped the item. Putting it into HQ Inventory.",, 'WOTCMoreSparkWeapons');
 			XComHQ.PutItemInInventory(NewGameState, ItemState);
 		}	
-		//else //`LOG("WARNING, failed to unequip the item!",, 'WOTCMoreSparkWeapons');
 	}
 }
 

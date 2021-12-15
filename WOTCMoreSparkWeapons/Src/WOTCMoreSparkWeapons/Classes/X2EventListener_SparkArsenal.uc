@@ -36,6 +36,7 @@ static function CHEventListenerTemplate StrategyListener()
 	Template.RegisterInStrategy = true;
 
 	Template.AddCHEvent('WeaponUpgraded', OnWeaponUpgraded, ELD_Immediate);
+	Template.AddCHEvent('ItemRemovedFromSlot', OnItemRemovedFromSlot, ELD_Immediate);
 
 	return Template;
 }
@@ -250,6 +251,69 @@ static private function EventListenerReturn OnWeaponUpgraded(Object EventData, O
 		NewUnitState.ValidateLoadout(NewGameState);
 	}
 	return ELR_NoInterrupt;
+}
+
+static private function EventListenerReturn OnItemRemovedFromSlot(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
+{
+	local XComGameState_Unit	UnitState;
+	local XComGameState_Unit	NewUnitState;
+	local XComGameState_Item	RemovedItem;
+	local X2WeaponTemplate		WeaponTemplate;
+
+	RemovedItem = XComGameState_Item(EventData);
+	if (RemovedItem == none)
+		return ELR_NoInterrupt;
+
+	// Check if the removed item was a Heavy Cannon
+	WeaponTemplate = X2WeaponTemplate(RemovedItem.GetMyTemplate());
+	if (WeaponTemplate.Abilities.Find('IRI_FireArtilleryCannon_AP_Passive') == INDEX_NONE)
+		return ELR_NoInterrupt;
+
+	UnitState = XComGameState_Unit(EventSource);
+	if (UnitState == none)
+		return ELR_NoInterrupt;
+
+	NewUnitState = XComGameState_Unit(NewGameState.GetGameStateForObjectID(UnitState.ObjectID));
+	if (NewUnitState == none)
+	{
+		NewUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
+	}
+
+	if (class'X2DownloadableContentInfo_WOTCMoreSparkWeapons'.static.DoesUnitHaveMunitionsMount(NewUnitState,NewGameState))
+	{
+		UnequipMunitionsMount(NewUnitState, NewGameState);
+	}	
+
+	return ELR_NoInterrupt;
+}
+
+static private function UnequipMunitionsMount(XComGameState_Unit UnitState, XComGameState NewGameState)
+{
+	local XComGameState_Item ItemState;
+	local XComGameState_HeadquartersXCom XComHQ;
+
+	ItemState = UnitState.GetItemInSlot(class'X2Item_Shells_T1'.default.INVENTORY_SLOT, NewGameState);
+	if (ItemState == none || ItemState.GetMyTemplateName() != 'IRI_Shells_T1')
+	{
+		ItemState = UnitState.GetItemInSlot(class'X2Item_Shells_T2'.default.INVENTORY_SLOT, NewGameState);
+		if (ItemState == none || ItemState.GetMyTemplateName() != 'IRI_Shells_T2')
+			return;
+	}
+
+	if (UnitState.RemoveItemFromInventory(ItemState, NewGameState))
+	{
+		foreach NewGameState.IterateByClassType(class'XComGameState_HeadquartersXCom', XComHQ)
+		{
+			break;
+		}
+		if (XComHQ == none)
+		{
+			XComHQ = XComGameState_HeadquartersXCom(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
+			XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+		}
+
+		XComHQ.PutItemInInventory(NewGameState, ItemState);
+	}
 }
 
 // Remove all Transfer Weapon effects at the end of tactical. This does not happen automatically, because `UnitRemovedFromPlay` is not called for XCOM units.

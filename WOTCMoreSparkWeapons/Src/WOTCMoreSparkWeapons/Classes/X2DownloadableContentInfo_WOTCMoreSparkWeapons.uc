@@ -26,6 +26,7 @@ var config(ArtilleryCannon) array<name> DisallowedWeaponUpgradeNames;
 
 var localized string str_ShellsMutuallyExclusiveWithMunitionsMount;
 var localized string str_MunitionsMountMutuallyExclusiveWithShells;
+var localized string str_HeavyCannonRequired;
 
 var config(GameData_WeaponData) WeaponDamageValue SPARKBIT_CONVENTIONAL_DAMAGE;
 var config(GameData_WeaponData) WeaponDamageValue SPARKBIT_MAGNETIC_DAMAGE;
@@ -846,13 +847,18 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 	
 	if (IsItemSpecialShell(ItemTemplate.DataName))
 	{	
-		//	Can't equip Munitions Mount and special shells at the same time.
-		if (DoesUnitHaveMunitionsMount(UnitState, CheckGameState))
+		if (!DoesUnitHaveHeavyCannonEquipped(UnitState, CheckGameState))
+		{
+			DisabledReason = default.str_HeavyCannonRequired;
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		} // Can't equip Munitions Mount and special shells at the same time.
+		else if (DoesUnitHaveMunitionsMount(UnitState, CheckGameState))
 		{
 			DisabledReason = default.str_ShellsMutuallyExclusiveWithMunitionsMount;
 			bCanAddItem = 0;
 			return OverrideNormalBehavior;
-		}//	Also can't equip MM and Shells on non-SPARKS.
+		} // Also can't equip MM and Shells on non-SPARKS.
 		else if (!bUnitSparkLike)
 		{
 			Manager = class'X2SoldierClassTemplateManager'.static.GetSoldierClassTemplateManager();
@@ -866,7 +872,13 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 
 	if (IsItemMunitionsMount(ItemTemplate.DataName))
 	{	
-		if (DoesUnitHaveSpecialShells(UnitState, CheckGameState))
+		if (!DoesUnitHaveHeavyCannonEquipped(UnitState))
+		{
+			DisabledReason = default.str_HeavyCannonRequired;
+			bCanAddItem = 0;
+			return OverrideNormalBehavior;
+		}
+		else if (DoesUnitHaveSpecialShells(UnitState, CheckGameState))
 		{
 			DisabledReason = default.str_MunitionsMountMutuallyExclusiveWithShells;
 			bCanAddItem = 0;
@@ -929,14 +941,14 @@ static function bool CanAddItemToInventory_CH_Improved(out int bCanAddItem, cons
 
 static private function bool DoesUnitHaveCanisterEquipped(const XComGameState_Unit UnitState)
 {
-    local array<XComGameState_Item> InventoryItems;
-    local XComGameState_Item        InventoryItem;
- 
-    InventoryItems = UnitState.GetAllInventoryItems();
- 
-    foreach InventoryItems(InventoryItem)
-    {
-        if (InventoryItem.GetWeaponCategory() == 'canister')
+	local StateObjectReference	ItemRef;
+    local XComGameState_Item	InventoryItem;
+
+	foreach UnitState.InventoryItems(ItemRef)
+	{
+		InventoryItem = UnitState.GetItemGameState(ItemRef);
+
+        if (InventoryItem != none && InventoryItem.GetWeaponCategory() == 'canister')
         {
             return true;
         }
@@ -969,7 +981,7 @@ static private function bool IsUnitsPrimaryWeaponValidForCanister(const XComGame
 }
 
 
-private static function bool DoesUnitHaveMunitionsMount(const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+final static function bool DoesUnitHaveMunitionsMount(const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
 	local XComGameState_Item ItemState;
 
@@ -989,7 +1001,22 @@ private static function bool DoesUnitHaveMunitionsMount(const XComGameState_Unit
 	return false;
 }
 
-private static function bool IsItemSpecialShell(const name TemplateName)
+// Check for ability rather than template name to keep the compatibility with other mods adding more Heavy Cannons.
+static final function bool DoesUnitHaveHeavyCannonEquipped(const XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+    local XComGameState_Item	PrimaryWeapon;
+	local X2WeaponTemplate		WeaponTemplate;
+
+	PrimaryWeapon = UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState);
+	if (PrimaryWeapon == none)
+		return false;
+
+	WeaponTemplate = X2WeaponTemplate(PrimaryWeapon.GetMyTemplate());
+
+	return WeaponTemplate.Abilities.Find('IRI_FireArtilleryCannon_AP_Passive') != INDEX_NONE;
+}
+
+final static function bool IsItemSpecialShell(const name TemplateName)
 {
 	switch (TemplateName)
 	{
@@ -1005,7 +1032,7 @@ private static function bool IsItemSpecialShell(const name TemplateName)
 	}
 }
 
-private static function bool IsItemMunitionsMount(const name TemplateName)
+final static function bool IsItemMunitionsMount(const name TemplateName)
 {
 	switch (TemplateName)
 	{
