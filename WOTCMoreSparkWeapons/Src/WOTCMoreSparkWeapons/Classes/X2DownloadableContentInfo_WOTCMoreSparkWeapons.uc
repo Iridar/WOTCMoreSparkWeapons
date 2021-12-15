@@ -1603,6 +1603,7 @@ static private function PatchAidProtocolTemplate(X2DataTemplate DataTemplate)
 	local X2AbilityTemplate				Template;
 	local X2Condition_SourceWeaponCat	SourceWeaponCat;
 	local X2Effect_TransferWeapon		TransferWeapon;
+	local X2Effect_Entrench				EntrenchEffect;
 
 	Template = X2AbilityTemplate(DataTemplate);
 	if (Template != none)
@@ -1617,6 +1618,11 @@ static private function PatchAidProtocolTemplate(X2DataTemplate DataTemplate)
 		TransferWeapon.TargetConditions.AddItem(SourceWeaponCat);
 
 		Template.AddTargetEffect(TransferWeapon);
+
+		EntrenchEffect = new class'X2Effect_Entrench';
+		EntrenchEffect.BuildPersistentEffect(1, true, true, false);
+		EntrenchEffect.bRemoveWhenTargetDies = true;
+		Template.AddTargetEffect(EntrenchEffect);
 	}
 }
 

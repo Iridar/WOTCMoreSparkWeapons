@@ -59,7 +59,7 @@ static function CHEventListenerTemplate TacticalListener()
 	return Template;
 }
 
-static function EventListenerReturn RecallCosmeticUnit_ListenerEventFunction(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
+static private function EventListenerReturn RecallCosmeticUnit_ListenerEventFunction(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
 {
 	local XComGameStateContext_Ability	AbilityContext;
 	local XComGameState_Unit			UnitState;
@@ -129,7 +129,7 @@ static function EventListenerReturn RecallCosmeticUnit_ListenerEventFunction(Obj
 }
 
 //	This will make sure Heavy Cannons cannot benefit from any kind of clipsize boost.
-static function EventListenerReturn OverrideClipSize_ListenerEventFunction(Object EventData, Object EventSource, XComGameState NullGameState, Name Event, Object CallbackData)
+static private function EventListenerReturn OverrideClipSize_ListenerEventFunction(Object EventData, Object EventSource, XComGameState NullGameState, Name Event, Object CallbackData)
 {
 	local XComLWTuple				Tuple;
 	local XComGameState_Item		ItemState;
@@ -167,7 +167,7 @@ static function EventListenerReturn OverrideClipSize_ListenerEventFunction(Objec
 }
 
 
-static function EventListenerReturn OnOverrideHasAmmoPocket(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
+static private function EventListenerReturn OnOverrideHasAmmoPocket(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
 {
 	local XComLWTuple				Tuple;
 	local XComGameState_Unit		UnitState;

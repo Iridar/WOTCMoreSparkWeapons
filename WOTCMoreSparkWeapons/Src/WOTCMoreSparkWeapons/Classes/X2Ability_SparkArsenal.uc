@@ -927,7 +927,8 @@ static function X2AbilityTemplate Create_EntrenchProtocol()
 {
 	local X2AbilityTemplate					Template;
 	local X2AbilityTrigger_EventListener	Trigger;
-	local X2Condition_UnitValue				UnitValue;
+	local X2Condition_UnitEffects			UnitEffects;
+	//local X2Condition_UnitValue				UnitValue;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_EntrenchProtocol');
 
@@ -948,9 +949,13 @@ static function X2AbilityTemplate Create_EntrenchProtocol()
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
 	Template.AbilityShooterConditions.AddItem(new class'X2Condition_SelfCastAidProtocol');
 
-	UnitValue = new class'X2Condition_UnitValue';
-	UnitValue.AddCheckValue('MovesThisTurn', 0);
-	Template.AbilityShooterConditions.AddItem(UnitValue);	
+	UnitEffects = new class'X2Condition_UnitEffects';
+	UnitEffects.AddRequireEffect(class'X2Effect_Entrench'.default.EffectName, 'AA_MissingRequiredEffect');
+	Template.AbilityShooterConditions.AddItem(UnitEffects);
+
+	//UnitValue = new class'X2Condition_UnitValue';
+	//UnitValue.AddCheckValue('MovesThisTurn', 0);
+	//Template.AbilityShooterConditions.AddItem(UnitValue);	
 
 	Template.AddShooterEffect(new class'X2Effect_ExtendAidProtocol');
 
