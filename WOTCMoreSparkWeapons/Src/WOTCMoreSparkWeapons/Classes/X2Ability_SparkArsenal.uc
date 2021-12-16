@@ -972,8 +972,6 @@ static function X2AbilityTemplate Create_EntrenchProtocol()
 
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
 
-	
-
 	return Template;
 }
 

@@ -241,7 +241,7 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 	}
 
 	//	If there's an item equipped in the slot, but the unit is not supposed to have the slot, or the item is not supposed to be in the slot, then unequip it and put it into HQ Inventory.
-	if (bShouldUnequip)
+	if (bShouldUnequip && ItemState != none)
 	{
 		ItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', ItemState.ObjectID));
 		Unit = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', Unit.ObjectID));

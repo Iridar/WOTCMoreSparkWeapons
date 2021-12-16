@@ -266,7 +266,7 @@ static private function EventListenerReturn OnItemRemovedFromSlot(Object EventDa
 
 	// Check if the removed item was a Heavy Cannon
 	WeaponTemplate = X2WeaponTemplate(RemovedItem.GetMyTemplate());
-	if (WeaponTemplate.Abilities.Find('IRI_FireArtilleryCannon_AP_Passive') == INDEX_NONE)
+	if (WeaponTemplate == none || WeaponTemplate.Abilities.Find('IRI_FireArtilleryCannon_AP_Passive') == INDEX_NONE)
 		return ELR_NoInterrupt;
 
 	UnitState = XComGameState_Unit(EventSource);

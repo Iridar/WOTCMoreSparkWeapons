@@ -170,7 +170,7 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 				//	Nuke the item if it was not equipped for some reason.
 				NewGameState.PurgeGameStateForObjectID(ItemState.ObjectID);
 			}
-			else `LOG("SlotValidateLoadout: Equipped free heavy weapon:" @ ItemState.GetMyTemplateName(),, 'IRITEST');
+			//else `LOG("SlotValidateLoadout: Equipped free heavy weapon:" @ ItemState.GetMyTemplateName(),, 'IRITEST');
 		}
 	}
 }

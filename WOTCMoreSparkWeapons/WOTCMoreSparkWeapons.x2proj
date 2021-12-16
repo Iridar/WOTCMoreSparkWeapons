@@ -299,9 +299,6 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Effect_TransferWeapon.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2EventListener_HasHeavyWeapon.uc">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2EventListener_SparkArsenal.uc">
       <SubType>Content</SubType>
     </Content>
