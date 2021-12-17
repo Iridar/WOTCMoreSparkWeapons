@@ -33,7 +33,7 @@ static function X2DataTemplate Create_Ammo_Sabot()
 
 	`CREATE_X2TEMPLATE(class'X2AmmoTemplate', Template, 'IRI_Ammo_Sabot');
 
-	Template.strImage = "img:///IRIRestorativeMist.UI.UI_SabotAmmo";
+	Template.strImage = "img:///IRI_SparkArsenal_UI.UI_SabotAmmo";
 
 	Template.EquipSound = "StrategyUI_Ammo_Equip";
 	Template.CanBeBuilt = false;

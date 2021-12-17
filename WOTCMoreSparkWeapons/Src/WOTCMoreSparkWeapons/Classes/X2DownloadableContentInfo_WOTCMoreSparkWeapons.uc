@@ -1162,7 +1162,7 @@ static function OverrideItemImage(out array<string> imagePath, const EInventoryS
 		if (XComHQ != None && XComHQ.IsTechResearched('BattlefieldMedicine'))
 		{
 			imagePath.Length = 0;
-			imagePath.AddItem("img:///IRIRestorativeMist.UI.Inv_RestorativeMist_Nano");
+			imagePath.AddItem("img:///IRI_SparkArsenal_UI.Inv_RestorativeMist_Nano");
 			//`LOG("Adding resto mist icon.",, 'IRITEST');
 		}
 	}

@@ -184,7 +184,7 @@ static function X2AbilityTemplate Create_Ammo_Sabot_Ability()
 
 	SetPassive(Template);
 	SetHidden(Template);
-	Template.IconImage = "img:///IRIRestorativeMist.UI.UIPerk_Ammo_Sabot";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_Ammo_Sabot";
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 
 	SabotAmmo = new class'X2Effect_SabotAmmo';
@@ -344,7 +344,7 @@ static function X2AbilityTemplate Create_RestorativeMist_Heal()
 	SetUpRestorativeMist(Template, true);
 
 	//	Icon Setup
-	Template.IconImage = "img:///IRIRestorativeMist.UI.UI_RestorativeMist";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UI_RestorativeMist";
 
 	//	Targeting and Triggering
 	Template.AbilityTargetStyle = default.SelfTarget;
@@ -369,7 +369,7 @@ static function X2DataTemplate Create_RestorativeMist_HealBit()
 	SetUpRestorativeMist(Template, false, true);
 
 	//	Icon Setup
-	Template.IconImage = "img:///IRIRestorativeMist.UI.UI_RestorativeMist_BIT";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UI_RestorativeMist_BIT";
 
 	//	Triggering and Targeting
 	CursorTarget = new class'X2AbilityTarget_Cursor';
@@ -780,7 +780,7 @@ static function X2AbilityTemplate Create_ElectroPulse()
 
 	SetUpElectroPulse(Template, 'EMPulse');
 
-	Template.IconImage = "img:///IRIElectroPulse.UI.UI_EMPulse";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UI_EMPulse";
 
 	//	Targeting and Triggering
 	Template.AbilityTargetStyle = default.SelfTarget;
@@ -810,7 +810,7 @@ static function X2DataTemplate Create_ElectroPulse_Bit()
 
 	SetUpElectroPulse(Template, 'BIT_EMPulse');
 
-	Template.IconImage = "img:///IRIElectroPulse.UI.UI_EMPulse_BIT";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UI_EMPulse_BIT";
 
 	CursorTarget = new class'X2AbilityTarget_Cursor';
 	CursorTarget.FixedAbilityRange = class'X2Item_ElectroPulse'.default.BIT_PULSE_RANGE;
