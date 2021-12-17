@@ -207,7 +207,7 @@ static function X2AbilityTemplate Create_SpeedLoader_Passive()
 
 	SetPassive(Template);
 	SetHidden(Template);
-	Template.IconImage = "img:///IRISparkArsenal.UI.UIPerk_SpeedLoader";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_SpeedLoader";
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 
 	Effect = new class'X2Effect_SpeedLoader_Trigger';
@@ -233,7 +233,7 @@ static function X2AbilityTemplate Create_SpeedLoader_Reload()
 	Template.AbilityCosts.Length = 0;
 
 	SetHidden(Template);
-	Template.IconImage = "img:///IRISparkArsenal.UI.UIPerk_SpeedLoader";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_SpeedLoader";
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 
 	return Template;

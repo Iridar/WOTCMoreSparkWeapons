@@ -52,12 +52,12 @@ static function X2DataTemplate Create_LaunchOrdnance(optional name TemplateName 
 	if (bBlasterLauncherTargeting)
 	{
 		Template.TargetingMethod = class'X2TargetingMethod_BlasterLauncher';
-		Template.IconImage = "img:///IRIOrdnanceLauncher.UI.UI_BlastOrdnance";
+		Template.IconImage = "img:///IRI_SparkArsenal_UI.UI_BlastOrdnance";
 	}
 	else
 	{
 		Template.TargetingMethod = class'X2TargetingMethod_OrdnanceLauncher';
-		Template.IconImage = "img:///IRIOrdnanceLauncher.UI.UI_LaunchGrenade";
+		Template.IconImage = "img:///IRI_SparkArsenal_UI.UI_LaunchGrenade";
 	}
 	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
 	RadiusMultiTarget.bUseWeaponRadius = true;

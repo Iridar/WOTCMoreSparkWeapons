@@ -131,7 +131,13 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="ContentForCook\IRIKineticStrikeModule.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="ContentForCook\IRIOrdnanceLauncher.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="ContentForCook\IRIRestorativeMist.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ContentForCook\IRISparkArsenal.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="ContentForCook\IRISparkHeavyWeapons.upk">
@@ -177,12 +183,6 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIArtilleryCannon.upk">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Content\IRIOrdnanceLauncher.upk">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Content\IRISparkArsenal.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\WOTCMoreSparkWeapons.chn">

@@ -10,6 +10,8 @@
 		"IRIHeavyCannonShells",
 		"IRIElectroPulse",
 		"IRIRestorativeMist",
-		"IRISparkHeavyWeapons"
+		"IRISparkHeavyWeapons",
+		"IRISparkArsenal",
+		"IRIOrdnanceLauncher"
     ]
 }
