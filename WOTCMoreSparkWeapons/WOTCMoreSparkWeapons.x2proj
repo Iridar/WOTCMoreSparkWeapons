@@ -119,6 +119,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\XComSparkArsenal.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="ContentForCook\IRIHeavyCannonShells.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="ContentForCook\IRIIncineratorUpgrades.upk">
       <SubType>Content</SubType>
     </Content>
@@ -168,9 +171,6 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIElectroPulse.upk">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Content\IRIHeavyCannonShells.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIOrdnanceLauncher.upk">
