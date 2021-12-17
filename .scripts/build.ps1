@@ -26,4 +26,5 @@ switch ($config)
     default { ThrowFailure "Unknown build configuration $config" }
 }
 
+$builder.SetContentOptionsJsonFilename("ContentOptions.json")
 $builder.InvokeBuild()
