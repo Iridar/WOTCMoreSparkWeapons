@@ -65,6 +65,7 @@ delegate ModifyTemplate(X2DataTemplate DataTemplate);
 //	Canister rounds -> experimental ammo, adds aim bonuses up close, aim penalties at range, +1 crit, -1 Ammo, add shotgun projectile.
 // Make Active Camo work for regular soldiers?
 
+//	Clip ejection for the Autogun.
 //	Rocket Punch with detachable arm. For Tier 2 KSM, maybe?
 //	Maybe do something for HE/HESH and Shrapnel with Sabot Ammo.
 //	Improve descriptions of Sabot Ammo interactions with special cannon shells

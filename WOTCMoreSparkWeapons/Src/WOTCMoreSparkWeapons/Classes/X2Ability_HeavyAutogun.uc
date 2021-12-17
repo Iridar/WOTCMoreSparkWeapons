@@ -63,7 +63,7 @@ static function X2AbilityTemplate Create_LAC_Overwatch()
 	Template.DefaultKeyBinding = 0;
 
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.ARMOR_ACTIVE_PRIORITY + 1;
-	Template.IconImage = "img:///IRISparkHeavyWeapons.UI.UIPerk_AutogunOverwatch";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_AutogunOverwatch";
 
 	return Template;
 }
@@ -206,7 +206,7 @@ static function X2AbilityTemplate SetupFire_LAC_Ability(name TemplateName)
 	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
 
 	//	Icon Setup
-	Template.IconImage = "img:///IRISparkHeavyWeapons.UI.UIPerk_FireAutogun";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_FireAutogun";
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 	Template.bDisplayInUITacticalText = false;

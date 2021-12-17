@@ -35,7 +35,7 @@ static function X2DataTemplate Create_ArmCannonTech()
 	`CREATE_X2TEMPLATE(class'X2TechTemplate', Template, 'IRI_ArmCannon_Tech');
 
 	Template.PointsToComplete = class'X2StrategyElement_DefaultTechs'.static.StafferXDays(1, default.ARM_CANNON_TECH_DAYS);
-	Template.strImage = "img:///IRISparkHeavyWeapons.UI.UI_ArmCannon_ProvingGrounds";
+	Template.strImage = "img:///IRI_SparkArsenal_UI.UI_ArmCannon_ProvingGrounds";
 	Template.SortingTier = 3;
 
 	// Created Item

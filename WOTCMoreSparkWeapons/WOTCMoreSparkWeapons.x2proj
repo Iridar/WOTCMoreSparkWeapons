@@ -134,6 +134,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="ContentForCook\IRIRestorativeMist.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="ContentForCook\IRISparkHeavyWeapons.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="ContentForCook\IRI_SparkArsenal_UI.upk">
       <SubType>Content</SubType>
     </Content>
@@ -180,9 +183,6 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRISparkArsenal.upk">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Content\IRISparkHeavyWeapons.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\WOTCMoreSparkWeapons.chn">

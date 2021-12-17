@@ -927,7 +927,7 @@ static function X2AbilityTemplate IRI_ActiveCamo()
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_ActiveCamo');
 
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
-	Template.IconImage = "img:///IRISparkHeavyWeapons.UI.UI_ActiveCamo";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UI_ActiveCamo";
 	//SetHidden(Template);
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
 
