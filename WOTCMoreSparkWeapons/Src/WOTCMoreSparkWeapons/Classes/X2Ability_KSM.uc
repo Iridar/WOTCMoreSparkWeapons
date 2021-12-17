@@ -58,7 +58,7 @@ static function X2AbilityTemplate Create_KineticStrike(name TemplateName, option
 	
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
-	Template.IconImage = "img:///IRIKineticStrikeModule.UI.UI_KineticStrike";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UI_KineticStrike";
 
 	//	Targeting and Triggering
 	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StandardMelee';
@@ -231,7 +231,7 @@ static function X2AbilityTemplate Create_KineticStrike_Passive()
 	// Icon Properties
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'IRI_KineticStrike_Passive');
 
-	Template.IconImage = "img:///IRIKineticStrikeModule.UI.UI_KSM_MeleeBoost";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UI_KSM_MeleeBoost";
 
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;

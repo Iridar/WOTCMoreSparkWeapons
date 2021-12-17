@@ -122,6 +122,12 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="ContentForCook\IRIIncineratorUpgrades.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="ContentForCook\IRIKineticStrikeModule.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ContentForCook\IRI_SparkArsenal_UI.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="ContentForCook\WoTC_ZPARK_ApocalypseCannon.upk">
       <SubType>Content</SubType>
     </Content>
@@ -165,9 +171,6 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIHeavyCannonShells.upk">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Content\IRIKineticStrikeModule.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRIOrdnanceLauncher.upk">

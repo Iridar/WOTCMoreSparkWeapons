@@ -1065,7 +1065,8 @@ private static function bool IsItemCanister(const X2ItemTemplate ItemTemplate)
 //	-----------------------------------------------------------------------------------------------------------------------------------
 static function string DLCAppendSockets(XComUnitPawn Pawn)
 {
-	local XComGameState_Unit UnitState;
+	local XComGameState_Unit		UnitState;
+	local array<SkeletalMeshSocket> NewSockets;
 
 	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Pawn.ObjectID));
 	if (UnitState == none)
@@ -1075,18 +1076,48 @@ static function string DLCAppendSockets(XComUnitPawn Pawn)
 	{
 		return "IRIOrdnanceLauncher.Meshes.Spark_Sockets";
 	}
-	if (UnitState.IsSoldier())
+	else if (UnitState.IsSoldier())
 	{
 		if (UnitState.kAppearance.iGender == eGender_Male)
 		{
-			return "IRIKineticStrikeModule.Meshes.SM_SoldierSockets_M";
+			NewSockets.AddItem(CreateSocket('iri_electro_pulse', 'SwordSheath', 8.182021f, 4.002287f, 26.015682f, 8, -78, -270));
+			NewSockets.AddItem(CreateSocket('iri_restorative_mist', 'SwordSheath', 7.194232f, 2.808428f, 24.213192f, 8, -78, -270));
+			NewSockets.AddItem(CreateSocket('iri_soldier_ksm', 'LForearm', 13.809367f, 2.360606f, -7.953190f, 175, 0, 0));
+			Pawn.Mesh.AppendSockets(NewSockets, true);
 		}
 		else
 		{
-			return "IRIKineticStrikeModule.Meshes.SM_SoldierSockets_F";
+			NewSockets.AddItem(CreateSocket('iri_electro_pulse', 'SwordSheath', 8.226833f, -0.804468f, 21.837490f, 6, -78, -270));
+			NewSockets.AddItem(CreateSocket('iri_restorative_mist', 'SwordSheath', 5.627124f, -1.013397f, 18.240984f, 8, -78, -270));
+			NewSockets.AddItem(CreateSocket('iri_soldier_ksm', 'LForearm', 13.641068f, 2.329477f, -7.598064f, 175, 0, 0));
+			Pawn.Mesh.AppendSockets(NewSockets, true);
 		}
 	}
 	return "";
+}
+
+
+static private function SkeletalMeshSocket CreateSocket(const name SocketName, const name BoneName, optional const float X, optional const float Y, optional const float Z, optional const float dRoll, optional const float dPitch, optional const float dYaw, optional float ScaleX = 1.0f, optional float ScaleY = 1.0f, optional float ScaleZ = 1.0f)
+{
+	local SkeletalMeshSocket NewSocket;
+
+	NewSocket = new class'SkeletalMeshSocket';
+    NewSocket.SocketName = SocketName;
+    NewSocket.BoneName = BoneName;
+
+    NewSocket.RelativeLocation.X = X;
+    NewSocket.RelativeLocation.Y = Y;
+    NewSocket.RelativeLocation.Z = Z;
+
+    NewSocket.RelativeRotation.Roll = dRoll * DegToUnrRot;
+    NewSocket.RelativeRotation.Pitch = dPitch * DegToUnrRot;
+    NewSocket.RelativeRotation.Yaw = dYaw * DegToUnrRot;
+
+	NewSocket.RelativeScale.X = ScaleX;
+	NewSocket.RelativeScale.Y = ScaleY;
+	NewSocket.RelativeScale.Z = ScaleZ;
+    
+	return NewSocket;
 }
 //	-----------------------------------------------------------------------------------------------------------------------------------
 //														UPDATE ANIMATIONS
