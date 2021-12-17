@@ -119,6 +119,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\XComSparkArsenal.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="ContentForCook\IRIArtilleryCannon.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="ContentForCook\IRIElectroPulse.upk">
       <SubType>Content</SubType>
     </Content>
@@ -161,9 +164,6 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="ContentForCook\WoTC_ZPARK_UI.upk">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Content\CIN_BasicColors.upk">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Content\CIN_IRI_Lockon.umap">
       <SubType>Content</SubType>
     </Content>
@@ -173,16 +173,7 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Content\CIN_IRI_QuickWideSpark.umap">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Content\EditorMeshes.upk">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Content\EngineMeshes.upk">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Content\IRIActiveCamoPerk.upk">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Content\IRIArtilleryCannon.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\WOTCMoreSparkWeapons.chn">

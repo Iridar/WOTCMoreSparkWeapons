@@ -36,27 +36,27 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	//	Set of dummy abilities used for icon in tactical to remind the player about shells equipped.
 	//	Oh the fire and brimstone that will rain on anyone creating an ablity template outside a separate function!..
-	Template = PurePassive('IRI_Shell_HEAT_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireHEAT", false, 'eAbilitySource_Item', true);
+	Template = PurePassive('IRI_Shell_HEAT_Passive', "img:///IRI_SparkArsenal_UI.UIPerk_FireHEAT", false, 'eAbilitySource_Item', true);
 	SetHidden(Template);
 	Templates.AddItem(Template);
 
-	Template = PurePassive('IRI_Shell_HEDP_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireHEAT", false, 'eAbilitySource_Item', true);
+	Template = PurePassive('IRI_Shell_HEDP_Passive', "img:///IRI_SparkArsenal_UI.UIPerk_FireHEAT", false, 'eAbilitySource_Item', true);
 	SetHidden(Template);
 	Templates.AddItem(Template);
 
-	Template = PurePassive('IRI_Shell_HE_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireHE", false, 'eAbilitySource_Item', true);
+	Template = PurePassive('IRI_Shell_HE_Passive', "img:///IRI_SparkArsenal_UI.UIPerk_FireHE", false, 'eAbilitySource_Item', true);
 	SetHidden(Template);
 	Templates.AddItem(Template);
 
-	Template = PurePassive('IRI_Shell_HESH_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireHE", false, 'eAbilitySource_Item', true);
+	Template = PurePassive('IRI_Shell_HESH_Passive', "img:///IRI_SparkArsenal_UI.UIPerk_FireHE", false, 'eAbilitySource_Item', true);
 	SetHidden(Template);
 	Templates.AddItem(Template);
 
-	Template = PurePassive('IRI_Shell_Shrapnel_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireShrapnel", false, 'eAbilitySource_Item', true);
+	Template = PurePassive('IRI_Shell_Shrapnel_Passive', "img:///IRI_SparkArsenal_UI.UIPerk_FireShrapnel", false, 'eAbilitySource_Item', true);
 	SetHidden(Template);
 	Templates.AddItem(Template);
 
-	Template = PurePassive('IRI_Shell_Flechette_Passive', "img:///IRIArtilleryCannon.UI.UIPerk_FireShrapnel", false, 'eAbilitySource_Item', true);
+	Template = PurePassive('IRI_Shell_Flechette_Passive', "img:///IRI_SparkArsenal_UI.UIPerk_FireShrapnel", false, 'eAbilitySource_Item', true);
 	SetHidden(Template);
 	Templates.AddItem(Template);
 
@@ -198,7 +198,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_AP_Passive()
 
 	SetPassive(Template);
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
-	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireCannon";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_FireCannon";
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 
 	SabotAmmo = new class'X2Effect_SabotShell';
@@ -284,7 +284,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HEAT', true, 'HEATDamage', true);
 
 	//	Icon Setup
-	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireHEAT";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_FireHEAT";
 
 	//	Shooter Conditions
 	RequiredItem = new class'X2Condition_RequiredItem';
@@ -365,7 +365,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEDP()
 	Template = SetUpCannonShot('IRI_FireArtilleryCannon_HEDP', true, 'HEDPDamage', true);
 
 	//	Icon Setup
-	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireHEAT";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_FireHEAT";
 
 	//	Shooter Conditions
 	RequiredItem = new class'X2Condition_RequiredItem';
@@ -408,7 +408,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT_Passive()
 
 	SetPassive(Template);
 	SetHidden(Template);
-	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireHEAT";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_FireHEAT";
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 
 	HeatShell = new class'X2Effect_HeatShell';
@@ -449,7 +449,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 	Template.AbilityTargetStyle = CursorTarget;
 
 	//	Icon Setup
-	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireHE";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_FireHE";
 
 	//	Multi Target Effects
 	AreaDamage = new class'X2Effect_Shredder';
@@ -499,7 +499,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HESH()
 	Template.AbilityTargetStyle = CursorTarget;
 
 	//	Icon Setup
-	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireHE";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_FireHE";
 
 	//	Multi Target Effects
 	AreaDamage = new class'X2Effect_Shredder';
@@ -569,7 +569,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
 	RequiredItem.ItemNames.AddItem('IRI_Shells_T1');
 	Template.AbilityShooterConditions.AddItem(RequiredItem);
 	
-	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireShrapnel";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_FireShrapnel";
 	
 	StandardAim = new class'X2AbilityToHitCalc_StandardAim';
 	StandardAim.bGuaranteedHit = true;
@@ -612,7 +612,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel_Passive()
 
 	SetPassive(Template);
 	SetHidden(Template);
-	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireShrapnel";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_FireShrapnel";
 	Template.AbilitySourceName = 'eAbilitySource_Item';
 
 	HeatShell = new class'X2Effect_ShrapnelShell';
@@ -687,7 +687,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Flechette()
 	RequiredItem.ItemNames.AddItem('IRI_Shells_T2');
 	Template.AbilityShooterConditions.AddItem(RequiredItem);
 	
-	Template.IconImage = "img:///IRIArtilleryCannon.UI.UIPerk_FireShrapnel";
+	Template.IconImage = "img:///IRI_SparkArsenal_UI.UIPerk_FireShrapnel";
 	
 	Template.AbilityToHitCalc = default.DeadEye;
 	

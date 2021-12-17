@@ -76,7 +76,7 @@ static function X2DataTemplate Create_ExperimentalShells_Tech()
 	`CREATE_X2TEMPLATE(class'X2TechTemplate', Template, 'IRI_ExperimentalShells_Tech');
 
 	Template.PointsToComplete = class'X2StrategyElement_DefaultTechs'.static.StafferXDays(1, default.EXPERIMENTAL_SHELLS_TECH_DAYS);
-	Template.strImage = "img:///IRIArtilleryCannon.UI.ExperimentalShells";
+	Template.strImage = "img:///IRI_SparkArsenal_UI.ExperimentalShells";
 	Template.SortingTier = 3;
 	
 	Template.ResearchCompletedFn = GiveShells;
@@ -172,7 +172,7 @@ static function X2DataTemplate Create_ImprovedShells_Tech()
 	`CREATE_X2TEMPLATE(class'X2TechTemplate', Template, 'IRI_ImprovedShells_Tech');
 
 	Template.PointsToComplete = class'X2StrategyElement_DefaultTechs'.static.StafferXDays(1, default.IMPROVED_SHELLS_TECH_DAYS);
-	Template.strImage = "img:///IRIArtilleryCannon.UI.ImprovedShells";
+	Template.strImage = "img:///IRI_SparkArsenal_UI.ImprovedShells";
 	Template.SortingTier = 3;
 
 	Template.ResearchCompletedFn = class'X2StrategyElement_DefaultTechs'.static.UpgradeItems;

@@ -79,7 +79,7 @@ static function X2DataTemplate Create_Shell_HEAT()
 	
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HEAT";
+	Template.strImage = "img:///IRI_SparkArsenal_UI.Inv_Shell_HEAT";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
 	{
@@ -125,7 +125,7 @@ static function X2DataTemplate Create_Shell_HE()
 	
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HE";
+	Template.strImage = "img:///IRI_SparkArsenal_UI.Inv_Shell_HE";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
 	{
@@ -170,7 +170,7 @@ static function X2DataTemplate Create_Shell_Shrapnel()
 	
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_Shrapnel";
+	Template.strImage = "img:///IRI_SparkArsenal_UI.Inv_Shell_Shrapnel";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
 	{
@@ -220,7 +220,7 @@ static function X2DataTemplate Create_Shell_HEDP()
 
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HEDP";
+	Template.strImage = "img:///IRI_SparkArsenal_UI.Inv_Shell_HEDP";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
 	{
@@ -267,7 +267,7 @@ static function X2DataTemplate Create_Shell_HESH()
 
 	Template.Tier = 1;
 	
-	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_HESH";
+	Template.strImage = "img:///IRI_SparkArsenal_UI.Inv_Shell_HESH";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
 	{
@@ -313,7 +313,7 @@ static function X2DataTemplate Create_Shell_Flechette()
 	
 	Template.Tier = 1;
 
-	Template.strImage = "img:///IRIArtilleryCannon.UI.Inv_Shell_Flechette";
+	Template.strImage = "img:///IRI_SparkArsenal_UI.Inv_Shell_Flechette";
 
 	if (default.bShowSpecialCannonShellsOnSparkBody)
 	{
