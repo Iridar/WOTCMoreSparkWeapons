@@ -985,9 +985,16 @@ final static function bool DoesUnitHaveMunitionsMount(const XComGameState_Unit U
 
 	ItemState = UnitState.GetItemInSlot(class'X2Item_Shells_T1'.default.INVENTORY_SLOT, CheckGameState);
 
-	if (ItemState != none && ItemState.GetMyTemplateName() == 'IRI_Shells_T1')
+	if (ItemState != none)
 	{
-		return true;
+		switch (ItemState.GetMyTemplateName())
+		{
+			case 'IRI_Shells_T1':
+			case 'IRI_Shells_T2':
+				return true;
+			default:
+				break;
+		}
 	}
 
 	if (class'X2Item_Shells_T1'.default.INVENTORY_SLOT != class'X2Item_Shells_T2'.default.INVENTORY_SLOT)
