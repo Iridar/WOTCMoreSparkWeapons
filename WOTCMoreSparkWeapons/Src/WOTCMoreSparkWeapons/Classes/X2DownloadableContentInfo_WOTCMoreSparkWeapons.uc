@@ -51,8 +51,8 @@ delegate ModifyTemplate(X2DataTemplate DataTemplate);
 //	Changelog 
 //	Immedaite goals:
 
-//	Bug probably happens when the BIT equips a heavy weapon from the SPARK's heavy weapon slot
-
+//	Bug probably happens when the BIT equips a heavy weapon from the SPARK's heavy weapon slot -- what bug, ffs?
+// Nuke the BIT/GREMLIN cosmetic unit when the item with them is unequipped. Maybe not in SPARK Arsenal.
 //	Rainmaker should affect EM Pulse, maybe Resto Mist too
 //	Allow some of the support heavy weapons in the aux weapon slot
 //  any ability that attaches bit to allied unit should transfer weaopn

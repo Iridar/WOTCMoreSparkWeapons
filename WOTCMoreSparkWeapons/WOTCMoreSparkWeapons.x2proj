@@ -20,6 +20,7 @@ tags= war of the chosen, item, weapon</Description>
     <Folder Include="Config\Compatibility" />
     <Folder Include="Localization\" />
     <Folder Include="Content" />
+    <Folder Include="ContentForCook" />
     <Folder Include="Src\" />
     <Folder Include="Src\WOTCMoreSparkWeapons\" />
     <Folder Include="Src\WOTCMoreSparkWeapons\Classes\" />
@@ -118,6 +119,24 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\XComSparkArsenal.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="ContentForCook\IRIIncineratorUpgrades.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ContentForCook\WoTC_ZPARK_ApocalypseCannon.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ContentForCook\WoTC_ZPARK_Common.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ContentForCook\WoTC_ZPARK_FlamestormCannon.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ContentForCook\WoTC_ZPARK_InfernoCannon.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ContentForCook\WoTC_ZPARK_UI.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\CIN_BasicColors.upk">
       <SubType>Content</SubType>
     </Content>
@@ -148,9 +167,6 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Content\IRIHeavyCannonShells.upk">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Content\IRIIncineratorUpgrades.upk">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Content\IRIKineticStrikeModule.upk">
       <SubType>Content</SubType>
     </Content>
@@ -164,15 +180,6 @@ tags= war of the chosen, item, weapon</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\IRISparkHeavyWeapons.upk">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Content\WoTC_ZPARK_ApocalypseCannon.upk">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Content\WoTC_ZPARK_FlamestormCannon.upk">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Content\WoTC_ZPARK_InfernoCannon.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\WOTCMoreSparkWeapons.chn">

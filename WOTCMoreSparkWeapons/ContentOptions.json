@@ -1,0 +1,9 @@
+{
+    "sfStandalone": [
+        "IRIIncineratorUpgrades",
+        "WoTC_ZPARK_ApocalypseCannon",
+		"WoTC_ZPARK_FlamestormCannon",
+		"WoTC_ZPARK_InfernoCannon",
+		"WoTC_ZPARK_UI"
+    ]
+}
