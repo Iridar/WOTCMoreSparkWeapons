@@ -223,6 +223,10 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 
 	ItemState = Unit.GetItemInSlot(Slot.InvSlot, NewGameState);
 	HasSlot = Slot.UnitHasSlot(Unit, strDummy, NewGameState);
+
+	`LOG("Aux slot. Has slot:" @ HasSlot @ "has item:" @ ItemState != none @ ItemState.GetMyTemplateName(),, 'IRITEST');
+
+
 	if (!HasSlot)
 	{
 		bShouldUnequip = true;
@@ -240,16 +244,21 @@ static function SlotValidateLoadout(CHItemSlot Slot, XComGameState_Unit Unit, XC
 		}
 	}
 
+	`LOG(`ShowVar(bShouldUnequip),, 'IRITEST');
+
 	//	If there's an item equipped in the slot, but the unit is not supposed to have the slot, or the item is not supposed to be in the slot, then unequip it and put it into HQ Inventory.
 	if (bShouldUnequip && ItemState != none)
 	{
 		ItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', ItemState.ObjectID));
 		Unit = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', Unit.ObjectID));
 		if (Unit.RemoveItemFromInventory(ItemState, NewGameState))
-		{
+		{	
+			`LOG("Remove item",, 'IRITEST');
 			XComHQ.PutItemInInventory(NewGameState, ItemState);
 		}	
 	}
+
+	`LOG("Slot validated.",, 'IRITEST');
 }
 
 function ECHSlotUnequipBehavior SlotGetUnequipBehavior(CHItemSlot Slot, ECHSlotUnequipBehavior DefaultBehavior, XComGameState_Unit UnitState, XComGameState_Item ItemState, optional XComGameState CheckGameState)
