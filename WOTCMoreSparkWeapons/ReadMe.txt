@@ -2,6 +2,14 @@
 
 More info at: https://www.patreon.com/Iridar
 
+
+Changelog:
+Better camera offset for cannons and incinerators.
+Cooked mod's assets.
+"WOTCIridarTemplateMaster" is now required.
+Fix bug where advanced munitions mount allowed equipping specials shells alongside itself.
+
+
 [WOTC] Iridar's SPARK Arsenal
 Adds new weapons, tools and gameplay mechanics for SPARKs, [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1452700934]MEC Troopers[/url][/b] and regular soldiers.
 
