@@ -1271,8 +1271,10 @@ static event OnLoadedSavedGameToStrategy()
 	foreach XComHQ.Crew(UnitRef)
 	{
 		UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UnitRef.ObjectID));
+
 		if (UnitState.IsSoldier() && default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
 		{
+			UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
 			GrantAbilities = default.AbilitiesToGrant;
 			for (i = UnitState.AbilityTree[0].Abilities.Length - 1; i >= 0; i--)
 			{
