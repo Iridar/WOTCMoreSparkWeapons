@@ -164,6 +164,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="ContentForCook\WoTC_ZPARK_UI.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="ContentOptions.json">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\CIN_IRI_Lockon.umap">
       <SubType>Content</SubType>
     </Content>

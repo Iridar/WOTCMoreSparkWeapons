@@ -1082,7 +1082,7 @@ static function string DLCAppendSockets(XComUnitPawn Pawn)
 
 	if (default.SparkCharacterTemplates.Find(UnitState.GetMyTemplateName()) != INDEX_NONE)
 	{
-		return "IRIOrdnanceLauncher.Meshes.Spark_Sockets";
+		return "IRIOrdnanceLauncher.Spark_Sockets";
 	}
 	else if (UnitState.IsSoldier())
 	{
