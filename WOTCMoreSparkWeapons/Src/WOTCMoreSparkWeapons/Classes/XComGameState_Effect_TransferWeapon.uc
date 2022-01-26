@@ -76,8 +76,6 @@ simulated function ForwardTransfer(XComGameState_Unit SourceUnit, XComGameState_
 	local int						iAmmo;
 	local int i;
 
-	//	TODO: Handle ability charges and cooldowns here
-
 	TargetSlot = FindFreeInventorySlot(TargetUnit, NewGameState);
 	if (TargetSlot != eInvSlot_Unknown)
 	{
@@ -89,7 +87,7 @@ simulated function ForwardTransfer(XComGameState_Unit SourceUnit, XComGameState_
 		BitWeaponRef = BitObjRef;
 
 		//	Transferring the weapon appears to reset its ammo count, so we store it locally.
-		//`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: begin transfer of weapon:" @ SourceWeapon.GetMyTemplateName() @ "with ammo:" @ SourceWeapon.Ammo @ "from slot:" @ OriginalSlot @ "to slot:" @ TargetSlot,, 'WOTCMoreSparkWeapons');
+		`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: begin transfer of weapon:" @ SourceWeapon.GetMyTemplateName() @ "with ammo:" @ SourceWeapon.Ammo @ "from slot:" @ OriginalSlot @ "to slot:" @ TargetSlot,, 'WOTCMoreSparkWeapons');
 		iAmmo = SourceWeapon.Ammo;
 
 		//	Remove all abilities associated with the weapon being transferred from the unit that is giving it away.
@@ -99,7 +97,7 @@ simulated function ForwardTransfer(XComGameState_Unit SourceUnit, XComGameState_
 			if (AbilityState.SourceWeapon == TransferWeaponRef)
 			{
 				RecordAbilityChargeCooldownData(AbilityState);
-				//`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: removing ability:" @ AbilityState.GetMyTemplateName() @ "from source unit:" @ SourceUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
+				`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: removing ability:" @ AbilityState.GetMyTemplateName() @ "from source unit:" @ SourceUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
 				SourceUnit.Abilities.Remove(i, 1);
 			}
 		}
@@ -126,20 +124,22 @@ simulated function ForwardTransfer(XComGameState_Unit SourceUnit, XComGameState_
 
 			//	Initiate abilities associated with the newly added weapon.
 			PlayerState = XComGameState_Player(History.GetGameStateForObjectID(TargetUnit.ControllingPlayer.ObjectID));			
-			AbilityData = TargetUnit.GatherUnitAbilitiesForInit(NewGameState, PlayerState);
+			AbilityData = TargetUnit.GatherUnitAbilitiesForInit(/*NewGameState*/, PlayerState); // Passing StartState to it causes a bug in LWOTC where it restores ammo for some weapons.
 			TacticalRules = `TACTICALRULES;
+
 			for (i = 0; i < AbilityData.Length; i++)
 			{
 				if (AbilityData[i].SourceWeaponRef == TransferWeaponRef)
 				{	
-					//`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: initializing ability:" @ AbilityData[i].Template.DataName @ "for target unit:" @ TargetUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
+					`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: initializing ability:" @ AbilityData[i].Template.DataName @ "for target unit:" @ TargetUnit.GetFullName(),, 'WOTCMoreSparkWeapons');
+					
 					AbilityRef = TacticalRules.InitAbilityForUnit(AbilityData[i].Template, TargetUnit, NewGameState, TransferWeaponRef);
 					AbilityState = XComGameState_Ability(NewGameState.GetGameStateForObjectID(AbilityRef.ObjectID));
 					RestoreAbilityChargeCooldownData(AbilityState);
 				}
 			}
 
-			//`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: finish transfer of weapon:" @ SourceWeapon.GetMyTemplateName() @ ", it now has ammo:" @ SourceWeapon.Ammo,, 'WOTCMoreSparkWeapons');
+			`LOG("XComGameState_Effect_TransferWeapon::ForwardTransfer:: finish transfer of weapon:" @ SourceWeapon.GetMyTemplateName() @ ", it now has ammo:" @ SourceWeapon.Ammo,, 'WOTCMoreSparkWeapons');
 			SourceWeapon.Ammo = iAmmo;
 		}
 	}
@@ -196,7 +196,7 @@ simulated function BackwardTransfer(XComGameState NewGameState)
 
 		//	Initiate abilities associated with the newly added weapon.
 		PlayerState = XComGameState_Player(History.GetGameStateForObjectID(SourceUnit.ControllingPlayer.ObjectID));			
-		AbilityData = SourceUnit.GatherUnitAbilitiesForInit(NewGameState, PlayerState);
+		AbilityData = SourceUnit.GatherUnitAbilitiesForInit(/*NewGameState*/, PlayerState);
 		TacticalRules = `TACTICALRULES;
 		for (i = 0; i < AbilityData.Length; i++)
 		{
