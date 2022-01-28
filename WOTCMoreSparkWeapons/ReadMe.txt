@@ -4,6 +4,7 @@ More info at: https://www.patreon.com/Iridar
 
 
 [WOTC] Iridar's SPARK Arsenal
+
 Adds new weapons, tools and gameplay mechanics for SPARKs, [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1452700934]MEC Troopers[/url][/b] and regular soldiers.
 
 [b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2568690416483865842/]>>> CLICK HERE FOR THE FULL LIST OF NEW FEATURES <<<[/url][/b]
@@ -15,8 +16,7 @@ Adds new weapons, tools and gameplay mechanics for SPARKs, [b][url=https://steam
 [b]New Secondary Weapons for SPARKs and MEC Troopers:[/b][list]
 [*] Ordnance Launchers (3 tiers)
 [*] Kinetic Strike Module (1 tier)
-[*] Munitions Mount (2 tiers)
-[*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1416242202]Ballistic Shields[/url][/b] can now be equipped by SPARKs and MEC Troopers.[/list]
+[*] Munitions Mount (2 tiers)[/list]
 
 [b]New Heavy Weapons:[/b][list]
 [*] Kiruka Autogun
@@ -42,7 +42,7 @@ Adds new weapons, tools and gameplay mechanics for SPARKs, [b][url=https://steam
 [*] BITs can be used with all vanilla Protocol abilities, including remote hacking, but they are weaker in that role than GREMLINs.
 [*] BITs no longer grant a generic Heavy Weapon slot, and instead add a BIT Heavy Weapon slot.
 [*] Control over the heavy weapon in that slot is temporarily transferred to the target allied soldier when you use Aid Protocol on them.
-[*] Having a BIT or GREMLIN equipped will grant Aid Protocol, Active Camo (see below) and Entrench Protocol. 
+[*] SPARKs / MEC Troopers equipped with a BIT or GREMLIN will gain Aid Protocol, Active Camo (see below) and Entrench Protocol.
 [*] Entrench Protocol will extend the duration of Aid Protocol used on self as long as the unit doesn't move, but the cooldown is extended as well.[/list]
 
 [b]Misc changes:[/b][list]
@@ -54,7 +54,7 @@ Adds new weapons, tools and gameplay mechanics for SPARKs, [b][url=https://steam
 
 [h1]BALANCING[/h1]
 
-This mod is a significant buff to SPARKs' and MECs' power. However, it is created around the expectation that SPARKs and MEC Troopers do not have Utility Slots. So if another mod adds some Utility Slots, and lets you carry more than 2-3 grenades/rockets, please do not complain that it's overpowered, that is not the intended behavior for this mod. The mod does support grenades/rockets in Utility Slots, if that's what you want to do.
+This mod is a significant buff to SPARKs' and MECs' power. However, it is created around the expectation that SPARKs and MEC Troopers do not have Utility Slots. 
 
 [h1]KNOWN ISSUES[/h1]
 
@@ -62,14 +62,14 @@ SPARK Heavy Cannon can fire for free when using RPGO under the effects of Overdr
 
 [h1]REQUIREMENTS[/h1]
 [list]
-[*] [url=https://steamcommunity.com/workshop/filedetails/?id=1134256495][b]X2WOTCCommunityHighlander[/b][/url] v1.21 or higher is required. It's possible to manually configure the mod for the limited compatibility for the older Highlander versions, [b][url=https://steamcommunity.com/workshop/filedetails/discussion/2127166233/2442587820564618365/]the instructions are here[/url][/b].
+[*] [url=https://steamcommunity.com/workshop/filedetails/?id=1134256495][b]X2WOTCCommunityHighlander[/b][/url] v1.21 or higher is required.
 [*] [b]Shen's Last Gift DLC[/b] is required. 
 [*] [b]Alien Hunters DLC[/b] - probably required.[/list]
 
 [h1]COMPANION MODS[/h1]
 [list]
 [*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1517938486][b][WOTC] Iridar's Weapon Skin Replacer[/b][/url] - removes unwanted "primary" versions of some of the items added by this mod.
-[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2363075446][b][WOTC] Iridar's Template Master - Core[/b][/url] - adds icons for Incinerators' weapon upgrades that are available only if you also use [b]Mitzruti's Immolators[/b] mod. 
+[*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2363075446][b][WOTC] Iridar's Template Master - Core[/b][/url] - adds icons for Incinerators' weapon upgrades that are available only if you also use [b]Immolator Overhaul[/b] mod. 
 [*] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1737532501][b][WotC] Weapon Fixes[/b][/url] - fixes Incinerators attack visualization.
 [*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1775963384][WOTC] Rocket Launchers 2.0[/url][/b] - fully supported. This mod enables SPARKs to carry, Take, Arm and Give rockets, as well as Fire them with the Ordnance Launcher. SPARKs do not suffer movement penalties for carrying rockets. All rockets are supported, including the Tactical Elerium Nuke. Judgement Day is upon ADVENT.
 [*] [b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1161324428]SPARK Launchers Redux[/url][/b] - can be carried in the Auxiliary Weapon Slot. 
@@ -87,6 +87,10 @@ I tried to keep the mod as compatible as possible, including all the major overh
 The mod is [b][i]highly[/i][/b] configurable through various files in:
 [code]..\steamapps\workshop\content\268500\2127166233\Config\[/code]
 
+[h1]COOKED ASSETS[/h1]
+
+This mod's packages are cooked to reduce their size and improve loading times. You can find the uncooked version of the mod on [b][url=https://github.com/Iridar/WOTCMoreSparkWeapons]GitHub[/url][/b].
+
 [h1]CREDITS[/h1]
 
 First of all, huge thanks to my [b][url=https://www.patreon.com/Iridar]patrons on patreon[/url][/b] for producing this mod. It's a [b][i]blast[/i][/b] to work with so many wonderful people. Particularly:
@@ -98,7 +102,6 @@ And thanks to comrades in arms:
 [b]Musashi[/b] - for graciously providing the custom death animation code. 
 [b]NeIVIeSiS[/b] - for making many of the icons for this mod.
 [b]bstar[/b] - brainstorm assistance.
-
 
 
 

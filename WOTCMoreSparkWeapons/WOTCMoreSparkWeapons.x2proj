@@ -29,6 +29,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Config\Base\XComCamera.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\Base\XComContent.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\Base\XComEditor.ini">
       <SubType>Content</SubType>
     </Content>
