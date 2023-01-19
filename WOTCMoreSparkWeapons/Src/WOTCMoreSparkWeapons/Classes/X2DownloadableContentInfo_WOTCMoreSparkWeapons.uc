@@ -51,6 +51,10 @@ delegate ModifyTemplate(X2DataTemplate DataTemplate);
 //	Changelog 
 //	Immedaite goals:
 
+// Powered Strike Module deals incorrect damage? 
+// if I send one into a mission with the Munitions secondary for the cannon and give it ammo, the ammo item disappears after the mission but the Spark's still treated as if it's got an ammo item equipped. It won't let me equip another even though the slot's empty. I tried removing all utility items and it didn't fix it.
+
+// Shoulder cannon that automatically follows up on primary weapon attacks? or saturaton fire style ability
 //	Bug probably happens when the BIT equips a heavy weapon from the SPARK's heavy weapon slot -- what bug, ffs?
 // Nuke the BIT/GREMLIN cosmetic unit when the item with them is unequipped. Maybe not in SPARK Arsenal.
 //	Rainmaker should affect EM Pulse, maybe Resto Mist too

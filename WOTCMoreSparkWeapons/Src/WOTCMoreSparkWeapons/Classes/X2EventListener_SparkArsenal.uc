@@ -35,7 +35,7 @@ static function CHEventListenerTemplate StrategyListener()
 	Template.RegisterInTactical = false;
 	Template.RegisterInStrategy = true;
 
-	Template.AddCHEvent('WeaponUpgraded', OnWeaponUpgraded, ELD_Immediate);
+	Template.AddCHEvent('WeaponUpgraded', OnWeaponUpgraded, ELD_OnStateSubmitted);
 	Template.AddCHEvent('ItemRemovedFromSlot', OnItemRemovedFromSlot, ELD_Immediate);
 
 	return Template;
@@ -207,6 +207,7 @@ static private function EventListenerReturn OnOverrideHasAmmoPocket(Object Event
 			WeaponUpgradeTemplateNames = ItemState.GetMyWeaponUpgradeTemplateNames();
 			if (WeaponUpgradeTemplateNames.Find('IRI_ExperimentalMagazine_Upgrade') != INDEX_NONE)
 			{
+				//`LOG(GetFuncName() @ ItemState.GetMyTemplateName() @ "has Experimental Magazine, granting Ammo Pocket",, 'SPARK_ARSENAL');
 				Tuple.Data[0].b = true;
 				return ELR_NoInterrupt;
 			}
@@ -216,25 +217,31 @@ static private function EventListenerReturn OnOverrideHasAmmoPocket(Object Event
 }
 
 
-static private function EventListenerReturn OnWeaponUpgraded(Object EventData, Object EventSource, XComGameState NewGameState, Name Event, Object CallbackData)
+static private function EventListenerReturn OnWeaponUpgraded(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
 {
-	local XComGameState_Item ItemState;
-	local XComGameState_Item NewItemState;
-	local XComGameState_Unit NewUnitState;
-	local array<name> EquippedUpgrades;
-	local array<name> NewEquippedUpgrades;
+	local XComGameState_Item	ItemState;
+	local XComGameState_Item	OldItemState;
+	local XComGameState_Unit	UnitState;
+	local XComGameStateHistory	History;
+	local array<name>			EquippedUpgrades;
+	local array<name>			OldEquippedUpgrades;
+	local XComGameState			NewGameState;
 
 	// `XEVENTMGR.TriggerEvent('WeaponUpgraded', Weapon, UpgradeItem, ChangeState);
+	
 	ItemState = XComGameState_Item(EventData);
 	if (ItemState == none)
 		return ELR_NoInterrupt;
 
-	NewItemState = XComGameState_Item(NewGameState.GetGameStateForObjectID(ItemState.ObjectID));
-	if (NewItemState == none)
+	History = `XCOMHISTORY;
+	OldItemState = XComGameState_Item(History.GetGameStateForObjectID(ItemState.ObjectID,, GameState.HistoryIndex - 1));
+	if (OldItemState == none)
 		return ELR_NoInterrupt;
 
 	EquippedUpgrades = ItemState.GetMyWeaponUpgradeTemplateNames();
-	NewEquippedUpgrades = NewItemState.GetMyWeaponUpgradeTemplateNames();
+	OldEquippedUpgrades = OldItemState.GetMyWeaponUpgradeTemplateNames();
+
+	//`LOG(GetFuncName() @ ItemState.GetMyTemplateName() @ "Weapon had Experimental magazine:" @ OldEquippedUpgrades.Find('IRI_ExperimentalMagazine_Upgrade') != INDEX_NONE @ "weapon has Experimental Magazine:" @ EquippedUpgrades.Find('IRI_ExperimentalMagazine_Upgrade') != INDEX_NONE,, 'SPARK_ARSENAL');
 
 	// Validate loadout if the weapon was equipped with an Experimental Magazine, or if it was removed.
 	// Prevents the following bug:
@@ -242,13 +249,23 @@ static private function EventListenerReturn OnWeaponUpgraded(Object EventData, O
 	//Equip experimental ammo
 	//Make soldier ineligible (e.g. by removing mentioned weapon upgrade).
 	//Ammo slot is no longer visible in the UI, but the soldier still has the Ammo equipped under the hood, and will benefit from it in Tactical.
-	if (EquippedUpgrades.Find('IRI_ExperimentalMagazine_Upgrade') != NewEquippedUpgrades.Find('IRI_ExperimentalMagazine_Upgrade'))
+	if (OldEquippedUpgrades.Find('IRI_ExperimentalMagazine_Upgrade') != EquippedUpgrades.Find('IRI_ExperimentalMagazine_Upgrade'))
 	{
-		NewUnitState = XComGameState_Unit(NewGameState.GetGameStateForObjectID(ItemState.OwnerStateObject.ObjectID));
-		if (NewUnitState == none)
-			NewUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', ItemState.OwnerStateObject.ObjectID));
+		UnitState = XComGameState_Unit(History.GetGameStateForObjectID(ItemState.OwnerStateObject.ObjectID));
+		if (UnitState == none)
+			return ELR_NoInterrupt;
 
-		NewUnitState.ValidateLoadout(NewGameState);
+		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Experimental Magazine Validating Loadout");
+		
+		UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
+
+		//`LOG("Validating loadout for:" @ UnitState.GetFullName() @ "Ammo in slot:" @ UnitState.GetItemInSlot(eInvSlot_AmmoPocket, NewGameState).GetMyTemplateName(),, 'SPARK_ARSENAL');
+
+		UnitState.ValidateLoadout(NewGameState);
+
+		//`LOG("Validated loadout for:" @ UnitState.GetFullName() @ "Ammo in slot:" @ UnitState.GetItemInSlot(eInvSlot_AmmoPocket, NewGameState).GetMyTemplateName(),, 'SPARK_ARSENAL');
+
+		`GAMERULES.SubmitGameState(NewGameState);
 	}
 	return ELR_NoInterrupt;
 }

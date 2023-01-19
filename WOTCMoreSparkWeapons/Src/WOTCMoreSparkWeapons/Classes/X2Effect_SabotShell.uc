@@ -138,8 +138,8 @@ function int GetAttackingDamageModifier(XComGameState_Effect EffectState, XComGa
 {
 	local float							DamageMod;
 	local XComGameState_Unit			TargetUnit;
-	local XComGameState_Item			SourceWeapon;
-	local X2ItemTemplate				AmmoTemplate;
+	//local XComGameState_Item			SourceWeapon;
+	//local X2ItemTemplate				AmmoTemplate;
 
 	if (default.BlacklistedAbilities.Find(AbilityState.GetMyTemplateName()) != INDEX_NONE) return 0;
 	if (EffectState.ApplyEffectParameters.ItemStateObjectRef != AbilityState.SourceWeapon) return 0;
@@ -148,16 +148,16 @@ function int GetAttackingDamageModifier(XComGameState_Effect EffectState, XComGa
 	if (TargetUnit != none)
 	{
 		//	Don't apply damage penalty if Sabot Ammo is loaded into the cannon.
-		SourceWeapon = AbilityState.GetSourceWeapon();
-		if (SourceWeapon != none)
-		{
-			AmmoTemplate = SourceWeapon.GetLoadedAmmoTemplate(AbilityState);
-		
-			if (AmmoTemplate != none && AmmoTemplate.DataName == 'IRI_Ammo_Sabot') 
-			{
-				return 0;
-			}
-		}
+		//SourceWeapon = AbilityState.GetSourceWeapon();
+		//if (SourceWeapon != none)
+		//{
+		//	AmmoTemplate = SourceWeapon.GetLoadedAmmoTemplate(AbilityState);
+		//
+		//	if (AmmoTemplate != none && AmmoTemplate.DataName == 'IRI_Ammo_Sabot') 
+		//	{
+		//		return 0;
+		//	}
+		//}
 
 		GetDamageReduction(Attacker, TargetUnit, DamageMod);
 
