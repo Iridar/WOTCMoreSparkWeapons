@@ -308,19 +308,22 @@ static function SetUpRestorativeMist(X2AbilityTemplate Template, optional bool b
 
 	if (bHealShooter)
 	{
-		MedikitHeal.TargetConditions.AddItem(UnitPropertyCondition);
+		MedikitHeal = new class'X2Effect_ApplyMedikitHeal';
+		MedikitHeal.PerUseHP = class'X2Item_RestorativeMist_CV'.default.HEAL_HP;
+		MedikitHeal.IncreasedHealProject = 'BattlefieldMedicine';
+		MedikitHeal.IncreasedPerUseHP = class'X2Item_RestorativeMist_CV'.default.BATTLEFIELD_MEDICINE_HEAL_HP;
+		MedikitHeal.TargetConditions.AddItem(UnitPropertyCondition); // E.g. so we don't heal robotic
 		Template.AddShooterEffect(MedikitHeal);
 	}
 
 	RemoveEffects = new class'X2Effect_RemoveEffectsByDamageType';
-	foreach class'X2Ability_DefaultAbilitySet'.default.MedikitHealEffectTypes(HealType)
-	{
-		RemoveEffects.DamageTypesToRemove.AddItem(HealType);
-	}
+	RemoveEffects.DamageTypesToRemove = class'X2Ability_DefaultAbilitySet'.default.MedikitHealEffectTypes;
 	Template.AddMultiTargetEffect(RemoveEffects);
 
 	if (bHealShooter)
 	{
+		RemoveEffects = new class'X2Effect_RemoveEffectsByDamageType';
+		RemoveEffects.DamageTypesToRemove = class'X2Ability_DefaultAbilitySet'.default.MedikitHealEffectTypes;
 		UnitPropertyCondition = new class'X2Condition_UnitProperty';
 		UnitPropertyCondition.ExcludeDead = true;
 		UnitPropertyCondition.ExcludeRobotic = true;
