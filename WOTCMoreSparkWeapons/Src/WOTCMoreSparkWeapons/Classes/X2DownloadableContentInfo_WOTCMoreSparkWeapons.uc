@@ -51,6 +51,7 @@ delegate ModifyTemplate(X2DataTemplate DataTemplate);
 //	Changelog 
 //	Immedaite goals:
 
+// Visualization bug: using BIT Aid Protocol on a unit that already has a cosmetic unit on them, and then that unit uses BIT heavy weapon, there's no visualization for the heavy weapon
 // Powered Strike Module deals incorrect damage? 
 // if I send one into a mission with the Munitions secondary for the cannon and give it ammo, the ammo item disappears after the mission but the Spark's still treated as if it's got an ammo item equipped. It won't let me equip another even though the slot's empty. I tried removing all utility items and it didn't fix it.
 
