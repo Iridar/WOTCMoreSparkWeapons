@@ -1320,7 +1320,8 @@ static event OnLoadedSavedGameToStrategy()
 	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ArmCannon_Tech');
 	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ImprovedShells_Tech');
 	AddProvingGroundsProjectIfItsNotPresent(StratMgr, 'IRI_ExperimentalShells_Tech');
-		
+
+	RemoveDuplicateSparkXPads();		
 }
 
 static private function bool AddSparkSquaddieWeapons(XComGameState AddToGameState)
@@ -1446,7 +1447,67 @@ static event OnPostTemplatesCreated()
 	class'X2Item_ArtilleryCannon_BM'.static.UpdateMods();
 	class'X2Item_SparkArsenal'.static.PatchWeaponUpgrades();
 	class'X2Item_SparkArsenal'.static.CopyWIOAttachmentAppearance();
+	PatchSparkRequiredLoadout();
 }
+
+// Add Evac Flare into SPARK required loadout, but only if LWOTC is active.
+// Apparently game can't handle having non-existent items in loadouts.
+static private function PatchSparkRequiredLoadout()
+{
+	local X2ItemTemplateManager ItemMgr;
+	local InventoryLoadoutItem	LoadoutItem;
+	local int Index;
+
+	if (!class'X2Item_SparkArsenal'.static.IsModActive('LongWarOfTheChosen'))
+		return;
+
+	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+
+	Index = ItemMgr.Loadouts.Find('LoadoutName', 'RequiredSpark');
+	if (Index != INDEX_NONE)
+	{
+		LoadoutItem.Item = 'EvacFlare';
+		ItemMgr.Loadouts[Index].Items.AddItem(LoadoutItem);
+	}
+}
+
+static private function RemoveDuplicateSparkXPads()
+{
+	local XComGameStateHistory			History;
+	local XComGameState_Item			ItemState;
+	local array<int>					UniqueOwners;
+	local array<int>					DuplicateItems;
+	local XComGameState					NewGameState;
+	local int							DuplicateItem;
+
+	History = `XCOMHISTORY;
+
+	foreach History.IterateByClassType(class'XComGameState_Item', ItemState)
+	{
+		if (ItemState.GetMyTemplateName() != 'IRI_Spark_XPad')
+			continue;
+
+		if (UniqueOwners.Find(ItemState.OwnerStateObject.ObjectID) == INDEX_NONE)
+		{
+			UniqueOwners.AddItem(ItemState.OwnerStateObject.ObjectID);
+		}
+		else
+		{
+			DuplicateItems.AddItem(ItemState.ObjectID);
+		}
+	}
+	
+	if (DuplicateItems.Length == 0)
+		return;
+
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Remove Duplicate SPARK XPads");
+	foreach DuplicateItems(DuplicateItem)
+	{
+		NewGameState.RemoveStateObject(DuplicateItem);
+	}
+	History.AddGameStateToHistory(NewGameState);
+}
+
 
 //	===================================================================================================================================
 //														PATCH SOLDIER CLASS TEMPLATES
