@@ -393,6 +393,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2UnifiedProjectile_HEAT.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2VersionCheck.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\XComGameState_Effect_TransferWeapon.uc">
       <SubType>Content</SubType>
     </Content>

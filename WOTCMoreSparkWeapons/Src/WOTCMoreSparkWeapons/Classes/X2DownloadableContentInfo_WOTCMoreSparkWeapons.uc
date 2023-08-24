@@ -1471,6 +1471,8 @@ static private function PatchSparkRequiredLoadout()
 	}
 }
 
+// Bandaid fix for a stupid bug.
+// Don't copy this code, it's stupid and suboptimal.
 static private function RemoveDuplicateSparkXPads()
 {
 	local XComGameStateHistory			History;
@@ -1479,33 +1481,82 @@ static private function RemoveDuplicateSparkXPads()
 	local array<int>					DuplicateItems;
 	local XComGameState					NewGameState;
 	local int							DuplicateItem;
+	local int							UniqueOwner;
+	local XComGameState_Unit			UnitState;
+
+	//`LOG("BEGIN" @ GetFuncName(),, 'IRITEST');
 
 	History = `XCOMHISTORY;
 
 	foreach History.IterateByClassType(class'XComGameState_Item', ItemState)
 	{
+		//`LOG("Item:" @ ItemState.GetMyTemplateName(),, 'IRITEST');
+
 		if (ItemState.GetMyTemplateName() != 'IRI_Spark_XPad')
 			continue;
 
+		//`LOG("MATCH This is a SPARK XPad! Owner is:" @ ItemState.OwnerStateObject.ObjectID,, 'IRITEST');
+
 		if (UniqueOwners.Find(ItemState.OwnerStateObject.ObjectID) == INDEX_NONE)
 		{
+			//`LOG("This is a unique owner, skipping this item.",, 'IRITEST');
 			UniqueOwners.AddItem(ItemState.OwnerStateObject.ObjectID);
 		}
 		else
 		{
+			//`LOG("MATCH This owner is on record, mark item as duplicate.",, 'IRITEST');
 			DuplicateItems.AddItem(ItemState.ObjectID);
 		}
 	}
+
+	//`LOG("This many duplicates:" @ DuplicateItems.Length,, 'IRITEST');
 	
 	if (DuplicateItems.Length == 0)
 		return;
 
 	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Remove Duplicate SPARK XPads");
-	foreach DuplicateItems(DuplicateItem)
+	foreach UniqueOwners(UniqueOwner)
 	{
-		NewGameState.RemoveStateObject(DuplicateItem);
+		UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UniqueOwner));
+		if (UnitState == none)
+		{
+			//`LOG("Unique owner:" @ UniqueOwner @ "does not exist in history!",, 'IRITEST');
+			continue;
+		}
+
+		//`LOG("Unique owner:" @ UnitState.GetFullName(),, 'IRITEST');
+
+		UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(UnitState.Class, UnitState.ObjectID));
+
+		foreach DuplicateItems(DuplicateItem)
+		{
+			ItemState = XComGameState_Item(NewGameState.ModifyStateObject(class'XComGameState_Item', DuplicateItem));
+
+			//`LOG("Got Duplicate Item from history:" @ ItemState != none @ ItemState.ObjectID,, 'IRITEST');
+			if (ItemState.OwnerStateObject.ObjectID != UnitState.ObjectID)
+			{
+				//`LOG("It's equipped on another unit, skipping",, 'IRITEST');
+				continue;
+			}
+
+			// Super ugly hack, but I'm not in the mood
+			ItemState.GetMyTemplate().iItemSize = 1;
+			if (UnitState.RemoveItemFromInventory(ItemState, NewGameState))
+			{
+				ItemState.GetMyTemplate().iItemSize = 0;
+				//`LOG("MATCH removed item from inventory, removing state object.",, 'IRITEST');
+				NewGameState.RemoveStateObject(ItemState.ObjectID);
+			}
+			//else
+			//{
+			//	`LOG("WARNING, failed to remove item from inventory",, 'IRITEST');
+			//}
+		}
 	}
+	
 	History.AddGameStateToHistory(NewGameState);
+
+	//`LOG("END" @ GetFuncName(),, 'IRITEST');
 }
 
 
