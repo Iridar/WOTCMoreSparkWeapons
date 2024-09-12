@@ -1176,8 +1176,6 @@ static function OverrideItemImage(out array<string> imagePath, const EInventoryS
 
 static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2WeaponUpgradeTemplate UpgradeTemplate)
 {
-	local name DisallowedUpgradeName;
-
 	switch (WeaponState.GetMyTemplateName())
 	{
 		case 'IRI_ArtilleryCannon_CV':
@@ -1185,14 +1183,7 @@ static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2Wea
 		case 'IRI_ArtilleryCannon_LS':
 		case 'IRI_ArtilleryCannon_CG':
 		case 'IRI_ArtilleryCannon_BM':
-			foreach default.DisallowedWeaponUpgradeNames(DisallowedUpgradeName)
-			{
-				if (UpgradeTemplate.DataName == DisallowedUpgradeName)
-				{
-					return false;
-				}
-			}
-			return true;
+			return default.DisallowedWeaponUpgradeNames.Find(UpgradeTemplate.DataName) == INDEX_NONE;
 		default:
 			return true;
 			

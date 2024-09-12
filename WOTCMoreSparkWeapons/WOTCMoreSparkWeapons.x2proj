@@ -239,6 +239,9 @@ tags= war of the chosen, item, weapon</Description>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Action_KSM_Kill.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Action_UpdateUnitLoadout.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\WOTCMoreSparkWeapons\Classes\X2Condition_Augmented.uc">
       <SubType>Content</SubType>
     </Content>

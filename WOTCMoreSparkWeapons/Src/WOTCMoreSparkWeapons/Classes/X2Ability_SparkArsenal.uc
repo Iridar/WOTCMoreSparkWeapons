@@ -251,7 +251,6 @@ static function SetUpRestorativeMist(X2AbilityTemplate Template, optional bool b
 	local X2AbilityMultiTarget_Radius			MultiTargetStyle;
 	local X2Effect_ApplyMedikitHeal				MedikitHeal;
 	local X2Effect_RemoveEffectsByDamageType	RemoveEffects;	
-	local name									HealType;
 	local X2AbilityCost_Ammo					AmmoCost;
 
 	//	Icon

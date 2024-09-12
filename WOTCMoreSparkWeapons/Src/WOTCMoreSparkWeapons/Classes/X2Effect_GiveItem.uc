@@ -89,6 +89,18 @@ simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffe
 	}
 }
 
+// TODO: Test if this breaks anything
+/*
+simulated function AddX2ActionsForVisualization(XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata, const name EffectApplyResult)
+{
+	if (EffectApplyResult == 'AA_Success')
+	{
+		class'X2Action_UpdateUnitLoadout'.static.AddToVisualizationTree(ActionMetadata, VisualizeGameState.GetContext(), false, ActionMetadata.LastActionAdded);
+	}
+	super.AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, EffectApplyResult);
+}
+*/
+
 defaultproperties
 {
 	

@@ -10,38 +10,60 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 	local X2CharacterTemplate	CharTemplate;
 	local XComGameState_Item	SourceWeapon;
 	local int					Tiles;
+	local int					SquadsightTiles;
+	local float					Modifier;
 	 
 	 SourceWeapon = AbilityState.GetSourceWeapon();
 
 	//  make sure the ammo that created this effect is loaded into the weapon
-	if (SourceWeapon != none && SourceWeapon.LoadedAmmo.ObjectID == EffectState.ApplyEffectParameters.ItemStateObjectRef.ObjectID && AbilityState.GetMyTemplate().bAllowAmmoEffects)
-	{
-		Tiles = Attacker.TileDistanceBetween(Target);
+	if (SourceWeapon == none || SourceWeapon.LoadedAmmo.ObjectID != EffectState.ApplyEffectParameters.ItemStateObjectRef.ObjectID || !AbilityState.GetMyTemplate().bAllowAmmoEffects)
+		return;
 
-		//  Calculate how far into Squadsight range are we.
-		Tiles -= Attacker.GetVisibilityRadius() * class'XComWorldData'.const.WORLD_METERS_TO_UNITS_MULTIPLIER / class'XComWorldData'.const.WORLD_StepSize;
+	CharTemplate = Target.GetMyTemplate();
+	if (CharTemplate == none)
+		return;
+	
+	//  Calculate how far into Squadsight range are we.
+	Tiles = Attacker.TileDistanceBetween(Target);
+	SquadsightTiles = Tiles - Attacker.GetVisibilityRadius() * class'XComWorldData'.const.WORLD_METERS_TO_UNITS_MULTIPLIER / class'XComWorldData'.const.WORLD_StepSize;
 
-		//	right at the boundary, but squadsight IS being used so treat it like one tile
-		if (Tiles == 0) Tiles = 1;
+	//	right at the boundary, but squadsight IS being used so treat it like one tile
+	if (SquadsightTiles == 0) SquadsightTiles = 1;
 
-		CharTemplate = Target.GetMyTemplate();
-		if (Tiles > 0 && CharTemplate != none)
-		{	
-			ModInfo.ModType = eHit_Success;
-			ModInfo.Reason = FriendlyName;
-			ModInfo.Value = -class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_DISTANCE_MOD * Tiles * CounterSquadsightPenalty + CharTemplate.CharacterBaseStats[eStat_Defense] * default.CounterDefense;
-			ShotModifiers.AddItem(ModInfo);
+	// Aim - counter squadsight penalty
+	if (SquadsightTiles > 0)
+	{	
+		Modifier = -class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_DISTANCE_MOD * SquadsightTiles * CounterSquadsightPenalty;
+	}	
 
-			ModInfo.ModType = eHit_Crit;
-			ModInfo.Reason = FriendlyName;
-			ModInfo.Value = -class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_CRIT_MOD * CounterSquadsightPenalty;
-			ShotModifiers.AddItem(ModInfo);
+	// Aim - counter target's innate defense
+	Modifier += CharTemplate.CharacterBaseStats[eStat_Defense] * default.CounterDefense;
+	if (Modifier != 0)
+	{	
+		ModInfo.ModType = eHit_Success;
+		ModInfo.Reason = FriendlyName;
+		ModInfo.Value = Modifier;
+		ShotModifiers.AddItem(ModInfo);
+	}	
 
-			ModInfo.ModType = eHit_Graze;
-			ModInfo.Reason = FriendlyName;
-			ModInfo.Value = -CharTemplate.CharacterBaseStats[eStat_Dodge] * default.CounterDodge;
-			ShotModifiers.AddItem(ModInfo);
-		}	
+	// Crit - counter squadsight's crit penalty
+	Modifier = -class'X2AbilityToHitCalc_StandardAim'.default.SQUADSIGHT_CRIT_MOD * CounterSquadsightPenalty;
+	if (Modifier != 0)
+	{	
+		ModInfo.ModType = eHit_Crit;
+		ModInfo.Reason = FriendlyName;
+		ModInfo.Value = Modifier;
+		ShotModifiers.AddItem(ModInfo);
+	}	
+
+	// Graze - counter target's innate dodge stat
+	Modifier = -CharTemplate.CharacterBaseStats[eStat_Dodge] * default.CounterDodge;
+	if (Modifier != 0)
+	{	
+		ModInfo.ModType = eHit_Graze;
+		ModInfo.Reason = FriendlyName;
+		ModInfo.Value = Modifier;
+		ShotModifiers.AddItem(ModInfo);
 	}
 }
 
