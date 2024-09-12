@@ -32,22 +32,56 @@ static function array<X2DataTemplate> CreateTemplates()
 
 static function X2AbilityTemplate Create_LAC_Overwatch()
 {
-	local X2AbilityTemplate Template;
+	local X2AbilityTemplate					Template;
+	local X2Effect_CoveringFire             CoveringFireEffect;
+	local X2Condition_AbilityProperty       CoveringFireCondition;
+	local X2Condition_UnitProperty          ConcealedCondition;
+	local X2Effect_SetUnitValue             UnitValueEffect;
+	local X2Effect_ReserveActionPoints		ReserveActionPoints;
 	local int i;
 
 	Template = class'X2Ability_DefaultAbilitySet'.static.AddOverwatchAbility('IRI_Overwatch_HeavyAutogun');
 
-	for (i = 0; i < Template.AbilityTargetEffects.Length; i++)
-	{	
-		if (X2Effect_ReserveActionPoints(Template.AbilityTargetEffects[i]) != none)
-		{
-			X2Effect_ReserveActionPoints(Template.AbilityTargetEffects[i]).ReserveType = 'iri_heavy_autogun_overwatch';
-		}
-		else if (X2Effect_CoveringFire(Template.AbilityTargetEffects[i]) != none)
-		{
-			X2Effect_CoveringFire(Template.AbilityTargetEffects[i]).AbilityToActivate = 'IRI_OverwatchShot_HeavyAutogun';
-		}
-	}
+	Template.AbilityTargetEffects.Length = 0;
+
+	ReserveActionPoints = new class'X2Effect_ReserveOverwatchPoints';
+	ReserveActionPoints.ReserveType = 'iri_heavy_autogun_overwatch';
+	Template.AddTargetEffect(ReserveActionPoints);
+
+	CoveringFireCondition = new class'X2Condition_AbilityProperty';
+	CoveringFireCondition.OwnerHasSoldierAbilities.AddItem('CoveringFire');
+
+	// Can't be arsed to filter which covering fire effect to apply, so apply all of them, if the overwatch shot ability isn't there, it just won't activate.
+	CoveringFireEffect = new class'X2Effect_CoveringFire';
+	CoveringFireEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
+	CoveringFireEffect.AbilityToActivate = 'IRI_OverwatchShot_HeavyAutogun';
+	CoveringFireEffect.TargetConditions.AddItem(CoveringFireCondition);
+	CoveringFireEffect.DuplicateResponse = eDupe_Allow;
+	Template.AddTargetEffect(CoveringFireEffect);
+
+	CoveringFireEffect = new class'X2Effect_CoveringFire';
+	CoveringFireEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
+	CoveringFireEffect.AbilityToActivate = 'IRI_OverwatchShot_HeavyAutogun_Spark';
+	CoveringFireEffect.TargetConditions.AddItem(CoveringFireCondition);
+	CoveringFireEffect.DuplicateResponse = eDupe_Allow;
+	Template.AddTargetEffect(CoveringFireEffect);
+
+	CoveringFireEffect = new class'X2Effect_CoveringFire';
+	CoveringFireEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
+	CoveringFireEffect.AbilityToActivate = 'IRI_OverwatchShot_HeavyAutogun_BIT';
+	CoveringFireEffect.TargetConditions.AddItem(CoveringFireCondition);
+	CoveringFireEffect.DuplicateResponse = eDupe_Allow;
+	Template.AddTargetEffect(CoveringFireEffect);
+
+	ConcealedCondition = new class'X2Condition_UnitProperty';
+	ConcealedCondition.ExcludeFriendlyToSource = false;
+	ConcealedCondition.IsConcealed = true;
+	UnitValueEffect = new class'X2Effect_SetUnitValue';
+	UnitValueEffect.UnitName = class'X2Ability_DefaultAbilitySet'.default.ConcealedOverwatchTurn;
+	UnitValueEffect.CleanupType = eCleanup_BeginTurn;
+	UnitValueEffect.NewValueToSet = 1;
+	UnitValueEffect.TargetConditions.AddItem(ConcealedCondition);
+	Template.AddTargetEffect(UnitValueEffect);
 
 	//	Fix bug where this ability can be used even with no AP while under Overdrive.
 	for (i = 0; i < Template.AbilityCosts.Length; i++)
