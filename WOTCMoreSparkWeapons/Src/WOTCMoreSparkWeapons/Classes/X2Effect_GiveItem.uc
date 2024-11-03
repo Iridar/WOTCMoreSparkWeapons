@@ -38,7 +38,7 @@ simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffe
 		if (EqTemplate == none)
 			return;
 
-		`LOG("X2Effect_GiveItem: found template:" @ EqTemplate.DataName,, 'IRITEST');
+		//`LOG("X2Effect_GiveItem: found template:" @ EqTemplate.DataName,, 'IRITEST');
 
 		if (!bOverrideInventoryRestrictions && !bUseInventorySlot)
 		{

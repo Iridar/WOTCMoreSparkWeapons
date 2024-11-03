@@ -299,6 +299,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEAT()
 	AreaDamage.bIgnoreBaseDamage = true;
 	AreaDamage.bApplyOnHit = true;
 	AreaDamage.bApplyOnMiss = true;
+	AreaDamage.bExplosiveDamage = true;
 	Template.AddMultiTargetEffect(AreaDamage);
 
 	KnockbackEffect = new class'X2Effect_Knockback';
@@ -379,6 +380,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HEDP()
 	AreaDamage.bIgnoreBaseDamage = true;
 	AreaDamage.bApplyOnHit = true;
 	AreaDamage.bApplyOnMiss = true;
+	AreaDamage.bExplosiveDamage = true;
 	Template.AddMultiTargetEffect(AreaDamage);
 
 	KnockbackEffect = new class'X2Effect_Knockback';
@@ -455,6 +457,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HE()
 	AreaDamage = new class'X2Effect_Shredder';
 	AreaDamage.DamageTag = 'HEAreaDamage';
 	AreaDamage.bIgnoreBaseDamage = true;
+	AreaDamage.bExplosiveDamage = true;
 	Template.AddMultiTargetEffect(AreaDamage);
 
 	KnockbackEffect = new class'X2Effect_Knockback';
@@ -505,6 +508,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_HESH()
 	AreaDamage = new class'X2Effect_Shredder';
 	AreaDamage.DamageTag = 'HESHAreaDamage';
 	AreaDamage.bIgnoreBaseDamage = true;
+	AreaDamage.bExplosiveDamage = true;
 	Template.AddMultiTargetEffect(AreaDamage);
 
 	KnockbackEffect = new class'X2Effect_Knockback';
@@ -561,7 +565,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Shrapnel()
 	local X2Condition_RequiredItem			RequiredItem;
 
 	//	Allow disoriented, skip primary target damage, reqires Shrapnel Shells
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Shrapnel', true, 'NoPrimary');
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Shrapnel', true, 'NoPrimary', false);
 
 	//	Shooter Conditions
 	RequiredItem = new class'X2Condition_RequiredItem';
@@ -679,7 +683,7 @@ static function X2AbilityTemplate Create_FireArtilleryCannon_Flechette()
 	local X2Condition_RequiredItem			RequiredItem;
 
 	//	Allow disoriented, skip primary target damage, reqires Shrapnel Shells
-	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Flechette', true, 'NoPrimary');
+	Template = SetUpCannonShot('IRI_FireArtilleryCannon_Flechette', true, 'NoPrimary', false);
 
 	//	Shooter Conditions
 	RequiredItem = new class'X2Condition_RequiredItem';
